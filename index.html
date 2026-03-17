@@ -247,7 +247,7 @@ let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
 let showProfileScreen=false,showSessionSheet=false,showStopSheet=false,showCISheet=false;
-let logMode='timer',manualStart='',manualEnd='';
+let logMode='timer',manualStart='',manualEnd='',manualStillActive=false;
 let sheetCat=null,sheetMethod='',sheetNotes='';
 let currentCoachCTA=null;
 
@@ -1352,17 +1352,48 @@ function calcManualMins(){
   return diff>0&&diff<=24*60?diff:0;
 }
 function calcManualPreview(){
+  if(manualStillActive){
+    if(!manualStart)return'Enter your start time above';
+    const now=new Date();
+    const [sh,sm]=manualStart.split(':').map(Number);
+    let startMs=new Date();startMs.setHours(sh,sm,0,0);
+    let diff=Math.floor((now-startMs)/60000);
+    if(diff<0)diff+=24*60; // started yesterday
+    if(diff<=0)return'<span style="color:#c0392b">Start time must be in the past</span>';
+    return`Running since ${manualStart} — <strong style="color:var(--green);font-size:15px">${fmtMin(diff)}</strong> so far`;
+  }
   const mins=calcManualMins();
   if(!manualStart||!manualEnd)return'Enter a start and end time above';
   if(mins===0)return'<span style="color:#c0392b">End time must be after start time</span>';
   const crossed=()=>{const[sh]=manualStart.split(':').map(Number);const[eh]=manualEnd.split(':').map(Number);return eh<sh;};
-  return`<strong style="color:var(--text1);font-size:15px">${fmtMin(mins)}</strong><span style="color:var(--text4);font-size:11px"> total${crossed()?'  (crossed midnight)':''}`;
+  return`<strong style="color:var(--text1);font-size:15px">${fmtMin(mins)}</strong><span style="color:var(--text4);font-size:11px"> total${crossed()?' · crossed midnight':''}`;
 }
 function updateManualPreview(){
   const el=document.getElementById('manual-duration-preview');
   if(el)el.innerHTML=calcManualPreview();
-  const btn=document.getElementById('s-log');
-  if(btn)btn.disabled=!(sheetMethod&&sheetCat&&calcManualMins()>0);
+  const logBtn=document.getElementById('s-log');
+  if(logBtn)logBtn.disabled=!(sheetMethod&&sheetCat&&calcManualMins()>0);
+  const startFromBtn=document.getElementById('s-start-from');
+  if(startFromBtn){
+    startFromBtn.disabled=!(sheetMethod&&sheetCat&&manualStart);
+    if(manualStart)startFromBtn.textContent=`▶ Start from ${manualStart}`;
+  }
+}
+function beginSessionFrom(startTimeStr){
+  if(!sheetMethod||!sheetCat||!startTimeStr)return;
+  const [sh,sm]=startTimeStr.split(':').map(Number);
+  const startDate=new Date();startDate.setHours(sh,sm,0,0);
+  let elapsedMs=Date.now()-startDate.getTime();
+  if(elapsedMs<0)elapsedMs+=24*60*60*1000; // handles midnight edge
+  const elapsedSecs=Math.floor(elapsedMs/1000);
+  // Start the timer but wind it back by the elapsed time
+  activeTimer={startedAt:Date.now()-elapsedMs,method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
+  timerSecs=elapsedSecs;
+  saveTimer(activeTimer);startInterval();
+  showSessionSheet=false;manualStillActive=false;
+  if(navigator.vibrate)navigator.vibrate(60);
+  showToast(`⏱ Timer started from ${startTimeStr} — ${fmtMin(Math.floor(elapsedSecs/60))} already logged`);
+  render();
 }
 
 // ── SESSION SHEET ──────────────────────────────────────────────────────────────
@@ -1406,19 +1437,26 @@ function mountSheet(){
     <div class="sec-title" style="margin-top:4px">Method</div>
     <div class="mcat-row">${catPills}</div>
     ${cat?`<div class="meth-grid">${methPills}</div>${customForm}`:`<div style="color:var(--text5);font-size:11px;padding:6px 2px">Pick a category above.</div>`}
-    ${!isTimer?`<div class="sec-title" style="margin-top:10px">When was your session?</div>
+    ${!isTimer?`<div class="sec-title" style="margin-top:10px">When did you start?</div>
     <div class="card" style="padding:14px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div>
           <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Start time</div>
           <input type="time" id="m-start" value="${manualStart}" style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:9px 10px;color:var(--accent);font-size:18px;font-weight:700;width:100%;outline:none;font-family:'Cinzel',serif;text-align:center">
         </div>
-        <div>
+        <div id="end-col" style="${manualStillActive?'opacity:.35;pointer-events:none':''}">
           <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">End time</div>
           <input type="time" id="m-end" value="${manualEnd}" style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:9px 10px;color:var(--accent);font-size:18px;font-weight:700;width:100%;outline:none;font-family:'Cinzel',serif;text-align:center">
         </div>
       </div>
-      <div id="manual-duration-preview" style="text-align:center;font-size:13px;color:var(--text3);min-height:20px">${calcManualPreview()}</div>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:8px 0;border-top:1px solid var(--stat-border)">
+        <input type="checkbox" id="m-still-active" ${manualStillActive?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2)">I'm still restoring right now</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:1px">Starts the timer from your start time and keeps running</div>
+        </div>
+      </label>
+      <div id="manual-duration-preview" style="text-align:center;font-size:13px;color:var(--text3);min-height:20px;margin-top:10px">${calcManualPreview()}</div>
     </div>`:''}
     <div class="sec-title">Notes (Optional)</div>
     <textarea id="s-notes" placeholder="Comfort level, observations, feedback...">${sheetNotes}</textarea>
@@ -1426,18 +1464,29 @@ function mountSheet(){
       <button class="btn-ghost" id="s-cancel" style="flex:0 0 76px">Cancel</button>
       <div style="flex:1">${isTimer
         ?`<button class="btn-green" id="s-start" style="margin:0" ${!canGo?'disabled':''}>▶ Start Timer</button>`
-        :`<button class="btn-gold" id="s-log" ${!canGo||!calcManualMins()?'disabled':''}>✓ Log Session</button>`
+        :manualStillActive
+          ?`<button class="btn-green" id="s-start-from" style="margin:0" ${!canGo||!manualStart?'disabled':''}>▶ Start from ${manualStart||'—'}</button>`
+          :`<button class="btn-gold" id="s-log" ${!canGo||!calcManualMins()?'disabled':''}>✓ Log Session</button>`
       }</div>
     </div>
   </div>`;
   document.getElementById('root').appendChild(el);
-  document.getElementById('mp-timer').onclick=()=>{logMode='timer';refreshSheet();};
+  document.getElementById('mp-timer').onclick=()=>{logMode='timer';manualStillActive=false;refreshSheet();};
   document.getElementById('mp-manual').onclick=()=>{logMode='manual';refreshSheet();};
   document.getElementById('s-cancel').onclick=()=>{showSessionSheet=false;render();};
   document.getElementById('s-notes')?.addEventListener('input',e=>sheetNotes=e.target.value);
   document.getElementById('m-start')?.addEventListener('input',e=>{manualStart=e.target.value;updateManualPreview();});
   document.getElementById('m-end')?.addEventListener('input',e=>{manualEnd=e.target.value;updateManualPreview();});
+  document.getElementById('m-still-active')?.addEventListener('change',e=>{
+    manualStillActive=e.target.checked;
+    refreshSheet();
+  });
   document.getElementById('s-start')?.addEventListener('click',()=>{sheetNotes=document.getElementById('s-notes')?.value||'';beginSession();});
+  document.getElementById('s-start-from')?.addEventListener('click',()=>{
+    if(!sheetMethod||!sheetCat||!manualStart)return;
+    sheetNotes=document.getElementById('s-notes')?.value||'';
+    beginSessionFrom(manualStart);
+  });
   document.getElementById('s-log')?.addEventListener('click',()=>{
     sheetNotes=document.getElementById('s-notes')?.value||'';
     const mins=calcManualMins();
@@ -1497,7 +1546,7 @@ function mountStopSheet(){
 // ── EVENTS ─────────────────────────────────────────────────────────────────────
 function attachEvents(){
   document.getElementById('start-session-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
-  document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';render();});
+  document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStillActive=false;render();});
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
   document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
   document.getElementById('goal-inp')?.addEventListener('change',e=>{char.dailyGoalMin=Math.max(5,Math.min(1440,+e.target.value||120));saveChar();render();});
