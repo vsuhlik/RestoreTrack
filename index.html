@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html data-theme="shadow">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>RestoreTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0D0B14;--bg-card:rgba(22,18,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(22,18,34,.98),rgba(16,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#0E0C17;--bg-hdr:linear-gradient(180deg,#1a1628,#130F1E);--bg-sheet:#12101e;--bg-ps:#0D0B14;--hdr-border:rgba(201,168,76,.25);--nav-border:rgba(201,168,76,.15);--card-border:rgba(201,168,76,.1);--card-border-gold:rgba(201,168,76,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#C9A84C;--acc6:rgba(201,168,76,.06);--acc12:rgba(201,168,76,.12);--acc18:rgba(201,168,76,.18);--acc30:rgba(201,168,76,.3);--acc45:rgba(201,168,76,.5);--text1:#E2DDD0;--text2:#aaa;--text3:#888;--text4:#555;--text5:#444;--text6:#333;--green:#22a85a;--green-bg:rgba(34,168,90,.06);--green-border:rgba(34,168,90,.3);--scrollbar:#2a2535}
+[data-theme="ivory"]{--bg:#F0EDE6;--bg-card:rgba(255,255,255,.97);--bg-card-gold:linear-gradient(135deg,rgba(255,252,244,.99),rgba(245,238,222,.99));--bg-stat:rgba(0,0,0,.04);--bg-nav:#FFF;--bg-hdr:linear-gradient(180deg,#FFF,#F0EDE6);--bg-sheet:#FAFAF7;--bg-ps:#F0EDE6;--hdr-border:rgba(122,92,16,.2);--nav-border:rgba(122,92,16,.12);--card-border:rgba(122,92,16,.15);--card-border-gold:rgba(122,92,16,.3);--stat-border:rgba(0,0,0,.09);--surf-border:rgba(0,0,0,.07);--accent:#7A5C10;--acc6:rgba(122,92,16,.06);--acc12:rgba(122,92,16,.1);--acc18:rgba(122,92,16,.14);--acc30:rgba(122,92,16,.28);--acc45:rgba(122,92,16,.45);--text1:#1a1710;--text2:#5a5040;--text3:#7a6a50;--text4:#9a8a70;--text5:#aaa090;--text6:#bfb8a8;--green:#1a8040;--green-bg:rgba(26,128,64,.06);--green-border:rgba(26,128,64,.3);--scrollbar:#d0cbc4}
+[data-theme="forest"]{--bg:#0A1409;--bg-card:rgba(11,22,10,.97);--bg-card-gold:linear-gradient(135deg,rgba(14,28,13,.98),rgba(9,18,8,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#060E05;--bg-hdr:linear-gradient(180deg,#142010,#0A1409);--bg-sheet:#0e1c0d;--bg-ps:#0A1409;--hdr-border:rgba(76,175,80,.25);--nav-border:rgba(76,175,80,.15);--card-border:rgba(76,175,80,.12);--card-border-gold:rgba(76,175,80,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#4CAF50;--acc6:rgba(76,175,80,.06);--acc12:rgba(76,175,80,.12);--acc18:rgba(76,175,80,.18);--acc30:rgba(76,175,80,.3);--acc45:rgba(76,175,80,.5);--text1:#D0EDD0;--text2:#7aaa77;--text3:#5a8855;--text4:#4a7048;--text5:#3a583a;--text6:#2a3e2a;--green:#4CAF50;--green-bg:rgba(76,175,80,.06);--green-border:rgba(76,175,80,.3);--scrollbar:#1a2e1a}
+[data-theme="ocean"]{--bg:#050D18;--bg-card:rgba(7,16,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(8,20,42,.98),rgba(5,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#030A12;--bg-hdr:linear-gradient(180deg,#0A1A32,#050D18);--bg-sheet:#081428;--bg-ps:#050D18;--hdr-border:rgba(56,180,212,.25);--nav-border:rgba(56,180,212,.15);--card-border:rgba(56,180,212,.12);--card-border-gold:rgba(56,180,212,.28);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#38B4D4;--acc6:rgba(56,180,212,.06);--acc12:rgba(56,180,212,.12);--acc18:rgba(56,180,212,.18);--acc30:rgba(56,180,212,.3);--acc45:rgba(56,180,212,.5);--text1:#C8E8F5;--text2:#6898AA;--text3:#4a7888;--text4:#3a6272;--text5:#2e5060;--text6:#22404e;--green:#22b4a0;--green-bg:rgba(34,180,160,.06);--green-border:rgba(34,180,160,.3);--scrollbar:#0d2234}
+[data-theme="neon"]{--bg:#07060E;--bg-card:rgba(12,9,22,.97);--bg-card-gold:linear-gradient(135deg,rgba(18,10,32,.98),rgba(10,6,20,.98));--bg-stat:rgba(255,255,255,.025);--bg-nav:#050409;--bg-hdr:linear-gradient(180deg,#10081C,#07060E);--bg-sheet:#0e0a1e;--bg-ps:#07060E;--hdr-border:rgba(220,0,255,.3);--nav-border:rgba(220,0,255,.18);--card-border:rgba(220,0,255,.14);--card-border-gold:rgba(220,0,255,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.06);--accent:#DC00FF;--acc6:rgba(220,0,255,.06);--acc12:rgba(220,0,255,.12);--acc18:rgba(220,0,255,.2);--acc30:rgba(220,0,255,.32);--acc45:rgba(220,0,255,.55);--text1:#F0E5FF;--text2:#9966CC;--text3:#7744AA;--text4:#5a3388;--text5:#442266;--text6:#331144;--green:#aa00ff;--green-bg:rgba(170,0,255,.06);--green-border:rgba(170,0,255,.3);--scrollbar:#1a0e2a}
+[data-theme="neon"] .hdr-title,[data-theme="neon"] .ci-big,[data-theme="neon"] .big-timer{text-shadow:0 0 14px var(--accent),0 0 28px var(--acc18)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;transition:background .3s}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px}
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:70px}
+.hdr{background:var(--bg-hdr);border-bottom:1px solid var(--hdr-border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.hdr-title{font-family:'Cinzel',serif;font-size:13px;color:var(--accent);letter-spacing:2px}
+.ci-pill{background:var(--acc12);border:1px solid var(--pill-border,var(--acc30));border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'Cinzel',serif}
+.profile-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.profile-btn:hover{border-color:var(--acc30);color:var(--accent)}
+.content{padding:12px;flex:1}
+.card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:9px}
+.card-gold{border-color:var(--card-border-gold)!important;background:var(--bg-card-gold)!important}
+.sec-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin:12px 0 6px}
+/* CI RING */
+.ci-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 4px}
+.ci-ring-wrap svg{filter:drop-shadow(0 0 6px var(--acc12))}
+.ci-set-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.ci-set-btn{background:var(--acc6);border:1px solid var(--acc30);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.ci-set-btn:hover{background:var(--acc12)}
+/* COACH CARD */
+.coach-card{background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:9px}
+.coach-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.coach-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px;opacity:.8}
+.coach-msg{font-size:12px;color:var(--text2);line-height:1.65}
+.coach-cta{display:inline-block;margin-top:9px;background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.coach-cta:hover{background:var(--acc18)}
+/* BARS & STATS */
+.xp-bar{height:8px;background:var(--bg-stat);border-radius:4px;overflow:hidden}
+.xp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acc18),var(--accent),var(--acc45));transition:width .8s ease}
+.goal-bar{height:10px;background:var(--bg-stat);border-radius:5px;overflow:hidden;margin:5px 0}
+.goal-fill{height:100%;border-radius:5px;transition:width .6s ease}
+.goal-fill-ok{background:linear-gradient(90deg,#0f5c2e,#22a85a)}
+.goal-fill-warn{background:linear-gradient(90deg,var(--acc18),var(--accent))}
+.sg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}
+.sg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:9px}
+.stat{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px 10px}
+.sv{font-size:20px;font-weight:700;color:var(--text1);line-height:1}
+.sl{font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+/* JOURNEY LADDER */
+.lrow{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--stat-border)}
+.lrow:last-child{border-bottom:none}
+.lcirc{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;font-family:'Cinzel',serif}
+.la{background:var(--acc18);border:1.5px solid var(--accent);color:var(--accent)}
+.ld{background:var(--acc6);border:1px solid var(--acc30);color:var(--text3)}
+.lf{background:var(--bg-stat);border:1px solid var(--stat-border);color:var(--text5)}
+/* CI SELECTOR */
+.ci-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.ci-sel-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:7px 4px;cursor:pointer;text-align:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--text3);transition:all .15s}
+.ci-sel-btn.active{background:var(--acc12);border-color:var(--acc30);color:var(--accent)}
+/* METHOD SELECTOR */
+.mcat-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.mcat-pill{flex-shrink:0;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;color:var(--text4);cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'DM Sans',sans-serif}
+.mcat-pill:hover{background:var(--acc6);color:var(--text2)}
+.mcat-pill.active{background:var(--acc12);border-color:var(--acc30);color:var(--accent)}
+.meth-grid{display:flex;flex-wrap:wrap;gap:6px;max-height:175px;overflow-y:auto;padding:2px;scrollbar-width:thin}
+.meth-pill{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 12px;font-size:11px;color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:4px}
+.meth-pill:hover{background:var(--acc6);color:var(--text2)}
+.meth-pill.active{background:var(--acc12);border-color:var(--acc30);color:var(--accent);font-weight:600}
+/* BUTTONS */
+.big-timer{font-size:50px;font-weight:900;font-family:'Cinzel',serif;color:var(--accent);letter-spacing:3px;text-align:center;line-height:1;margin:8px 0}
+.big-timer.running{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.btn-green{background:linear-gradient(135deg,#0f5c2e,#22a85a);border:none;border-radius:10px;padding:14px;color:#fff;font-weight:700;font-size:15px;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;margin-bottom:8px;letter-spacing:.3px}
+.btn-red{background:linear-gradient(135deg,#5c0f0f,#c0392b);border:none;border-radius:10px;padding:14px;color:#fff;font-weight:700;font-size:15px;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;margin-bottom:8px;letter-spacing:.3px}
+.btn-gold{background:linear-gradient(135deg,var(--acc18),var(--accent));border:none;border-radius:10px;padding:13px;color:var(--bg);font-weight:700;font-size:14px;cursor:pointer;width:100%;font-family:'DM Sans',sans-serif;letter-spacing:.3px;transition:opacity .2s}
+.btn-gold:hover{opacity:.9}
+.btn-gold:disabled{opacity:.35;cursor:not-allowed}
+.btn-ghost{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px;color:var(--text3);font-weight:600;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-ghost:hover{background:var(--acc6);color:var(--text2)}
+.btn-outline{background:none;border:1px solid var(--acc30);border-radius:8px;padding:8px 14px;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-outline:hover{background:var(--acc6)}
+textarea{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 11px;color:var(--text1);font-size:12px;width:100%;outline:none;resize:vertical;min-height:55px;font-family:'DM Sans',sans-serif}
+textarea::placeholder{color:var(--text5)}
+textarea:focus{border-color:var(--acc30)}
+/* CHARTS */
+.bar-wrap{display:flex;align-items:flex-end;gap:5px;height:100px;padding:0 2px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bar{border-radius:3px 3px 0 0;width:100%;background:var(--acc18);min-height:2px;transition:height .5s ease}
+.bar.today{background:linear-gradient(180deg,var(--accent),var(--acc45))}
+.bar-lbl{font-size:9px;color:var(--text4);text-align:center}
+.bar-val{font-size:8px;color:var(--text5);text-align:center;min-height:10px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:4px 0}
+.cal-dot{aspect-ratio:1;border-radius:3px;background:var(--bg-stat)}
+.cal-dot.on{background:var(--acc45)}
+.cal-dot.goal{background:rgba(34,168,90,.55)}
+.cal-dot.now{border:1.5px solid var(--accent)}
+/* CI REFERENCE */
+.ci-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--stat-border);align-items:flex-start}
+.ci-row:last-child{border-bottom:none}
+.ci-badge{background:var(--acc12);border:1px solid var(--acc30);border-radius:5px;padding:2px 6px;font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:var(--accent);width:44px;text-align:center;flex-shrink:0}
+/* ACHIEVEMENTS */
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ach-card{border-radius:10px;padding:12px 9px;text-align:center}
+.ach-card.unlocked{background:var(--acc6);border:1px solid var(--acc30)}
+.ach-card.locked{background:var(--bg-stat);border:1px solid var(--stat-border);opacity:.4}
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-nav);border-top:1px solid var(--nav-border);display:flex;max-width:480px;margin:0 auto;z-index:20}
+.nav-btn{flex:1;padding:8px 0 7px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text5);transition:color .2s}
+.nav-btn.active{color:var(--accent)}
+.nav-icon{font-size:18px;line-height:1.2}
+/* TOASTS & OVERLAYS */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid var(--acc45);border-radius:12px;padding:11px 20px;color:var(--accent);font-weight:600;font-size:13px;z-index:300;white-space:pre-line;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.7);animation:sd .3s ease}
+@keyframes sd{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.sess-flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'DM Sans',sans-serif;font-size:22px;font-weight:700;color:var(--accent);z-index:400;pointer-events:none;animation:xpf .9s ease forwards;text-align:center}
+@keyframes xpf{0%{opacity:0;transform:translate(-50%,-65%)}30%{opacity:1;transform:translate(-50%,-50%)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-38%)}}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:50;display:flex;align-items:flex-end;justify-content:center;max-width:480px;margin:0 auto}
+.sheet{background:var(--bg-sheet);border:1px solid var(--card-border);border-radius:18px 18px 0 0;padding:20px 16px 32px;width:100%;max-height:90vh;overflow-y:auto}
+.sheet-handle{width:36px;height:4px;background:var(--stat-border);border-radius:2px;margin:0 auto 16px}
+.pscreen{position:fixed;inset:0;background:var(--bg-ps);z-index:100;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:28px 20px 40px;max-width:480px;margin:0 auto}
+.pcard{background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;width:100%;margin-bottom:9px;cursor:pointer;display:flex;align-items:center;gap:13px;transition:border-color .2s}
+.pcard:hover{border-color:var(--acc45)}
+.pcard.active-p{border-color:var(--accent);background:var(--acc6)}
+.pavatar{width:40px;height:40px;border-radius:50%;background:var(--acc12);border:1px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--accent);flex-shrink:0}
+.gold-inp{background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 14px;color:var(--text1);font-size:14px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px}
+.gold-inp:focus{border-color:var(--accent)}
+.gold-inp::placeholder{color:var(--text4)}
+.theme-row{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+.theme-chip{border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .25s;flex:1;max-width:78px}
+.theme-chip.sel{border-color:var(--accent)}
+.theme-swatch{width:100%;padding:10px 6px 7px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.theme-lbl{font-size:8px;font-weight:700;text-align:center}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22a85a;animation:blink 1.2s infinite;display:inline-block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.del-btn{background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:3px 8px;color:#a03232;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.del-btn:hover{background:rgba(200,50,50,.15)}
+.goal-inp{background:var(--bg-stat);border:1px solid var(--acc30);border-radius:7px;padding:5px 8px;color:var(--accent);font-size:15px;font-weight:700;width:76px;outline:none;text-align:center;font-family:'Cinzel',serif}
+.xp-tag{background:var(--acc6);border:1px solid var(--acc30);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--accent);font-weight:600;display:inline-block;margin-top:6px}
+.mode-row{display:flex;gap:6px;margin-bottom:10px}
+.mode-pill{flex:1;padding:8px;border-radius:8px;background:var(--bg-stat);border:1px solid var(--surf-border);cursor:pointer;font-size:12px;font-weight:500;color:var(--text4);font-family:'DM Sans',sans-serif;text-align:center;transition:all .2s}
+.mode-pill.active{background:var(--acc12);border-color:var(--acc30);color:var(--accent)}
+.page-title{font-family:'Cinzel',serif;font-size:14px;color:var(--accent);margin-bottom:2px}
+.page-sub{font-size:11px;color:var(--text4);margin-bottom:12px}
+.empty{text-align:center;padding:36px 16px;color:var(--text5);font-size:12px;line-height:2}
+.ci-big{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:var(--accent);line-height:1}
+.divider{width:100%;text-align:center;font-size:10px;color:var(--text5);text-transform:uppercase;letter-spacing:1px;margin:10px 0 8px}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:9px}
+.photo-thumb{aspect-ratio:1;border-radius:8px;object-fit:cover;width:100%;cursor:pointer;border:1px solid var(--stat-border);background:var(--bg-stat);display:flex;align-items:center;justify-content:center;color:var(--text5);font-size:11px;text-align:center;transition:border-color .2s;overflow:hidden}
+.photo-thumb:hover{border-color:var(--acc30)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;max-width:480px;margin:0 auto}
+.photo-viewer img{max-width:100%;max-height:70vh;border-radius:10px;object-fit:contain}
+.time-entry{display:flex;align-items:center;gap:8px;justify-content:center;margin:10px 0}
+.time-inp{background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 6px;color:var(--accent);font-size:28px;font-weight:700;font-family:'Cinzel',serif;outline:none;text-align:center;width:72px}
+.time-sep{font-size:28px;font-weight:700;color:var(--text4);font-family:'Cinzel',serif}
+.time-lbl{font-size:10px;color:var(--text4);text-align:center;margin-top:2px}
+/* TIMELINE PHOTO ENTRIES */
+.photo-tl{border-left:2px solid var(--acc18);margin-left:16px;padding-left:16px;margin-bottom:12px;position:relative}
+.photo-tl-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-card);position:absolute;left:-6px;top:4px}
+.photo-tl-date{font-size:10px;color:var(--text4);margin-bottom:5px;font-weight:600}
+.photo-tl-ci{font-family:'Cinzel',serif;font-size:9px;color:var(--accent);font-weight:700}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="toast" id="toast" style="display:none"></div>
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────────
+const LEVELS=[
+  {ci:'CI-0',desc:'Starting point of restoration. No loose skin present.',soft:'',hard:''},
+  {ci:'CI-1',desc:'',soft:'No loose skin on the shaft.',hard:'Shaft skin is very tight, may draw the scrotum up on some men.'},
+  {ci:'CI-2',desc:'',soft:'Some loose skin wrinkles over the sulcus.',hard:'Shaft skin is tight.'},
+  {ci:'CI-3',desc:'',soft:'Foreskin covers the sulcus and just touches the corona.',hard:'May be very slight wrinkling of shaft skin.'},
+  {ci:'CI-4',desc:'',soft:'Foreskin covers the corona, leaving most of the glans exposed.',hard:'Some wrinkling of shaft skin behind the sulcus.'},
+  {ci:'CI-5',desc:'',soft:'Half to two-thirds of the glans is exposed.',hard:'Foreskin wrinkles over the sulcus.'},
+  {ci:'CI-6',desc:'',soft:'Foreskin covers most of the glans.',hard:'Foreskin retracts behind the corona.'},
+  {ci:'CI-7',desc:'',soft:'Glans is completely covered with glans visible through the opening.',hard:'Foreskin covers the corona and some of the glans.'},
+  {ci:'CI-8',desc:'',soft:'Small amount of overhanging foreskin.',hard:'Foreskin covers over half of the glans.'},
+  {ci:'CI-9',desc:'',soft:'Foreskin overhangs the end of the glans.',hard:'Foreskin completely covers the glans but there is no overhang.'},
+  {ci:'CI-10',desc:'',soft:'Considerable overhanging foreskin.',hard:'Foreskin still overhangs the end of the glans.'}
+];
+const ciDesc=(l)=>l.ci==='CI-0'?'Starting point of restoration. No loose skin present.':
+  `<span style="color:var(--text3);font-weight:600">Soft:</span> ${l.soft}<br><span style="color:var(--text3);font-weight:600">Hard:</span> ${l.hard}`;
+const CATS=[
+  {id:'manual',label:'Manual',icon:'✋',color:'#F59E0B',
+   methods:['MM1 (Manual Method 1)','MM2 (Manual Method 2)','MM3 (Manual Method 3)','MM4 (Manual Method 4)','MM5 (Manual Method 5)','Squeeze-Stretch Method','O-Rings']},
+  {id:'device',label:'Devices',icon:'⚙',color:'#60A5FA',
+   methods:['DTR (Dual Tension Restorer)','TLC Tugger','TLC-X','CAT II Q','HyperRestore','Mantor','Foreskinned','PUD (Penis Uncircumcising Device)','FIT V4','Airforce']},
+  {id:'tape',label:'Taping',icon:'📐',color:'#A78BFA',
+   methods:['T-Tape','Cross Tape','Tegaderm (3M Transpore)','Reverse Tape','Canister Method']},
+  {id:'inflation',label:'Inflation',icon:'💨',color:'#34D399',
+   methods:['HyperRestore (Balloon)','Foreskinned Air','Airforce Direct Air','Priva Air',"Chris' Air Retainer (CAR-1)",'DIY Balloon Method']},
+  {id:'retaining',label:'Retaining',icon:'🔒',color:'#F472B6',
+   methods:['Your-Skin Cone','Stealth Retainer','O-Rings (Retaining)','SI Retainer','ManHood']},
+  {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
+];
+const ACHS=[
+  {id:'first',icon:'🌱',title:'First Step',desc:'Log your first session',check:c=>c.sessions>=1},
+  {id:'s10',icon:'📝',title:'Building Habit',desc:'Log 10 sessions',check:c=>c.sessions>=10},
+  {id:'s50',icon:'💪',title:'Committed',desc:'Log 50 sessions',check:c=>c.sessions>=50},
+  {id:'s100',icon:'🏅',title:'Century',desc:'Log 100 sessions',check:c=>c.sessions>=100},
+  {id:'str3',icon:'🔥',title:'On Fire',desc:'3-day streak',check:c=>c.streak>=3},
+  {id:'str7',icon:'⚡',title:'Week Warrior',desc:'7-day streak',check:c=>c.streak>=7},
+  {id:'str30',icon:'👑',title:'Month Champion',desc:'30-day streak',check:c=>c.streak>=30},
+  {id:'goal5',icon:'🎯',title:'Goal Getter',desc:'Hit daily goal 5 times',check:c=>c.goalDays>=5},
+  {id:'goal20',icon:'💎',title:'Consistent',desc:'Hit daily goal 20 times',check:c=>c.goalDays>=20},
+  {id:'h10',icon:'⏱',title:'Ten Hours',desc:'10 total hours',check:c=>c.minutes>=600},
+  {id:'h50',icon:'⌛',title:'Dedicated',desc:'50 total hours',check:c=>c.minutes>=3000},
+  {id:'h100',icon:'🏆',title:'Century Hours',desc:'100 total hours',check:c=>c.minutes>=6000},
+  {id:'m3',icon:'🔬',title:'Explorer',desc:'Try 3 different methods',check:c=>c.methods.length>=3},
+  {id:'m5',icon:'🧪',title:'Methodical',desc:'Try 5 different methods',check:c=>c.methods.length>=5},
+  {id:'ci1',icon:'✨',title:'First Progress',desc:'Reach CI-1',check:c=>(c.ciLevel||0)>=1},
+  {id:'ci3',icon:'🌿',title:'Advancing',desc:'Reach CI-3',check:c=>(c.ciLevel||0)>=3},
+  {id:'ci5',icon:'⭐',title:'Halfway',desc:'Reach CI-5',check:c=>(c.ciLevel||0)>=5},
+  {id:'ci7',icon:'🔮',title:'Almost There',desc:'Reach CI-7',check:c=>(c.ciLevel||0)>=7},
+  {id:'ci10',icon:'🏆',title:'Restored',desc:'Complete the journey',check:c=>(c.ciLevel||0)>=10}
+];
+const THEMES=[
+  {id:'shadow',name:'Shadow',bg:'#0D0B14',accent:'#C9A84C',text:'#E2DDD0',mid:'#3d2a00'},
+  {id:'ivory',name:'Ivory',bg:'#F0EDE6',accent:'#7A5C10',text:'#1a1710',mid:'#C8A848'},
+  {id:'forest',name:'Forest',bg:'#0A1409',accent:'#4CAF50',text:'#D0EDD0',mid:'#2d5c10'},
+  {id:'ocean',name:'Ocean',bg:'#050D18',accent:'#38B4D4',text:'#C8E8F5',mid:'#0a4070'},
+  {id:'neon',name:'Neon',bg:'#07060E',accent:'#DC00FF',text:'#F0E5FF',mid:'#6600AA'}
+];
+const QUOTES=[
+  "Every session is a message to your body: grow.","Progress is measured in months, not days.",
+  "You are restoring what was taken. That is strength.","Consistency beats intensity every time.",
+  "The body remembers how to grow.","Thousands are walking this path with you.",
+  "Slow and steady wins the long game.","Your patience today is your progress tomorrow.",
+  "Tension plus time equals growth.","Every session counts, even the short ones.",
+  "You started. That alone puts you ahead.","Rest is part of the process too.",
+  "Trust the process. The results follow.","Small efforts, compounded daily, become transformation.",
+  "What you restore, no one can take again.","Dedication is showing up even on the hard days.",
+  "Your body is on your side.","Months from now you'll be glad you started today.",
+  "Every restorer started at CI-0. Every one.","The marathon runner doesn't sprint every mile."
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let profiles=[],currentPid=null,currentTheme='shadow';
+let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
+  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
+let logs=[],photos=[];
+let tab='today';
+let activeTimer=null,timerInterval=null,timerSecs=0;
+let showProfileScreen=false,showSessionSheet=false,showStopSheet=false,showCISheet=false;
+let logMode='timer',manualHrs=0,manualMins=0;
+let sheetCat=null,sheetMethod='',sheetNotes='';
+let currentCoachCTA=null;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────────
+const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
+const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${r}m`:`${h}h`};
+const today=()=>new Date().toISOString().split('T')[0];
+const todayLogs=()=>logs.filter(l=>l.date===today());
+const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0);
+const thisWeekDays=()=>{const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;};
+const dayLbl=d=>['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(d+'T12:00:00').getDay()];
+const catFor=id=>CATS.find(c=>c.id===id)||{icon:'?',color:'#888',mult:1,label:'',methods:[]};
+const dailyQuote=()=>QUOTES[Math.floor((new Date().getDate()*13+new Date().getMonth()*7)%QUOTES.length)];
+
+// ── STORAGE ────────────────────────────────────────────────────────────────────
+const S={
+  get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},
+  del(k){try{localStorage.removeItem(k);}catch{}}
+};
+function loadAll(){
+  profiles=S.get('rst-profiles')||[];currentPid=S.get('rst-active-pid');
+  if(currentPid&&profiles.find(p=>p.id===currentPid))loadProfile(currentPid);
+  else if(profiles.length>0){currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);loadProfile(currentPid);}
+  else showProfileScreen=true;
+}
+function loadProfile(pid){
+  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
+  char={...defaults};logs=[];photos=[];
+  const c=S.get(`rst-${pid}-char`);if(c)char={...char,...c};
+  if(!char.customMethods)char.customMethods=[];
+  if(char.ciLevel===undefined)char.ciLevel=0;
+  if(!char.ciHistory)char.ciHistory=[];
+  const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
+  const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
+  currentTheme=char.theme||'shadow';applyTheme(currentTheme);
+  const t=S.get(`rst-${pid}-timer`);
+  if(t&&t.startedAt){activeTimer=t;timerSecs=Math.floor((Date.now()-t.startedAt)/1000)+(t.elapsedOnPause||0);sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';startInterval();}
+}
+function saveChar(){if(!currentPid)return;S.set(`rst-${currentPid}-char`,char);}
+function saveLogs(){if(!currentPid)return;S.set(`rst-${currentPid}-logs`,logs);}
+function savePhotos(){if(!currentPid)return;S.set(`rst-${currentPid}-photos`,photos);}
+function saveTimer(t){if(!currentPid)return;t?S.set(`rst-${currentPid}-timer`,t):S.del(`rst-${currentPid}-timer`);}
+function saveProfiles(){S.set('rst-profiles',profiles);}
+
+// ── THEME ──────────────────────────────────────────────────────────────────────
+function applyTheme(id){document.documentElement.setAttribute('data-theme',id||'shadow');}
+function selectTheme(id){currentTheme=id;applyTheme(id);char.theme=id;if(currentPid)saveChar();document.querySelectorAll('.theme-chip').forEach(el=>el.classList.toggle('sel',el.dataset.tid===id));}
+
+// ── PROFILE OPS ────────────────────────────────────────────────────────────────
+function createProfile(name){
+  const id='p'+Date.now();profiles.push({id,name,createdAt:today()});saveProfiles();currentPid=id;
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[]};
+  logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
+}
+function switchProfile(pid){
+  currentPid=pid;stopInterval();activeTimer=null;timerSecs=0;sheetMethod='';sheetCat=null;
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
+  logs=[];photos=[];loadProfile(pid);S.set('rst-active-pid',pid);showProfileScreen=false;tab='today';render();
+}
+
+function showRenameInline(pid){
+  const el=document.getElementById(`rename-inline-${pid}`);
+  if(!el)return;
+  el.style.display='block';
+  const inp=document.getElementById(`rename-val-${pid}`);
+  if(inp){inp.focus();inp.select();}
+  inp.onkeydown=e=>{if(e.key==='Enter')saveRenameInline(pid);};
+}
+function saveRenameInline(pid){
+  const inp=document.getElementById(`rename-val-${pid}`);
+  const n=inp?.value.trim();if(!n)return;
+  profiles=profiles.map(p=>p.id===pid?{...p,name:n}:p);
+  saveProfiles();
+  if(pid===currentPid){char.name=n;saveChar();}
+  renderProfileScreen();
+}
+function confirmDeleteProfile(pid,name){
+  confirmDialog(
+    `Delete "${name}"?`,
+    'All sessions, photos, and progress data for this profile will be permanently deleted. This cannot be undone.',
+    'Delete Profile',
+    ()=>deleteProfile(pid)
+  );
+}
+function deleteProfile(pid){
+  // Clear all stored data for this profile
+  S.del(`rst-${pid}-char`);
+  S.del(`rst-${pid}-logs`);
+  S.del(`rst-${pid}-photos`);
+  S.del(`rst-${pid}-timer`);
+  profiles=profiles.filter(p=>p.id!==pid);
+  saveProfiles();
+  // Switch to another profile or show create screen
+  if(profiles.length>0){
+    currentPid=profiles[0].id;
+    S.set('rst-active-pid',currentPid);
+    loadProfile(currentPid);
+    showProfileScreen=true;
+    renderProfileScreen();
+  } else {
+    currentPid=null;
+    S.del('rst-active-pid');
+    showProfileScreen=true;
+    render();
+  }
+}
+function startInterval(){
+  stopInterval();timerInterval=setInterval(()=>{
+    if(!activeTimer)return;
+    timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
+    const el=document.getElementById('mc-run-time');if(el)el.textContent=fmtHMS(timerSecs);
+    const si=document.getElementById('sheet-timer');if(si)si.textContent=fmtHMS(timerSecs);
+  },1000);
+}
+function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
+function beginSession(){
+  if(!sheetMethod||!sheetCat)return;
+  activeTimer={startedAt:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
+  timerSecs=0;saveTimer(activeTimer);startInterval();showSessionSheet=false;
+  if(navigator.vibrate)navigator.vibrate(60);
+  render();
+}
+function stopSession(){
+  if(!activeTimer)return;stopInterval();
+  const elapsed=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
+  timerSecs=elapsed;activeTimer={...activeTimer,startedAt:null,elapsedOnPause:elapsed};
+  saveTimer(activeTimer);
+  if(navigator.vibrate)navigator.vibrate([40,30,40]);
+  showStopSheet=true;render();
+}
+function resumeSession(){
+  if(!activeTimer)return;
+  activeTimer={...activeTimer,startedAt:Date.now(),elapsedOnPause:timerSecs};
+  saveTimer(activeTimer);startInterval();showStopSheet=false;render();
+}
+function commitSession(notes){
+  const finalMins=Math.max(1,Math.round(timerSecs/60));
+  const method=activeTimer?activeTimer.method:sheetMethod;
+  const catId=activeTimer?activeTimer.cat:sheetCat;
+  awardSession(method,catId,finalMins,notes||sheetNotes||'');
+  stopInterval();activeTimer=null;timerSecs=0;sheetMethod='';sheetCat=null;sheetNotes='';
+  saveTimer(null);showStopSheet=false;render();
+}
+function logManual(method,catId,hrs,mins,notes){
+  const totalMins=(hrs*60)+mins;if(totalMins<=0)return;
+  awardSession(method,catId,totalMins,notes||'');
+  showSessionSheet=false;render();
+}
+function awardSession(method,catId,totalMins,notes){
+  const td=today();
+  let ns=char.streak;
+  if(char.lastDate){const diff=Math.round((new Date(td)-new Date(char.lastDate))/86400000);if(diff===1)ns++;else if(diff>1)ns=1;}else ns=1;
+  const prevTodayMin=todayMin();
+  const nm=char.methods.includes(method)?char.methods:[...char.methods,method];
+  let ngd=char.goalDays;
+  if(prevTodayMin<char.dailyGoalMin&&(prevTodayMin+totalMins)>=char.dailyGoalMin)ngd++;
+  char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd};
+  const newly=[];
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
+  logs=[{id:Date.now(),date:td,method,cat:catId,dur:totalMins,notes,xp:0},...logs];
+  saveChar();saveLogs();
+  showSessFlash(`✓ ${fmtMin(totalMins)}`);
+  if(newly.length)showToast(`🏅 ${newly[0]} — milestone reached!`);
+  else if(ns>1)showToast(`${fmtMin(totalMins)} logged · ${ns}-day streak 🔥`);
+  else showToast(`${fmtMin(totalMins)} logged · Session #${char.sessions}`);
+}
+
+// ── CI LEVEL ───────────────────────────────────────────────────────────────────
+function setCILevel(n){
+  const prev=char.ciLevel||0;if(n===prev)return;
+  char.ciLevel=n;
+  char.ciHistory=[...(char.ciHistory||[]),{ci:n,date:today()}];
+  const newly=[];
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
+  saveChar();
+  if(n>prev)showToast(`🎉 ${LEVELS[n].ci} reached!`);
+  if(newly.length)setTimeout(()=>showToast(`🏅 ${newly[0]} unlocked!`),1800);
+  showCISheet=false;render();
+}
+
+// ── PHOTOS ─────────────────────────────────────────────────────────────────────
+function addPhoto(ciLevel,dataUrl,note){
+  photos=[{id:Date.now(),ci:ciLevel,date:today(),url:dataUrl,note:note||'',analysis:null},...photos];
+  savePhotos();showToast('📸 Progress photo saved!');tab='photos';render();
+}
+function deletePhoto(id){
+  confirmDialog(
+    'Delete this photo?',
+    'This photo will be permanently removed from your timeline. This cannot be undone.',
+    'Delete',
+    ()=>{photos=photos.filter(p=>p.id!==id);savePhotos();render();}
+  );
+}
+
+// ── CONFIRM DIALOG ─────────────────────────────────────────────────────────────
+function confirmDialog(title,msg,confirmLabel,onConfirm){
+  const ex=document.getElementById('confirm-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='confirm-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-size:18px;text-align:center;margin-bottom:10px">⚠️</div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--text1);text-align:center;margin-bottom:8px">${title}</div>
+    <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6;margin-bottom:20px">${msg}</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" id="confirm-cancel" style="flex:1">Cancel</button>
+      <button id="confirm-ok" style="flex:1;background:linear-gradient(135deg,#5c0f0f,#c0392b);border:none;border-radius:10px;padding:13px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">${confirmLabel}</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('confirm-cancel').onclick=()=>el.remove();
+  document.getElementById('confirm-ok').onclick=()=>{el.remove();onConfirm();};
+  // Also close on backdrop tap
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
+function openPhotoViewer(photo){
+  const el=document.createElement('div');el.className='photo-viewer';el.id='photo-view';
+  el.innerHTML=`
+    <img src="${photo.url}" alt="Progress photo" style="max-width:100%;max-height:55vh;border-radius:10px;object-fit:contain">
+    <div style="margin-top:12px;text-align:center;width:100%">
+      <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">${photo.ci}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:3px">${photo.date}</div>
+      ${photo.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${photo.note}</div>`:''}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;width:100%">
+      <button class="btn-ghost" onclick="document.getElementById('photo-view').remove()" style="flex:1">Close</button>
+      <button class="del-btn" onclick="confirmDialog('Delete this photo?','This photo will be permanently removed from your timeline. This cannot be undone.','Delete',()=>{deletePhoto(${photo.id});document.getElementById('photo-view').remove();})" style="padding:10px 18px;font-size:13px">Delete</button>
+    </div>`;
+  document.getElementById('root').appendChild(el);
+}
+
+// ── EXPORT ─────────────────────────────────────────────────────────────────────
+function exportCSV(){
+  const rows=[['Date','Method','Category','Duration (min)','Notes']];
+  logs.forEach(l=>{const cat=catFor(l.cat);rows.push([l.date,l.method,cat.label,l.dur,(l.notes||'').replace(/,/g,' ')]);});
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`restoration-log-${today()}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('📊 CSV exported!');
+}
+
+// ── UI HELPERS ─────────────────────────────────────────────────────────────────
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3500);}
+function showSessFlash(msg){const el=document.createElement('div');el.className='sess-flash';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),950);}
+
+// ── CI RING SVG ────────────────────────────────────────────────────────────────
+function arcD(cx,cy,r,startDeg,endDeg){
+  const toR=d=>d*Math.PI/180;
+  const sx=cx+r*Math.cos(toR(startDeg)),sy=cy+r*Math.sin(toR(startDeg));
+  const ex=cx+r*Math.cos(toR(endDeg)),ey=cy+r*Math.sin(toR(endDeg));
+  const sweep=((endDeg-startDeg)%360+360)%360;
+  const large=sweep>180?1:0;
+  return`M${sx.toFixed(2)},${sy.toFixed(2)} A${r},${r} 0 ${large},1 ${ex.toFixed(2)},${ey.toFixed(2)}`;
+}
+function ciRingSVG(){
+  const ci=char.ciLevel||0;
+  const cx=110,cy=105,r=80,sw=14;
+  const startDeg=148,totalDeg=244,segCount=10,gap=1.5;
+  const segDeg=totalDeg/segCount;
+  let paths='';
+  for(let i=0;i<segCount;i++){
+    const s=startDeg+i*segDeg+gap,e=startDeg+(i+1)*segDeg-gap;
+    const filled=i<ci;
+    const isLast=i===ci-1;
+    const op=filled?(isLast?'1':'0.8'):'0.2';
+    const color=filled?'var(--accent)':'var(--stat-border,#444)';
+    paths+=`<path d="${arcD(cx,cy,r,s,e)}" stroke="${color}" stroke-width="${sw}" fill="none" stroke-linecap="round" opacity="${op}"/>`;
+  }
+  // Active dot at current position
+  const dotDeg=ci>0?startDeg+ci*segDeg:startDeg;
+  const toR=d=>d*Math.PI/180;
+  const dotX=cx+r*Math.cos(toR(dotDeg)),dotY=cy+r*Math.sin(toR(dotDeg));
+  const dotEl=ci>0?`<circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="6" fill="var(--accent)"/>
+    <circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="3" fill="var(--bg)"/>`:
+    `<circle cx="${(cx+r*Math.cos(toR(startDeg))).toFixed(1)}" cy="${(cy+r*Math.sin(toR(startDeg))).toFixed(1)}" r="5" fill="var(--stat-border,#444)" opacity="0.5"/>`;
+  // Bottom labels
+  const lx=cx+r*Math.cos(toR(startDeg));
+  const ly=cy+r*Math.sin(toR(startDeg));
+  const rx=cx+r*Math.cos(toR(startDeg+totalDeg));
+  const ry=cy+r*Math.sin(toR(startDeg+totalDeg));
+  return`<svg viewBox="0 0 220 172" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:220px;display:block;margin:0 auto">
+    ${paths}${dotEl}
+    <text x="${cx}" y="${cy-10}" text-anchor="middle" font-family="Cinzel,serif" font-size="34" font-weight="900" fill="var(--accent)">${LEVELS[ci].ci}</text>
+    <text x="${cx}" y="${cy+13}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="500" fill="var(--text3)">${ci===0?'Starting point':ci===10?'Fully restored':'In progress'}</text>
+    <text x="${cx}" y="${cy+30}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="var(--text4)">${ci<10?`Next: CI-${ci+1}`:'🏆 Journey Complete'}</text>
+    <text x="${(lx-5).toFixed(0)}" y="${(ly+16).toFixed(0)}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="var(--text5)">CI-0</text>
+    <text x="${(rx+5).toFixed(0)}" y="${(ry+16).toFixed(0)}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="var(--text5)">CI-10</text>
+  </svg>`;
+}
+
+// ── COACH MESSAGE ──────────────────────────────────────────────────────────────
+function coachMessage(){
+  const td=today();
+  const ci=char.ciLevel||0;
+  const daysSinceLast=char.lastDate?Math.round((new Date(td)-new Date(char.lastDate))/86400000):-1;
+  const sessThisWeek=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=7).length;
+  const tMin=todayMin();
+  const goal=char.dailyGoalMin||120;
+  const hoursTotal=char.minutes/60;
+  const isRunning=!!activeTimer&&!!activeTimer.startedAt;
+
+  if(char.sessions===0)
+    return{icon:'👋',msg:`Welcome, ${char.name}! Start your first session to begin tracking your restoration journey. Even 15 minutes is a great first step.`,cta:'log'};
+  if(isRunning)
+    return{icon:'⏱',msg:`Session in progress — ${fmtHMS(timerSecs)}. Stay relaxed; consistent, comfortable tension is more effective than pushing harder.`,cta:null};
+  if(daysSinceLast>=5)
+    return{icon:'📅',msg:`It's been ${daysSinceLast} days since your last session. Restoration responds to regular, consistent tension — getting back on track today matters.`,cta:'log'};
+  if(daysSinceLast>=3)
+    return{icon:'⏰',msg:`${daysSinceLast} days since your last session. Even 15–20 minutes today keeps the momentum going.`,cta:'log'};
+  if(tMin>=goal){
+    const s=char.streak;
+    return{icon:'🎯',msg:`Daily goal hit — ${fmtMin(tMin)} logged today.${s>=3?` ${s}-day streak 🔥`:''} Your body is receiving the consistent tension signal it needs.`,cta:null};
+  }
+  if(photos.length===0&&char.sessions>=3)
+    return{icon:'📸',msg:`You've logged ${char.sessions} sessions — add a baseline photo now. Progress can be hard to notice day-to-day, but photos months apart tell the real story.`,cta:'photos'};
+  if(ci===0&&hoursTotal>=8)
+    return{icon:'📊',msg:`You've logged over ${Math.round(hoursTotal)} hours. Head to the Journey tab to set your current CI level — tracking where you are is key to seeing where you're going.`,cta:'journey'};
+  if(sessThisWeek<=1&&daysSinceLast>=0)
+    return{icon:'💡',msg:`Aim for at least 20–30 minutes daily if possible — shorter daily sessions generally outperform occasional long ones for tissue response.`,cta:'log'};
+  // Default rotating messages (honest, no fake timelines)
+  const day=new Date().getDate();
+  const msgs=[
+    {icon:'📈',msg:`${Math.round(hoursTotal)} hours of restoration time logged. Every hour is consistent tension applied — that's the only driver of growth.`},
+    {icon:'🔬',msg:`You've tried ${char.methods.length} method${char.methods.length===1?'':'s'}. Mixing manual and device methods can help apply tension across different areas of the prepuce over time.`},
+    {icon:'🌱',msg:`Currently at ${LEVELS[ci].ci}. ${ci<10?`Advancement between CI levels typically takes months of consistent effort.`:`You've completed the full restoration journey.`}`},
+    {icon:'💡',msg:`If your skin ever feels sore or fatigued, a rest day is always the right call. Recovery is part of the process.`},
+    {icon:'⏳',msg:`${char.streak>0?`${char.streak}-day streak.`:'Keep building your streak.'} Restoration is one of the slowest tissue changes the body makes — patience and consistency are your only tools.`},
+  ];
+  return msgs[day%msgs.length];
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render(){
+  if(showProfileScreen){renderProfileScreen();return;}
+  const ci=char.ciLevel||0;
+  const isRunning=!!activeTimer&&!!activeTimer.startedAt;
+  document.getElementById('root').innerHTML=`<div class="app">
+    <div class="hdr">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div class="hdr-title">◉ RESTORETRACK</div>
+        <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer" title="Go to Journey">${LEVELS[ci].ci}</div>
+        ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px">
+          <div class="live-dot"></div>
+          <span style="font-size:10px;font-weight:600;color:var(--green)">${fmtHMS(timerSecs)}</span>
+        </div>`:''}
+      </div>
+      <button class="profile-btn" id="pbtn">👤 ${char.name} ▾</button>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="nav">${renderNav()}</div>
+  </div>`;
+  document.getElementById('pbtn').onclick=()=>{showProfileScreen=true;render();};
+  document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
+  const c=document.getElementById('content');
+  if(tab==='today')c.innerHTML=renderToday();
+  else if(tab==='journey')c.innerHTML=renderJourney();
+  else if(tab==='photos')c.innerHTML=renderPhotos();
+  else if(tab==='reports')c.innerHTML=renderReports();
+  else if(tab==='ach')c.innerHTML=renderAch();
+  attachEvents();
+  if(showSessionSheet)mountSheet();
+  else if(showStopSheet)mountStopSheet();
+  else if(showCISheet)mountCISheet();
+}
+function renderNav(){
+  const running=!!activeTimer&&!!activeTimer.startedAt;
+  return[{id:'today',icon:'◉',lbl:'Today'},{id:'journey',icon:'◑',lbl:'Journey'},{id:'photos',icon:'📸',lbl:'Photos'},{id:'reports',icon:'▦',lbl:'Reports'},{id:'ach',icon:'★',lbl:'Milestones'}]
+    .map(t=>`<button class="nav-btn${tab===t.id?' active':''}" data-tab="${t.id}">
+      <span class="nav-icon" style="position:relative;display:inline-block">${t.icon}${running&&t.id==='today'?`<span style="position:absolute;top:-1px;right:-3px;width:6px;height:6px;border-radius:50%;background:var(--green);border:1px solid var(--bg-nav)"></span>`:''}</span>${t.lbl}
+    </button>`).join('');
+}
+
+// ── TODAY ──────────────────────────────────────────────────────────────────────
+function renderToday(){
+  const td=today(),tMin=todayMin(),goal=char.dailyGoalMin||120;
+  const goalPct=Math.min(100,Math.round((tMin/goal)*100));
+  const monthMin=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0);
+  const yearMin=logs.filter(l=>l.date.slice(0,4)===td.slice(0,4)).reduce((a,l)=>a+l.dur,0);
+  const tSess=todayLogs();
+  const isRunning=!!activeTimer&&!!activeTimer.startedAt;
+  const isPaused=!!activeTimer&&!activeTimer.startedAt;
+  const msg=coachMessage();currentCoachCTA=msg.cta;
+  const timerBlock=isRunning?`<div class="card" style="border-color:var(--green-border);background:var(--green-bg);margin-bottom:9px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div class="live-dot"></div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--green)">Session Active</div>
+      <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method}</div></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time">${fmtHMS(timerSecs)}</div>
+    </div>
+    <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px">⏹ Stop Session</button>
+  </div>`:isPaused?`<div class="card" style="border-color:var(--acc30);margin-bottom:9px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:16px">⏸</span>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--accent)">Session Paused</div>
+      <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method} · ${fmtHMS(timerSecs)}</div></div>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button id="resume-btn" class="btn-green" style="margin:0;padding:10px;font-size:13px;flex:1">▶ Resume</button>
+      <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px;flex:1">⏹ Save</button>
+    </div>
+  </div>`:'';
+  const sessHtml=tSess.length?tSess.map(l=>{const cat=catFor(l.cat);return`
+    <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;padding:10px;margin-bottom:7px">
+      <div style="width:34px;height:34px;border-radius:8px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${cat.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.method}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">${fmtMin(l.dur)}${l.notes?' · '+l.notes.slice(0,45):''}</div>
+      </div>
+      <button class="del-btn" data-id="${l.id}" style="margin-top:2px">✕</button>
+    </div>`}).join(''):`<div class="empty">No sessions today yet.<br>Tap <strong>Start Session</strong> to begin.</div>`;
+
+  // Last session summary (shown when no active timer and no sessions today)
+  const lastLog=logs.find(l=>l.date!==td);
+  const lastSessHtml=!activeTimer&&tSess.length===0&&lastLog?`
+    <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;margin-bottom:9px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:1px;flex-shrink:0">Last</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lastLog.method}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">${lastLog.date} · ${fmtMin(lastLog.dur)}</div>
+      </div>
+    </div>`:'';
+  return`
+  <div class="coach-card">
+    <div style="display:flex;gap:10px;align-items:flex-start">
+      <div class="coach-icon">${msg.icon}</div>
+      <div style="flex:1">
+        <div class="coach-label">Your Coach</div>
+        <div class="coach-msg">${msg.msg}</div>
+        ${msg.cta?`<div class="coach-cta" id="coach-cta">${msg.cta==='log'?'+ Log Session':msg.cta==='photos'?'📸 Add Photo':'→ Update CI'}</div>`:''}
+      </div>
+    </div>
+  </div>
+  <div class="card card-gold">
+    <div class="ci-ring-wrap">${ciRingSVG()}</div>
+    <div class="ci-set-row">
+      <div style="font-size:10px;color:var(--text4)">Not right?</div>
+      <div class="ci-set-btn" id="update-ci-btn">Update my CI level</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:9px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+      <div style="font-size:11px;color:var(--text3)">Daily Goal</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input class="goal-inp" id="goal-inp" type="number" min="5" max="1440" value="${goal}">
+        <span style="font-size:10px;color:var(--text4)">min/day</span>
+      </div>
+    </div>
+    <div class="goal-bar"><div class="goal-fill ${goalPct>=100?'goal-fill-ok':'goal-fill-warn'}" style="width:${goalPct}%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-top:2px">
+      <span>${fmtMin(tMin)} done</span>
+      <span>${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go'}</span>
+    </div>
+  </div>
+  <div class="sg4">
+    <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(tMin)}</div><div class="sl">Today</div></div>
+    <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(monthMin)}</div><div class="sl">Month</div></div>
+    <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(yearMin)}</div><div class="sl">Year</div></div>
+    <div class="stat"><div class="sv" style="font-size:13px;color:#F59E0B">${char.streak}🔥</div><div class="sl">Streak</div></div>
+  </div>
+  ${timerBlock}
+  ${!activeTimer?`<button id="start-session-btn" class="btn-gold" style="margin-bottom:7px">+ Start Session</button>`:''}
+  <button id="log-past-btn" class="btn-ghost" style="width:100%;font-size:12px;margin-bottom:12px">Log Past Session</button>
+  ${lastSessHtml}
+  <div class="sec-title">Today's Sessions</div>${sessHtml}`;
+}
+
+// ── JOURNEY ────────────────────────────────────────────────────────────────────
+function renderJourney(){
+  const ci=char.ciLevel||0;
+  const ciHistory=char.ciHistory||[];
+
+  // CI stage strip — horizontal scroll, current highlighted
+  const stageStrip=LEVELS.map((l,i)=>{
+    const done=i<ci,active=i===ci;
+    return`<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 2px" onclick="showCISheet=true;render()">
+      <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:Cinzel,serif;
+        background:${active?'var(--accent)':done?'var(--acc18)':'var(--bg-stat)'};
+        border:${active?'2px solid var(--accent)':done?'1px solid var(--acc30)':'1px solid var(--stat-border)'};
+        color:${active?'var(--bg)':done?'var(--accent)':'var(--text5)'};
+        box-shadow:${active?'0 0 0 3px var(--acc18)':'none'}">${i}</div>
+      <div style="font-size:7px;color:${active?'var(--accent)':done?'var(--text4)':'var(--text6)'};text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">${done&&!active?'✓':active?'▲':''}</div>
+    </div>`;
+  }).join('');
+
+  // Current stage info
+  const curr=LEVELS[ci];
+  const next=ci<10?LEVELS[ci+1]:null;
+
+  // Compact reference — one line each, soft/hard split
+  const refGuide=LEVELS.map((l,i)=>{
+    const active=i===ci;
+    return`<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--stat-border);${i===LEVELS.length-1?'border-bottom:none':''}">
+      <div style="font-family:Cinzel,serif;font-size:10px;font-weight:700;color:${active?'var(--accent)':'var(--text4)'};width:34px;flex-shrink:0;padding-top:1px">${l.ci}</div>
+      <div style="font-size:10px;color:${active?'var(--text2)':'var(--text4)'};line-height:1.65;flex:1">${ciDesc(l)}</div>
+      ${active?`<div style="font-size:8px;color:var(--accent);flex-shrink:0;padding-top:2px">◀</div>`:''}
+    </div>`;
+  }).join('');
+
+  return`
+  <div class="card card-gold" style="padding:18px 14px 16px">
+    <div class="ci-ring-wrap" style="margin-bottom:10px">${ciRingSVG()}</div>
+    <div style="overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px">
+      <div style="display:flex;gap:4px;justify-content:space-between;min-width:max-content;width:100%;padding:4px 0">${stageStrip}</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div>
+        <div style="font-family:Cinzel,serif;font-size:22px;font-weight:900;color:var(--accent);line-height:1">${curr.ci}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.7">${ciDesc(curr)}</div>
+      </div>
+      <button class="ci-set-btn" id="update-ci-btn2" style="flex-shrink:0;margin-left:12px;margin-top:2px">Update</button>
+    </div>
+    ${next?`<div style="border-top:1px solid var(--stat-border);padding-top:10px;display:flex;align-items:flex-start;gap:8px">
+      <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:1px;padding-top:2px;flex-shrink:0;width:36px">Next</div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text4)">${next.ci}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:4px;line-height:1.65">${ciDesc(next)}</div>
+      </div>
+    </div>`:'<div style="border-top:1px solid var(--stat-border);padding-top:10px;text-align:center;font-size:11px;color:var(--accent)">🏆 Journey Complete</div>'}
+  </div>
+
+  <div class="sg4" style="margin-top:0">
+    <div class="stat"><div class="sv">${char.sessions}</div><div class="sl">Sessions</div></div>
+    <div class="stat"><div class="sv">${(char.minutes/60).toFixed(1)}h</div><div class="sl">Hours</div></div>
+    <div class="stat"><div class="sv" style="color:#F59E0B">${char.streak}</div><div class="sl">🔥 Streak</div></div>
+    <div class="stat"><div class="sv" style="color:var(--accent)">${char.methods.length}</div><div class="sl">Methods</div></div>
+  </div>
+
+  <div class="sec-title">CI Reference</div>
+  <div class="card" style="padding:8px 12px">${refGuide}</div>`;
+}
+
+// ── PHOTOS ─────────────────────────────────────────────────────────────────────
+let compareA=null,compareB=null;
+
+function renderPhotos(){
+  const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
+  const timelineHtml=sorted.length?sorted.map(p=>`
+    <div class="photo-tl">
+      <div class="photo-tl-dot"></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">
+        <span class="photo-tl-date">${p.date}</span>
+        <span class="photo-tl-ci">${p.ci}</span>
+        ${p.note?`<span style="font-size:10px;color:var(--text4);font-style:italic">· ${p.note.slice(0,32)}</span>`:''}
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="photo-thumb" style="width:80px;height:80px;flex-shrink:0" onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}))"><img src="${p.url}" alt="${p.ci}"></div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:5px">
+          ${p.note?`<div style="font-size:10px;color:var(--text4);font-style:italic">${p.note}</div>`:''}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">
+            <button class="del-btn" onclick="confirmDialog('Delete this photo?','This photo will be permanently removed. This cannot be undone.','Delete',()=>deletePhoto(${p.id}))">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join(''):`<div class="empty">No progress photos yet.<br>Tap the button above to add your first.</div>`;
+
+  const lastPhoto=sorted[0];
+  const daysSincePhoto=lastPhoto?Math.round((new Date()-new Date(lastPhoto.date+'T12:00:00'))/86400000):-1;
+  const photoNudge=daysSincePhoto>=30?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 12px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
+    📅 It's been <strong>${daysSincePhoto} days</strong> since your last photo. A comparison shot now would be a great record of your progress.
+  </div>`:daysSincePhoto===-1?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 12px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
+    💡 A baseline photo today gives you something real to compare against months from now. It's one of the most motivating things you can do.
+  </div>`:'';
+
+  const compareBtn=photos.length>=2
+    ?`<button class="btn-ghost" id="open-compare-btn" style="width:100%;margin-bottom:8px;font-size:12px">⟷ Compare Two Photos</button>`
+    :'';
+
+  return`
+  ${photoNudge}
+  <button class="btn-gold" id="open-photo-guide-btn" style="margin-bottom:8px">📷 Take Progress Photo</button>
+  ${compareBtn}
+  <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none">
+  <div class="sec-title">Photo Timeline</div>
+  ${timelineHtml}`;
+}
+
+// ── PHOTO GUIDE SHEET ──────────────────────────────────────────────────────────
+let photoGuideStep=1;
+let pendingPhotoData=null;
+let pendingPhotoCI=null;
+
+function mountPhotoGuideSheet(){
+  const ex=document.getElementById('photo-guide-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='photo-guide-ov';
+
+  if(photoGuideStep===1){
+    el.innerHTML=`<div class="sheet">
+      <div class="sheet-handle"></div>
+      <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:4px">Progress Photo</div>
+      <div style="font-size:11px;color:var(--text4);margin-bottom:16px">Consistent photos are the clearest way to see your progress. Before you shoot:</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <div style="display:flex;gap:11px;align-items:flex-start;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px">
+          <span style="font-size:18px;flex-shrink:0">📏</span>
+          <div><div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:2px">Same distance every time</div>
+          <div style="font-size:11px;color:var(--text4)">Arm's length works well. Consistent distance makes comparisons accurate.</div></div>
+        </div>
+        <div style="display:flex;gap:11px;align-items:flex-start;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px">
+          <span style="font-size:18px;flex-shrink:0">🎯</span>
+          <div><div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:2px">Straight-on angle</div>
+          <div style="font-size:11px;color:var(--text4)">Camera level, pointing straight at the subject. Avoid angles that exaggerate or hide coverage.</div></div>
+        </div>
+        <div style="display:flex;gap:11px;align-items:flex-start;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px">
+          <span style="font-size:18px;flex-shrink:0">💡</span>
+          <div><div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:2px">Good, even lighting</div>
+          <div style="font-size:11px;color:var(--text4)">Natural light or a well-lit room. Avoid harsh shadows — they make coverage look different than it is.</div></div>
+        </div>
+        <div style="display:flex;gap:11px;align-items:flex-start;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px">
+          <span style="font-size:18px;flex-shrink:0">🔁</span>
+          <div><div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:2px">Flaccid state</div>
+          <div style="font-size:11px;color:var(--text4)">CI levels are assessed while flaccid. Take your photo in a relaxed state for accurate comparison.</div></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" id="photo-guide-cancel" style="flex:0 0 80px">Cancel</button>
+        <button class="btn-gold" id="photo-guide-shoot" style="flex:1">Ready — Open Camera</button>
+      </div>
+    </div>`;
+    document.getElementById('root').appendChild(el);
+    document.getElementById('photo-guide-cancel').onclick=()=>{photoGuideStep=1;el.remove();};
+    document.getElementById('photo-guide-shoot').onclick=()=>{
+      document.getElementById('photo-file').click();
+    };
+
+  } else if(photoGuideStep===2){
+    if(!pendingPhotoCI)pendingPhotoCI=LEVELS[char.ciLevel||0].ci;
+
+    const ciCards=LEVELS.map((l,i)=>{
+      const isSel=pendingPhotoCI===l.ci;
+      return`<div data-pci="${l.ci}" onclick="pendingPhotoCI='${l.ci}';document.querySelectorAll('#photo-guide-ov .pci-card').forEach(c=>{const s=c.dataset.pci===pendingPhotoCI;c.style.background=s?'var(--acc12)':'var(--bg-stat)';c.style.borderColor=s?'var(--acc30)':'var(--stat-border)';c.querySelector('.pci-label').style.color=s?'var(--accent)':'var(--text3)';c.querySelector('.pci-check').textContent=s?'✓':'';c.querySelector('.pci-check').style.background=s?'var(--accent)':'transparent';c.querySelector('.pci-check').style.borderColor=s?'var(--accent)':'var(--stat-border)';})"
+        class="pci-card" style="background:${isSel?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:9px 11px;cursor:pointer;margin-bottom:6px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+          <div class="pci-label" style="font-family:Cinzel,serif;font-size:12px;font-weight:700;color:${isSel?'var(--accent)':'var(--text3)'}">${l.ci}</div>
+          <div class="pci-check" style="width:15px;height:15px;border-radius:50%;border:2px solid ${isSel?'var(--accent)':'var(--stat-border)'};background:${isSel?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--bg);flex-shrink:0">${isSel?'✓':''}</div>
+        </div>
+        <div style="font-size:10px;color:var(--text4);line-height:1.6">${ciDesc(l)}</div>
+      </div>`;
+    }).join('');
+
+    el.innerHTML=`<div class="sheet" style="max-height:88vh">
+      <div class="sheet-handle"></div>
+      <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:10px">Tag Your Photo</div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
+        <img src="${pendingPhotoData}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--acc30);flex-shrink:0" alt="Preview">
+        <div style="font-size:10px;color:var(--text4);line-height:1.7;padding-top:2px">Select the CI level that best matches what you see in your photo. Read the descriptions and pick the closest match.</div>
+      </div>
+
+      <div style="max-height:42vh;overflow-y:auto;padding-right:2px;margin-bottom:12px">${ciCards}</div>
+
+      <input type="text" id="photo-note-inp" placeholder="Optional note — method, how long in, anything relevant..." style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 11px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:12px">
+
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" id="photo-retake" style="flex:0 0 80px">↺ Retake</button>
+        <button class="btn-gold" id="photo-confirm-save" style="flex:1">Save to Timeline</button>
+      </div>
+    </div>`;
+    document.getElementById('root').appendChild(el);
+
+    document.getElementById('photo-retake').onclick=()=>{
+      photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
+      el.remove();mountPhotoGuideSheet();
+    };
+    document.getElementById('photo-confirm-save').onclick=()=>{
+      const note=document.getElementById('photo-note-inp')?.value||'';
+      if(!pendingPhotoData||!pendingPhotoCI)return;
+      addPhoto(pendingPhotoCI,pendingPhotoData,note);
+      photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
+      el.remove();
+    };
+  }
+}
+
+// ── COMPARE PICKER ─────────────────────────────────────────────────────────────
+function openComparePicker(){
+  const ex=document.getElementById('compare-pick-ov');if(ex)ex.remove();
+  compareA=null;compareB=null;
+  const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.createElement('div');el.className='overlay';el.id='compare-pick-ov';
+
+  const thumbs=sorted.map(p=>`
+    <div id="cpt-${p.id}" onclick="comparePickTap(${p.id})"
+      style="cursor:pointer;border-radius:8px;overflow:hidden;position:relative;border:2px solid transparent;transition:border-color .15s;aspect-ratio:1">
+      <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);padding:3px 5px;font-size:9px;font-family:Cinzel,serif;color:#fff;text-align:center">${p.ci}<br><span style="font-size:8px;opacity:.8;font-family:DM Sans,sans-serif">${p.date}</span></div>
+      <div id="cpt-badge-${p.id}" style="display:none;position:absolute;top:4px;right:4px;background:var(--accent);color:var(--bg);border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;font-family:Cinzel,serif"></div>
+    </div>`).join('');
+
+  el.innerHTML=`<div class="sheet" style="max-height:85vh">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:4px">Compare Photos</div>
+    <div style="font-size:11px;color:var(--text4);margin-bottom:12px" id="compare-instr">Tap to select your <strong style="color:var(--text2)">first</strong> photo (Before)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;overflow-y:auto;max-height:52vh;padding:2px">${thumbs}</div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn-ghost" id="compare-cancel-btn" style="flex:0 0 80px">Cancel</button>
+      <button class="btn-gold" id="compare-go-btn" style="flex:1" disabled>Compare</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('compare-cancel-btn').onclick=()=>el.remove();
+  document.getElementById('compare-go-btn').onclick=()=>{
+    if(compareA&&compareB){el.remove();openCompareViewer();}
+  };
+}
+
+function comparePickTap(id){
+  const photo=photos.find(p=>p.id===id);if(!photo)return;
+  if(compareA&&compareA.id===id){
+    // deselect A
+    compareA=null;
+    updateComparePickUI();return;
+  }
+  if(compareB&&compareB.id===id){
+    compareB=null;
+    updateComparePickUI();return;
+  }
+  if(!compareA){compareA=photo;}
+  else if(!compareB&&id!==compareA.id){compareB=photo;}
+  updateComparePickUI();
+}
+
+function updateComparePickUI(){
+  const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
+  sorted.forEach(p=>{
+    const el=document.getElementById(`cpt-${p.id}`);
+    const badge=document.getElementById(`cpt-badge-${p.id}`);
+    if(!el)return;
+    const isA=compareA&&compareA.id===p.id;
+    const isB=compareB&&compareB.id===p.id;
+    el.style.borderColor=isA?'var(--accent)':isB?'#22a85a':'transparent';
+    if(badge){
+      if(isA){badge.style.display='flex';badge.textContent='A';}
+      else if(isB){badge.style.display='flex';badge.textContent='B';}
+      else badge.style.display='none';
+    }
+  });
+  const instr=document.getElementById('compare-instr');
+  const goBtn=document.getElementById('compare-go-btn');
+  if(!compareA&&!compareB&&instr)instr.innerHTML='Tap to select your <strong style="color:var(--text2)">first</strong> photo (Before)';
+  else if(compareA&&!compareB&&instr)instr.innerHTML='Now select your <strong style="color:var(--text2)">second</strong> photo (After)';
+  else if(compareA&&compareB&&instr)instr.innerHTML='Ready to compare — tap <strong style="color:var(--text2)">Compare</strong>';
+  if(goBtn)goBtn.disabled=!(compareA&&compareB);
+}
+
+function openCompareViewer(){
+  const ex=document.getElementById('compare-view-ov');if(ex)ex.remove();
+  let a=compareA,b=compareB;
+  // Sort so older = left by default
+  if(a.date>b.date){const tmp=a;a=b;b=tmp;}
+
+  function buildViewer(pA,pB){
+    const el=document.getElementById('compare-view-ov');
+    if(!el)return;
+    const diffDays=Math.abs(Math.round((new Date(pB.date)-new Date(pA.date))/86400000));
+    const diffMonths=Math.round(diffDays/30.4);
+    const span=diffMonths>=2?`${diffMonths} months apart`:diffDays===0?'Same day':`${diffDays} days apart`;
+    const ciA=parseInt(pA.ci.replace('CI-',''));
+    const ciB=parseInt(pB.ci.replace('CI-',''));
+    const ciChange=ciB-ciA;
+    const ciNote=ciChange>0?`<span style="color:#22a85a;font-weight:600">+${ciChange} CI level${ciChange>1?'s':''}</span>`:ciChange<0?`<span style="color:#c0392b">${ciChange} CI</span>`:`<span style="color:var(--text4)">Same CI</span>`;
+
+    el.querySelector('.compare-inner').innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 4px">
+        <div style="font-family:Cinzel,serif;font-size:13px;color:var(--accent)">Progress Comparison</div>
+        <button onclick="document.getElementById('compare-view-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 12px;color:var(--text3);font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif">Close</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="background:var(--bg-stat);border-radius:10px;border:2px solid var(--acc30);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:140px">
+            <img src="${pA.url}" style="width:100%;height:auto;max-height:200px;object-fit:contain;display:block" alt="${pA.ci}">
+          </div>
+          <div style="text-align:center;margin-top:5px">
+            <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent)">${pA.ci}</div>
+            <div style="font-size:10px;color:var(--text4)">${pA.date}</div>
+            ${pA.note?`<div style="font-size:9px;color:var(--text5);font-style:italic;margin-top:2px">${pA.note.slice(0,30)}</div>`:''}
+          </div>
+        </div>
+        <div>
+          <div style="background:var(--bg-stat);border-radius:10px;border:2px solid var(--green-border,rgba(34,168,90,.4));overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:140px">
+            <img src="${pB.url}" style="width:100%;height:auto;max-height:200px;object-fit:contain;display:block" alt="${pB.ci}">
+          </div>
+          <div style="text-align:center;margin-top:5px">
+            <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent)">${pB.ci}</div>
+            <div style="font-size:10px;color:var(--text4)">${pB.date}</div>
+            ${pB.note?`<div style="font-size:9px;color:var(--text5);font-style:italic;margin-top:2px">${pB.note.slice(0,30)}</div>`:''}
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-around;text-align:center;margin-bottom:12px">
+        <div><div style="font-size:11px;color:var(--text4)">Time span</div><div style="font-size:13px;font-weight:600;color:var(--text1);margin-top:2px">${span}</div></div>
+        <div style="width:1px;background:var(--stat-border)"></div>
+        <div><div style="font-size:11px;color:var(--text4)">CI change</div><div style="font-size:13px;font-weight:600;margin-top:2px">${ciNote}</div></div>
+      </div>
+
+      <button onclick="swapCompare()" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px;color:var(--text3);font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif">⇄ Swap Before / After</button>`;
+  }
+
+  const wrapper=document.createElement('div');
+  wrapper.id='compare-view-ov';
+  wrapper.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;align-items:flex-end;justify-content:center;max-width:480px;margin:0 auto;';
+  wrapper.innerHTML=`<div class="compare-inner" style="background:var(--bg-sheet);border:1px solid var(--card-border);border-radius:18px 18px 0 0;padding:18px 14px 28px;width:100%;max-height:92vh;overflow-y:auto"></div>`;
+  document.getElementById('root').appendChild(wrapper);
+  buildViewer(a,b);
+
+  window._compareA=a;window._compareB=b;
+  window.swapCompare=()=>{
+    const tmp=window._compareA;window._compareA=window._compareB;window._compareB=tmp;
+    buildViewer(window._compareA,window._compareB);
+  };
+}
+
+// ── REPORTS ────────────────────────────────────────────────────────────────────
+function renderReports(){
+  const wDays=thisWeekDays(),wMins=wDays.map(d=>logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0));
+  const maxM=Math.max(...wMins,1);
+  const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*88)),isT=wDays[i]===today();
+    return`<div class="bar-col"><div class="bar-val">${m>0?fmtMin(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
+  }).join('');
+  const catTotals=CATS.filter(c=>c.id!=='custom').map(c=>({...c,total:logs.filter(l=>l.cat===c.id).reduce((a,l)=>a+l.dur,0)}));
+  const totM=catTotals.reduce((a,c)=>a+c.total,0)||1;
+  const catBars=catTotals.map(c=>{const p=Math.round((c.total/totM)*100);
+    return`<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--text2)">${c.icon} ${c.label}</span><span style="color:${c.color}">${fmtMin(c.total)} (${p}%)</span></div>
+      <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
+    </div>`;}).join('');
+  const cal35=[];for(let i=34;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);cal35.push(d.toISOString().split('T')[0]);}
+  const activeDays=new Set(logs.map(l=>l.date));
+  const goalDaysSet=new Set();
+  cal35.forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
+  const calDots=cal35.map(d=>`<div class="cal-dot${goalDaysSet.has(d)?' goal':activeDays.has(d)?' on':''}${d===today()?' now':''}"></div>`).join('');
+  const weekTotal=wMins.reduce((a,m)=>a+m,0);
+  const monthTotal=logs.filter(l=>l.date.slice(0,7)===today().slice(0,7)).reduce((a,l)=>a+l.dur,0);
+  const histHtml=logs.length?logs.slice(0,40).map(l=>{const cat=catFor(l.cat);return`
+    <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;padding:10px;margin-bottom:7px">
+      <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.method}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">${l.date} · ${fmtMin(l.dur)}${l.notes?' · '+l.notes.slice(0,45):''}</div>
+      </div>
+      <button class="del-btn" data-id="${l.id}" style="flex-shrink:0">✕</button>
+    </div>`}).join(''):`<div class="empty">No sessions logged yet.</div>`;
+
+  // ── CI PROGRESSION CHART ──
+  const ciChart=buildCIChart();
+
+  return`<div class="page-title">Reports</div>
+  <div class="page-sub">Your restoration journey in numbers.</div>
+  <div class="sg2">
+    <div class="stat"><div class="sv" style="font-size:15px">${fmtMin(weekTotal)}</div><div class="sl">This Week</div></div>
+    <div class="stat"><div class="sv" style="font-size:15px">${fmtMin(monthTotal)}</div><div class="sl">This Month</div></div>
+    <div class="stat"><div class="sv" style="font-size:15px">${(char.minutes/60).toFixed(1)}h</div><div class="sl">All Time</div></div>
+    <div class="stat"><div class="sv" style="font-size:15px;color:#F59E0B">${char.streak}</div><div class="sl">Best Streak</div></div>
+  </div>
+  <div class="sec-title">CI Progression</div>
+  <div class="card" style="padding:14px 10px 10px">${ciChart}</div>
+  <div class="sec-title">This Week</div>
+  <div class="card"><div class="bar-wrap">${bars}</div></div>
+  <div class="sec-title">Activity Calendar (35 days)</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text5);margin-bottom:4px"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+    <div class="cal-grid">${calDots}</div>
+    <div style="display:flex;gap:10px;margin-top:7px;font-size:9px;color:var(--text4);flex-wrap:wrap">
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--acc45);vertical-align:middle;margin-right:3px"></span>Active</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(34,168,90,.55);vertical-align:middle;margin-right:3px"></span>Goal met</span>
+    </div>
+  </div>
+  <div class="sec-title">Method Breakdown</div>
+  <div class="card">${catBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions yet.</div>`}</div>
+  <div class="sec-title">Export Data</div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between">
+    <div><div style="font-size:13px;font-weight:600;color:var(--text1)">Download Session Log</div>
+    <div style="font-size:10px;color:var(--text4);margin-top:2px">${logs.length} sessions · CSV format</div></div>
+    <button class="btn-outline" id="export-btn">📊 Export CSV</button>
+  </div>
+  <div class="sec-title">Session History</div>${histHtml}`;
+}
+
+// ── CI PROGRESSION CHART ───────────────────────────────────────────────────────
+function buildCIChart(){
+  const history=char.ciHistory||[];
+  const currentCI=char.ciLevel||0;
+
+  // Build point list — deduplicate same-day entries, keep latest per day
+  // Include current CI as the final point at today
+  const raw=[...history];
+  // Always anchor the last known point to today's date if current CI set
+  if(currentCI>0){
+    // Add today as the current level if not already recorded today
+    const td=today();
+    if(!raw.length||raw[raw.length-1]?.date!==td){
+      raw.push({ci:currentCI,date:td});
+    }
+  }
+
+  if(raw.length<2){
+    return`<div style="text-align:center;padding:20px 10px;color:var(--text5);font-size:11px;line-height:2">
+      Update your CI level at least twice to see your progression chart.<br>
+      <span style="font-size:10px">Go to Journey → Update to set your current CI.</span>
+    </div>`;
+  }
+
+  // Sort by date
+  const pts=raw.sort((a,b)=>a.date.localeCompare(b.date));
+
+  // Chart dimensions
+  const W=310,H=120,padL=28,padR=10,padT=10,padB=22;
+  const chartW=W-padL-padR,chartH=H-padT-padB;
+
+  // X scale — date range
+  const dates=pts.map(p=>new Date(p.date+'T12:00:00'));
+  const minT=dates[0].getTime(),maxT=dates[dates.length-1].getTime();
+  const xRange=maxT-minT||1;
+  const xOf=t=>padL+((t-minT)/xRange)*chartW;
+
+  // Y scale — CI 0–10
+  const yOf=ci=>padT+chartH-((ci/10)*chartH);
+
+  // Build stepped path (horizontal then vertical — staircase)
+  let pathD='';
+  for(let i=0;i<pts.length;i++){
+    const x=xOf(dates[i].getTime());
+    const y=yOf(pts[i].ci);
+    if(i===0){pathD+=`M${x.toFixed(1)},${y.toFixed(1)}`;}
+    else{
+      // Step: go horizontal first at prev Y, then vertical to new Y
+      const prevY=yOf(pts[i-1].ci);
+      pathD+=` H${x.toFixed(1)} V${y.toFixed(1)}`;
+    }
+  }
+  // Extend to right edge at current level
+  const lastX=xOf(dates[dates.length-1].getTime());
+  const lastY=yOf(pts[pts.length-1].ci);
+
+  // Area fill path
+  const areaD=pathD+` H${(padL+chartW).toFixed(1)} V${(padT+chartH).toFixed(1)} H${padL.toFixed(1)} Z`;
+
+  // Y axis labels — 0, 2, 4, 6, 8, 10
+  const yLabels=[0,2,4,6,8,10].map(v=>{
+    const y=yOf(v);
+    return`<text x="${(padL-5).toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="7" fill="var(--text5)" text-anchor="end" font-family="DM Sans,sans-serif">${v}</text>
+    <line x1="${padL}" y1="${y.toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--stat-border)" stroke-width="0.5"/>`;
+  }).join('');
+
+  // X axis date labels — first and last
+  const fmtDateShort=d=>{const dt=new Date(d+'T12:00:00');return`${dt.toLocaleString('default',{month:'short'})} '${String(dt.getFullYear()).slice(2)}`;};
+  const xLabels=`
+    <text x="${padL}" y="${H-4}" font-size="7" fill="var(--text5)" text-anchor="start" font-family="DM Sans,sans-serif">${fmtDateShort(pts[0].date)}</text>
+    <text x="${(padL+chartW).toFixed(1)}" y="${H-4}" font-size="7" fill="var(--text5)" text-anchor="end" font-family="DM Sans,sans-serif">${fmtDateShort(pts[pts.length-1].date)}</text>`;
+
+  // Data point dots + tooltips
+  const dots=pts.map((p,i)=>{
+    const x=xOf(dates[i].getTime());
+    const y=yOf(p.ci);
+    const isLast=i===pts.length-1;
+    return`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isLast?4:3}" fill="${isLast?'var(--accent)':'var(--bg-card)'}" stroke="var(--accent)" stroke-width="1.5"/>
+    ${isLast?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="var(--accent)" opacity="0.15"/>`:''}
+    <title>${p.date}: CI-${p.ci}</title>`;
+  }).join('');
+
+  // Current CI callout label at last point
+  const callout=`<text x="${(Math.min(lastX+6,padL+chartW-18)).toFixed(1)}" y="${(lastY-6).toFixed(1)}" font-size="9" font-weight="700" fill="var(--accent)" font-family="Cinzel,serif">CI-${pts[pts.length-1].ci}</text>`;
+
+  const totalDays=Math.round(xRange/86400000);
+  const spanLabel=totalDays<60?`${totalDays}d`:totalDays<365?`${Math.round(totalDays/30.4)}mo`:`${(totalDays/365).toFixed(1)}yr`;
+
+  return`
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;padding:0 4px">
+    <div style="font-size:11px;font-weight:600;color:var(--text2)">CI-0 → CI-${pts[pts.length-1].ci}</div>
+    <div style="font-size:10px;color:var(--text4)">${spanLabel} tracked</div>
+  </div>
+  <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible">
+    <defs>
+      <linearGradient id="ciAreaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    ${yLabels}
+    <path d="${areaD}" fill="url(#ciAreaGrad)"/>
+    <path d="${pathD}" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+    ${callout}
+    ${xLabels}
+  </svg>`;
+}
+
+// ── MILESTONES ─────────────────────────────────────────────────────────────────
+function renderAch(){
+  const unlocked=char.achievements.length;
+  const sorted=[...ACHS].sort((a,b)=>{
+    const ua=char.achievements.includes(a.id),ub=char.achievements.includes(b.id);
+    if(ua&&!ub)return -1;if(!ua&&ub)return 1;return 0;
+  });
+  const cards=sorted.map(a=>{const u=char.achievements.includes(a.id);
+    return`<div class="ach-card ${u?'unlocked':'locked'}">
+      <div style="font-size:24px;margin-bottom:5px">${a.icon}</div>
+      <div style="font-size:11px;font-weight:600;color:${u?'var(--accent)':'var(--text2)'}">${a.title}</div>
+      <div style="font-size:9px;color:${u?'var(--text4)':'var(--text3)'};margin-top:2px">${a.desc}</div>
+    </div>`;}).join('');
+  return`<div class="page-title">Milestones</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <div style="font-size:11px;color:var(--text4)">${unlocked} of ${ACHS.length} unlocked</div>
+    <div style="flex:1;height:5px;background:var(--bg-stat);border-radius:3px;overflow:hidden"><div style="height:100%;background:var(--accent);width:${Math.round(unlocked/ACHS.length*100)}%;border-radius:3px;transition:width .6s"></div></div>
+  </div>
+  <div class="ach-grid">${cards}</div>`;
+}
+
+// ── PROFILE SCREEN ─────────────────────────────────────────────────────────────
+function renderProfileScreen(){
+  const chips=THEMES.map(t=>`<div class="theme-chip${currentTheme===t.id?' sel':''}" data-tid="${t.id}" onclick="selectTheme('${t.id}')">
+    <div class="theme-swatch" style="background:${t.bg}">
+      <div style="display:flex;gap:3px"><div class="tdot" style="background:${t.accent}"></div><div class="tdot" style="background:${t.mid}"></div><div class="tdot" style="background:${t.text}"></div></div>
+      <div class="theme-lbl" style="color:${t.text}">${t.name}</div>
+    </div>
+  </div>`).join('');
+  document.getElementById('root').innerHTML=`<div class="pscreen">
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK</div>
+      <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
+    </div>
+    ${profiles.map(p=>{
+      const pChar=S.get(`rst-${p.id}-char`)||{};
+      const sessCount=pChar.sessions||0;
+      const ciLv=pChar.ciLevel||0;
+      const isActive=p.id===currentPid;
+      return`<div class="pcard${isActive?' active-p':''}" data-pid="${p.id}" style="flex-direction:column;align-items:stretch;gap:0;cursor:default">
+        <div style="display:flex;align-items:center;gap:13px;cursor:${isActive?'default':'pointer'}" onclick="${isActive?'':'switchProfile(\''+p.id+'\')'}">
+          <div class="pavatar">${p.name.charAt(0).toUpperCase()}</div>
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:14px;color:var(--text1)">${p.name}</div>
+            <div style="font-size:10px;color:var(--text4);margin-top:2px">${LEVELS[ciLv].ci} · ${sessCount} session${sessCount!==1?'s':''} · Since ${p.createdAt}</div>
+          </div>
+          ${!isActive?`<span style="font-size:10px;color:var(--text5)">Switch</span>`:''}
+        </div>
+        ${isActive?`<div style="display:flex;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--stat-border)">
+          <button onclick="showRenameInline('${p.id}')" style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✏ Rename</button>
+          ${profiles.length>1?`<button onclick="confirmDeleteProfile('${p.id}','${p.name}')" style="flex:1;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:7px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">✕ Delete Profile</button>`:''}
+        </div>
+        <div id="rename-inline-${p.id}" style="display:none;margin-top:8px">
+          <div style="display:flex;gap:7px">
+            <input id="rename-val-${p.id}" class="gold-inp" style="flex:1;margin:0;font-size:13px;padding:8px 10px" maxlength="24" placeholder="New name..." value="${p.name}">
+            <button onclick="saveRenameInline('${p.id}')" style="background:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif">Save</button>
+            <button onclick="document.getElementById('rename-inline-${p.id}').style.display='none'" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text4);cursor:pointer;font-family:DM Sans,sans-serif">✕</button>
+          </div>
+        </div>`:''}
+      </div>`;
+    }).join('')}
+    <div style="width:100%;margin-bottom:6px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Appearance</div>
+      <div class="theme-row">${chips}</div>
+    </div>
+    <div class="divider">── New Profile ──</div>
+    <input class="gold-inp" id="new-name" placeholder="Enter your name..." maxlength="24">
+    <button class="btn-gold" id="create-btn">Create Profile</button>
+    ${currentPid?`<button id="cancel-p" style="background:none;border:none;color:var(--text5);font-size:12px;margin-top:14px;cursor:pointer;font-family:'DM Sans',sans-serif;display:block;width:100%;text-align:center">Cancel</button>`:''}
+  </div>`;
+  document.querySelectorAll('.pcard[data-pid]').forEach(el=>{
+    if(el.dataset.pid!==currentPid)el.onclick=()=>switchProfile(el.dataset.pid);
+  });
+  document.getElementById('create-btn').onclick=()=>{const n=document.getElementById('new-name').value.trim();if(n)createProfile(n);};
+  document.getElementById('new-name').onkeydown=e=>{if(e.key==='Enter'){const n=e.target.value.trim();if(n)createProfile(n);}};
+  document.getElementById('cancel-p')?.addEventListener('click',()=>{showProfileScreen=false;render();});
+}
+
+// ── CI SHEET ───────────────────────────────────────────────────────────────────
+function mountCISheet(){
+  const ex=document.getElementById('ci-ov');if(ex)ex.remove();
+  const ci=char.ciLevel||0;
+  const el=document.createElement('div');el.className='overlay';el.id='ci-ov';
+  el.innerHTML=`<div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:4px">Update CI Level</div>
+    <div style="font-size:11px;color:var(--text4);margin-bottom:14px">Assess your current coverage and select your CI level. Be honest — this is your personal record, and accuracy helps more than optimism.</div>
+    <div class="ci-select-grid">
+      ${LEVELS.map((l,i)=>`<div class="ci-sel-btn${ci===i?' active':''}" onclick="setCILevel(${i})">${l.ci}</div>`).join('')}
+    </div>
+    <div style="margin-top:10px;padding:10px;background:var(--bg-stat);border-radius:8px;font-size:10px;color:var(--text4);line-height:1.7">
+      <strong style="color:var(--text3)">CI levels are a community standard, not a medical measurement.</strong> They're a helpful way to track general progress. When in doubt, round down — you'll feel better when you advance than if you set expectations too high.
+    </div>
+    <button class="btn-ghost" id="ci-cancel" style="margin-top:12px;width:100%">Cancel</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('ci-cancel').onclick=()=>{showCISheet=false;render();};
+}
+
+// ── SESSION SHEET ──────────────────────────────────────────────────────────────
+function mountSheet(){
+  const ex=document.getElementById('sov');if(ex)ex.remove();
+  const customMethods=char.customMethods||[];
+  const allCats=CATS.map(c=>c.id==='custom'?{...c,methods:customMethods}:c);
+  const cat=allCats.find(c=>c.id===sheetCat);
+  const catPills=allCats.map(c=>`<div class="mcat-pill${sheetCat===c.id?' active':''}"
+    style="${sheetCat===c.id?`border-color:${c.color};color:${c.color};background:${c.color}14`:''}"
+    onclick="sheetCat='${c.id}';sheetMethod='';refreshSheet()">
+    ${c.icon} ${c.label}
+  </div>`).join('');
+  const methPills=cat?cat.methods.map(m=>`<div class="meth-pill${sheetMethod===m?' active':''}"
+    style="${sheetMethod===m&&cat?`border-color:${cat.color};background:${cat.color}14;color:${cat.color}`:''}"
+    onclick="sheetMethod=this.dataset.m;refreshSheet()" data-m="${m.replace(/"/g,'&quot;')}">
+    ${m}${cat.id==='custom'?`<span onclick="event.stopPropagation();deleteCustomMethod(this.closest('[data-m]').dataset.m)" style="opacity:.5;font-size:10px;cursor:pointer;margin-left:2px">✕</span>`:''}
+  </div>`).join(''):'';
+  const customForm=sheetCat==='custom'?`
+    <div style="border-top:1px solid var(--stat-border);margin-top:10px;padding-top:10px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:7px">✦ Create a custom method</div>
+      <div style="display:flex;gap:7px;margin-bottom:7px">
+        <input class="gold-inp" id="cust-inp" placeholder="e.g. My Modified Squeeze..." style="margin:0;flex:1;font-size:12px;padding:7px 10px">
+        <button class="btn-outline" id="add-cust-btn" style="white-space:nowrap;padding:7px 12px">＋ Add</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);cursor:pointer">
+        <input type="checkbox" id="save-cust-chk" checked style="accent-color:var(--accent);cursor:pointer">
+        Save to profile for reuse
+      </label>
+    </div>`:'';
+  const isTimer=logMode==='timer';
+  const canGo=!!(sheetMethod&&sheetCat);
+  const el=document.createElement('div');el.className='overlay';el.id='sov';
+  el.innerHTML=`<div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:12px">New Session</div>
+    <div class="mode-row">
+      <div class="mode-pill${logMode==='timer'?' active':''}" id="mp-timer">▶ Timer</div>
+      <div class="mode-pill${logMode==='manual'?' active':''}" id="mp-manual">✏ Log Past Time</div>
+    </div>
+    <div class="sec-title" style="margin-top:4px">Method</div>
+    <div class="mcat-row">${catPills}</div>
+    ${cat?`<div class="meth-grid">${methPills}</div>${customForm}`:`<div style="color:var(--text5);font-size:11px;padding:6px 2px">Pick a category above.</div>`}
+    ${!isTimer?`<div class="sec-title" style="margin-top:10px">How long?</div>
+    <div class="card" style="text-align:center;padding:12px">
+      <div class="time-entry">
+        <div><input class="time-inp" id="m-hrs" type="number" min="0" value="${manualHrs}"><div class="time-lbl">hrs</div></div>
+        <div class="time-sep">:</div>
+        <div><input class="time-inp" id="m-mins" type="number" min="0" max="59" value="${manualMins}"><div class="time-lbl">min</div></div>
+      </div>
+    </div>`:''}
+    <div class="sec-title">Notes (Optional)</div>
+    <textarea id="s-notes" placeholder="Comfort level, observations, feedback...">${sheetNotes}</textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn-ghost" id="s-cancel" style="flex:0 0 76px">Cancel</button>
+      <div style="flex:1">${isTimer
+        ?`<button class="btn-green" id="s-start" style="margin:0" ${!canGo?'disabled':''}>▶ Start Timer</button>`
+        :`<button class="btn-gold" id="s-log" ${!canGo?'disabled':''}>✓ Log Session</button>`
+      }</div>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('mp-timer').onclick=()=>{logMode='timer';refreshSheet();};
+  document.getElementById('mp-manual').onclick=()=>{logMode='manual';refreshSheet();};
+  document.getElementById('s-cancel').onclick=()=>{showSessionSheet=false;render();};
+  document.getElementById('s-notes')?.addEventListener('input',e=>sheetNotes=e.target.value);
+  document.getElementById('m-hrs')?.addEventListener('input',e=>{manualHrs=Math.max(0,+e.target.value||0);});
+  document.getElementById('m-mins')?.addEventListener('input',e=>{manualMins=Math.max(0,Math.min(59,+e.target.value||0));});
+  document.getElementById('s-start')?.addEventListener('click',()=>{sheetNotes=document.getElementById('s-notes')?.value||'';beginSession();});
+  document.getElementById('s-log')?.addEventListener('click',()=>{sheetNotes=document.getElementById('s-notes')?.value||'';logManual(sheetMethod,sheetCat,manualHrs,manualMins,sheetNotes);});
+  document.getElementById('add-cust-btn')?.addEventListener('click',()=>{
+    const inp=document.getElementById('cust-inp');const save=document.getElementById('save-cust-chk')?.checked!==false;
+    if(inp&&inp.value.trim())addCustomMethod(inp.value.trim(),save);
+  });
+  document.getElementById('cust-inp')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const save=document.getElementById('save-cust-chk')?.checked!==false;if(e.target.value.trim())addCustomMethod(e.target.value.trim(),save);}
+  });
+}
+function refreshSheet(){const el=document.getElementById('sov');if(el)el.remove();mountSheet();}
+
+function addCustomMethod(name,save){
+  if(!name.trim())return;sheetMethod=name.trim();
+  if(save&&!(char.customMethods||[]).includes(name.trim())){char.customMethods=[...(char.customMethods||[]),name.trim()];saveChar();}
+  refreshSheet();
+}
+function deleteCustomMethod(name){
+  char.customMethods=(char.customMethods||[]).filter(m=>m!==name);
+  if(sheetMethod===name)sheetMethod='';saveChar();refreshSheet();
+}
+
+// ── STOP SHEET ─────────────────────────────────────────────────────────────────
+function mountStopSheet(){
+  const ex=document.getElementById('stop-ov');if(ex)ex.remove();
+  const mins=Math.max(1,Math.round(timerSecs/60));
+  const method=activeTimer?.method||sheetMethod;
+  const goalHit=todayMin()+mins>=char.dailyGoalMin;
+  const el=document.createElement('div');el.className='overlay';el.id='stop-ov';
+  el.innerHTML=`<div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-family:Cinzel,serif;font-size:12px;color:var(--text4);margin-bottom:6px">Session Complete</div>
+      <div class="big-timer">${fmtHMS(timerSecs)}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">${method}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <div class="xp-tag">Session #${char.sessions+1}</div>
+        ${char.streak>1?`<div class="xp-tag">${char.streak}-day streak 🔥</div>`:''}
+        ${goalHit?`<div class="xp-tag" style="border-color:rgba(34,168,90,.4);color:var(--green)">🎯 Daily goal hit!</div>`:''}
+      </div>
+    </div>
+    <div class="sec-title">Notes (Optional)</div>
+    <textarea id="stop-notes" placeholder="Comfort level, device tension, observations...">${sheetNotes}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-ghost" id="stop-resume">↺ Resume</button>
+      <button class="btn-gold" id="stop-save" style="flex:1">✓ Save Session</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('stop-resume').onclick=resumeSession;
+  document.getElementById('stop-save').onclick=()=>{commitSession(document.getElementById('stop-notes')?.value||'');};
+}
+
+// ── EVENTS ─────────────────────────────────────────────────────────────────────
+function attachEvents(){
+  document.getElementById('start-session-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
+  document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualHrs=0;manualMins=0;render();});
+  document.getElementById('stop-btn')?.addEventListener('click',stopSession);
+  document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
+  document.getElementById('goal-inp')?.addEventListener('change',e=>{char.dailyGoalMin=Math.max(5,Math.min(1440,+e.target.value||120));saveChar();render();});
+  document.getElementById('export-btn')?.addEventListener('click',exportCSV);
+  document.getElementById('update-ci-btn')?.addEventListener('click',()=>{showCISheet=true;render();});
+  document.getElementById('update-ci-btn2')?.addEventListener('click',()=>{showCISheet=true;render();});
+  document.getElementById('coach-cta')?.addEventListener('click',()=>{
+    if(currentCoachCTA==='log'){showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();}
+    else if(currentCoachCTA==='photos'){tab='photos';render();}
+    else if(currentCoachCTA==='journey'){tab='journey';render();}
+  });
+  document.getElementById('open-compare-btn')?.addEventListener('click',()=>openComparePicker());
+  document.getElementById('open-photo-guide-btn')?.addEventListener('click',()=>{
+    photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;mountPhotoGuideSheet();
+  });
+  const pf=document.getElementById('photo-file');
+  if(pf){pf.addEventListener('change',e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      pendingPhotoData=ev.target.result;
+      photoGuideStep=2;
+      const ex=document.getElementById('photo-guide-ov');if(ex)ex.remove();
+      mountPhotoGuideSheet();
+    };
+    reader.readAsDataURL(file);
+    // Reset so same file can be re-selected if retaking
+    pf.value='';
+  });}
+  document.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const id=+b.dataset.id;
+    const entry=logs.find(l=>l.id===id);
+    if(!entry)return;
+    const label=`${entry.method} · ${fmtMin(entry.dur)} · ${entry.date}`;
+    confirmDialog(
+      'Delete this session?',
+      `"${label}" will be permanently removed. Your session count and total time will be adjusted.`,
+      'Delete',
+      ()=>{
+        char.sessions=Math.max(0,char.sessions-1);
+        char.minutes=Math.max(0,char.minutes-entry.dur);
+        logs=logs.filter(l=>l.id!==id);
+        saveChar();saveLogs();render();
+      }
+    );
+  }));
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+loadAll();render();
+</script>
+</body>
+</html>
