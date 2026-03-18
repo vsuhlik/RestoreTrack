@@ -430,8 +430,9 @@ function setCILevel(n){
 }
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
-function addPhoto(ciLevel,dataUrl,note){
-  photos=[{id:Date.now(),ci:ciLevel,date:today(),url:dataUrl,note:note||'',analysis:null},...photos];
+function addPhoto(ciLevel,dataUrl,note,dateStr){
+  const photoDate=dateStr||today();
+  photos=[{id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||'',analysis:null},...photos];
   savePhotos();showToast('📸 Progress photo saved!');tab='photos';render();
 }
 function deletePhoto(id){
@@ -905,27 +906,122 @@ function renderJourney(){
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
 let compareA=null,compareB=null;
+let expandedEras=new Set(); // tracks which era keys are expanded
+
+function groupPhotosIntoEras(sortedPhotos){
+  // Groups photos with ≤30 day gaps into eras, newest first
+  if(!sortedPhotos.length)return[];
+  const eras=[];
+  let current=[sortedPhotos[0]];
+  for(let i=1;i<sortedPhotos.length;i++){
+    const prev=new Date(sortedPhotos[i-1].date+'T12:00:00');
+    const curr=new Date(sortedPhotos[i].date+'T12:00:00');
+    const dayGap=Math.round((prev-curr)/86400000);
+    if(dayGap<=30){
+      current.push(sortedPhotos[i]);
+    } else {
+      eras.push(current);
+      current=[sortedPhotos[i]];
+    }
+  }
+  eras.push(current);
+  return eras;
+}
+
+function eraLabel(photos){
+  // Newest and oldest date in era
+  const dates=photos.map(p=>p.date).sort();
+  const oldest=dates[0],newest=dates[dates.length-1];
+  const oldDt=new Date(oldest+'T12:00:00');
+  const newDt=new Date(newest+'T12:00:00');
+  const fmt=(d,showYear)=>d.toLocaleDateString('en',{month:'short',...(showYear?{year:'numeric'}:{})});
+  if(oldest===newest)return fmt(oldDt,true);
+  if(oldDt.getFullYear()!==newDt.getFullYear())
+    return`${fmt(oldDt,true)} – ${fmt(newDt,true)}`;
+  if(oldDt.getMonth()!==newDt.getMonth())
+    return`${fmt(oldDt,false)} – ${fmt(newDt,true)}`;
+  return fmt(oldDt,true);
+}
+
+function eraKey(era){
+  return era.map(p=>p.id).join('-');
+}
+
+function eraCI(era){
+  // CI range across the era
+  const cis=era.map(p=>parseInt(p.ci.replace('CI-',''))).filter(n=>!isNaN(n));
+  if(!cis.length)return'';
+  const mn=Math.min(...cis),mx=Math.max(...cis);
+  return mn===mx?`CI-${mn}`:`CI-${mn} → CI-${mx}`;
+}
+
+function toggleEra(key){
+  if(expandedEras.has(key))expandedEras.delete(key);
+  else expandedEras.add(key);
+  // Re-render just the photos tab content without full render
+  const c=document.getElementById('content');
+  if(c&&tab==='photos'){c.innerHTML=renderPhotos();attachEvents();}
+}
 
 function renderPhotos(){
   const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
-  const timelineHtml=sorted.length?sorted.map(p=>`
-    <div class="photo-tl">
-      <div class="photo-tl-dot"></div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">
-        <span class="photo-tl-date">${p.date}</span>
-        <span class="photo-tl-ci">${p.ci}</span>
-        ${p.note?`<span style="font-size:10px;color:var(--text4);font-style:italic">· ${p.note.slice(0,32)}</span>`:''}
-      </div>
-      <div style="display:flex;gap:8px">
-        <div class="photo-thumb" style="width:80px;height:80px;flex-shrink:0" onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}))"><img src="${p.url}" alt="${p.ci}"></div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;gap:5px">
-          ${p.note?`<div style="font-size:10px;color:var(--text4);font-style:italic">${p.note}</div>`:''}
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">
-            <button class="del-btn" onclick="confirmDialog('Delete this photo?','This photo will be permanently removed. This cannot be undone.','Delete',()=>deletePhoto(${p.id}))">Delete</button>
+  const eras=groupPhotosIntoEras(sorted);
+
+  const eraHtml=eras.length?eras.map(era=>{
+    const key=eraKey(era);
+    const isExpanded=expandedEras.has(key);
+    const label=eraLabel(era);
+    const ciRange=eraCI(era);
+    const count=era.length;
+
+    // Fan thumbnail — show up to 3 photos stacked/fanned
+    const fanPhotos=era.slice(0,3);
+    const fanHtml=`<div style="position:relative;width:72px;height:72px;flex-shrink:0">
+      ${fanPhotos.map((p,i)=>{
+        const rot=fanPhotos.length===1?0:i===0?-6:i===1?0:6;
+        const tx=fanPhotos.length===1?0:i===0?-4:i===1?0:4;
+        const z=i+1;
+        return`<div style="position:absolute;inset:0;border-radius:8px;overflow:hidden;border:2px solid var(--bg-card);
+          transform:rotate(${rot}deg) translateX(${tx}px);z-index:${z};box-shadow:0 2px 6px rgba(0,0,0,.3)">
+          <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
+        </div>`;
+      }).join('')}
+      ${count>3?`<div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:10">+${count-3}</div>`:''}
+    </div>`;
+
+    // Expanded photo list
+    const expandedHtml=isExpanded?`<div style="margin-top:12px;border-top:1px solid var(--stat-border);padding-top:12px;display:flex;flex-direction:column;gap:12px">
+      ${era.map(p=>`
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div style="width:72px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid var(--stat-border);cursor:pointer" onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}))">
+            <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+              <span style="font-family:Cinzel,serif;font-size:10px;font-weight:700;color:var(--accent)">${p.ci}</span>
+              <span style="font-size:10px;color:var(--text5)">${p.date}</span>
+            </div>
+            ${p.note?`<div style="font-size:10px;color:var(--text4);font-style:italic;line-height:1.5">${p.note}</div>`:''}
+            <button class="del-btn" onclick="confirmDialog('Delete this photo?','This photo will be permanently removed. This cannot be undone.','Delete',()=>deletePhoto(${p.id}))" style="margin-top:6px">Delete</button>
+          </div>
+        </div>`).join('')}
+    </div>`:'' ;
+
+    return`<div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:9px">
+      <div style="display:flex;gap:12px;align-items:center;cursor:pointer" onclick="toggleEra('${key}')">
+        ${fanHtml}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:3px">${label}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${ciRange?`<span style="font-family:Cinzel,serif;font-size:10px;color:var(--accent)">${ciRange}</span>`:''}
+            <span style="font-size:10px;color:var(--text4)">${count} photo${count!==1?'s':''}</span>
           </div>
         </div>
+        <div style="font-size:18px;color:var(--text4);flex-shrink:0;transition:transform .2s;transform:rotate(${isExpanded?'90':'0'}deg)">›</div>
       </div>
-    </div>`).join(''):`<div class="empty">No progress photos yet.<br>Tap the button above to add your first.</div>`;
+      ${expandedHtml}
+    </div>`;
+  }).join(''):`<div class="empty">No progress photos yet.<br>Tap the button above to add your first.</div>`;
 
   const lastPhoto=sorted[0];
   const daysSincePhoto=lastPhoto?Math.round((new Date()-new Date(lastPhoto.date+'T12:00:00'))/86400000):-1;
@@ -949,7 +1045,7 @@ function renderPhotos(){
   <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none">
   <input type="file" id="photo-file-library" accept="image/*" style="display:none">
   <div class="sec-title">Photo Timeline</div>
-  ${timelineHtml}`;
+  ${eraHtml}`;
 }
 
 // ── PHOTO GUIDE SHEET ──────────────────────────────────────────────────────────
@@ -1025,7 +1121,14 @@ function mountPhotoGuideSheet(){
         <div style="font-size:10px;color:var(--text4);line-height:1.7;padding-top:2px">Select the CI level that best matches what you see in your photo. Read the descriptions and pick the closest match.</div>
       </div>
 
-      <div style="max-height:42vh;overflow-y:auto;padding-right:2px;margin-bottom:12px">${ciCards}</div>
+      <div style="max-height:36vh;overflow-y:auto;padding-right:2px;margin-bottom:12px">${ciCards}</div>
+
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Photo date</div>
+        <input type="date" id="photo-date-inp" value="${today()}" max="${today()}"
+          style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif">
+        <div style="font-size:9px;color:var(--text5);margin-top:4px">Change this for existing photos taken in the past.</div>
+      </div>
 
       <input type="text" id="photo-note-inp" placeholder="Optional note — method, how long in, anything relevant..." style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 11px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:12px">
 
@@ -1042,8 +1145,9 @@ function mountPhotoGuideSheet(){
     };
     document.getElementById('photo-confirm-save').onclick=()=>{
       const note=document.getElementById('photo-note-inp')?.value||'';
+      const dateVal=document.getElementById('photo-date-inp')?.value||today();
       if(!pendingPhotoData||!pendingPhotoCI)return;
-      addPhoto(pendingPhotoCI,pendingPhotoData,note);
+      addPhoto(pendingPhotoCI,pendingPhotoData,note,dateVal);
       photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
       el.remove();
     };
