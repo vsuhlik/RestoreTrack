@@ -464,20 +464,106 @@ function confirmDialog(title,msg,confirmLabel,onConfirm){
   // Also close on backdrop tap
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
 }
-function openPhotoViewer(photo){
+function openPhotoViewer(photo,eraPhotos){
+  // eraPhotos = array of photos in this era for swipe navigation
+  // if not provided, just show the single photo
+  const era=eraPhotos||[photo];
+  let idx=era.findIndex(p=>p.id===photo.id);
+  if(idx===-1)idx=0;
+
+  function buildContent(p,i){
+    const hasPrev=i<era.length-1;
+    const hasNext=i>0;
+    const isEditing=false;
+    return`
+      <div style="position:relative;width:100%">
+        <img src="${p.url}" alt="Progress photo" style="max-width:100%;max-height:50vh;border-radius:10px;object-fit:contain;display:block;margin:0 auto">
+        ${era.length>1?`
+          <div style="position:absolute;top:50%;left:-8px;transform:translateY(-50%)">
+            <button onclick="viewerNav(-1)" style="background:rgba(0,0,0,.5);border:none;border-radius:50%;width:32px;height:32px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;${!hasPrev?'opacity:.2;pointer-events:none':''}">‹</button>
+          </div>
+          <div style="position:absolute;top:50%;right:-8px;transform:translateY(-50%)">
+            <button onclick="viewerNav(1)" style="background:rgba(0,0,0,.5);border:none;border-radius:50%;width:32px;height:32px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;${!hasNext?'opacity:.2;pointer-events:none':''}">›</button>
+          </div>`:''}
+      </div>
+      ${era.length>1?`<div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text5)">${era.length-i} of ${era.length}</div>`:''}
+      <div id="viewer-meta" style="margin-top:10px;text-align:center;width:100%">
+        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">${p.ci}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">${p.date}</div>
+        ${p.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${p.note}</div>`:'<div style="font-size:11px;color:var(--text5);margin-top:6px">No caption</div>'}
+      </div>
+      <div id="viewer-edit-area"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;width:100%">
+        <button class="btn-ghost" onclick="document.getElementById('photo-view').remove()" style="flex:1">Close</button>
+        <button class="btn-outline" onclick="openViewerEdit(${p.id})" style="flex:0 0 60px;font-size:12px">✏ Edit</button>
+        <button class="del-btn" onclick="confirmDialog('Delete this photo?','This will permanently remove it from your timeline.','Delete',()=>{deletePhoto(${p.id});document.getElementById('photo-view').remove();})" style="padding:10px 14px;font-size:12px">Delete</button>
+      </div>`;
+  }
+
   const el=document.createElement('div');el.className='photo-viewer';el.id='photo-view';
-  el.innerHTML=`
-    <img src="${photo.url}" alt="Progress photo" style="max-width:100%;max-height:55vh;border-radius:10px;object-fit:contain">
-    <div style="margin-top:12px;text-align:center;width:100%">
-      <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">${photo.ci}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:3px">${photo.date}</div>
-      ${photo.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${photo.note}</div>`:''}
-    </div>
-    <div style="display:flex;gap:10px;margin-top:16px;width:100%">
-      <button class="btn-ghost" onclick="document.getElementById('photo-view').remove()" style="flex:1">Close</button>
-      <button class="del-btn" onclick="confirmDialog('Delete this photo?','This photo will be permanently removed from your timeline. This cannot be undone.','Delete',()=>{deletePhoto(${photo.id});document.getElementById('photo-view').remove();})" style="padding:10px 18px;font-size:13px">Delete</button>
-    </div>`;
+  el.innerHTML=buildContent(era[idx],idx);
   document.getElementById('root').appendChild(el);
+
+  // Swipe touch handling
+  let touchStartX=0;
+  el.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+  el.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    if(Math.abs(dx)>50){dx<0?viewerNav(1):viewerNav(-1);}
+  },{passive:true});
+
+  // Nav function scoped to this viewer instance
+  window.viewerNav=(dir)=>{
+    const newIdx=idx-dir; // dir=1 means right/newer, dir=-1 means left/older
+    if(newIdx<0||newIdx>=era.length)return;
+    idx=newIdx;
+    el.innerHTML=buildContent(era[idx],idx);
+    // Re-attach touch
+    el.removeEventListener('touchstart',()=>{});
+    el.removeEventListener('touchend',()=>{});
+    el.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+    el.addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-touchStartX;
+      if(Math.abs(dx)>50){dx<0?viewerNav(1):viewerNav(-1);}
+    },{passive:true});
+  };
+
+  // Edit function
+  window.openViewerEdit=(photoId)=>{
+    const p=photos.find(x=>x.id===photoId);if(!p)return;
+    const editArea=document.getElementById('viewer-edit-area');
+    if(!editArea)return;
+    editArea.innerHTML=`
+      <div style="margin-top:12px;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:10px;padding:12px;width:100%">
+        <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Date</div>
+        <input type="date" id="edit-photo-date" value="${p.date}" max="${today()}"
+          style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:7px;padding:7px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px">
+        <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Caption</div>
+        <input type="text" id="edit-photo-note" value="${p.note||''}" placeholder="Add a caption..."
+          style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:7px 10px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px">
+        <div style="display:flex;gap:7px">
+          <button class="btn-ghost" onclick="document.getElementById('viewer-edit-area').innerHTML=''" style="flex:0 0 70px;padding:8px">Cancel</button>
+          <button class="btn-gold" onclick="saveViewerEdit(${photoId})" style="flex:1;padding:8px">Save</button>
+        </div>
+      </div>`;
+    document.getElementById('edit-photo-note').focus();
+  };
+
+  window.saveViewerEdit=(photoId)=>{
+    const dateVal=document.getElementById('edit-photo-date')?.value||'';
+    const noteVal=document.getElementById('edit-photo-note')?.value||'';
+    photos=photos.map(p=>p.id===photoId?{...p,date:dateVal||p.date,note:noteVal}:p);
+    savePhotos();
+    // Refresh the viewer content to show updated values
+    el.innerHTML=buildContent(era[idx],idx);
+    showToast('✓ Photo updated');
+    // Re-attach touch
+    el.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+    el.addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].clientX-touchStartX;
+      if(Math.abs(dx)>50){dx<0?viewerNav(1):viewerNav(-1);}
+    },{passive:true});
+  };
 }
 
 // ── EXPORT ─────────────────────────────────────────────────────────────────────
@@ -989,11 +1075,13 @@ function renderPhotos(){
       ${count>3?`<div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:10">+${count-3}</div>`:''}
     </div>`;
 
-    // Expanded photo list
+    // Expanded photo list — build era ID list for swipe context
+    const eraIds=era.map(p=>p.id);
     const expandedHtml=isExpanded?`<div style="margin-top:12px;border-top:1px solid var(--stat-border);padding-top:12px;display:flex;flex-direction:column;gap:12px">
       ${era.map(p=>`
         <div style="display:flex;gap:8px;align-items:flex-start">
-          <div style="width:72px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid var(--stat-border);cursor:pointer" onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}))">
+          <div style="width:72px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid var(--stat-border);cursor:pointer"
+            onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}),[${eraIds.join(',')}].map(id=>photos.find(x=>x.id===id)).filter(Boolean))">
             <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
           </div>
           <div style="flex:1;min-width:0">
