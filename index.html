@@ -622,6 +622,123 @@ function renderNav(){
     </button>`).join('');
 }
 
+// ── WEEKLY SUMMARY ─────────────────────────────────────────────────────────────
+function getMondayOf(dateStr){
+  const d=new Date(dateStr+'T12:00:00');
+  const day=d.getDay(); // 0=Sun
+  const diff=day===0?-6:1-day;
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().split('T')[0];
+}
+function getWeekDates(mondayStr){
+  const dates=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(mondayStr+'T12:00:00');
+    d.setDate(d.getDate()+i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+function buildWeeklySummary(){
+  const td=today();
+  const thisMonday=getMondayOf(td);
+
+  // Only show from Monday onwards — if today IS the start of week
+  // Also show on subsequent days until dismissed
+  const dismissed=char.weeklySummaryDismissed||'';
+  if(dismissed===thisMonday)return''; // dismissed this week
+
+  // Previous week = Monday before thisMonday
+  const prevMonday=new Date(thisMonday+'T12:00:00');
+  prevMonday.setDate(prevMonday.getDate()-7);
+  const prevMondayStr=prevMonday.toISOString().split('T')[0];
+  const prevWeekDates=getWeekDates(prevMondayStr);
+
+  // Only show if prev week has any data at all, or if it's been at least a week since first log
+  const prevWeekLogs=logs.filter(l=>prevWeekDates.includes(l.date));
+  if(prevWeekLogs.length===0)return'';
+
+  // Week before that for comparison
+  const prevPrevMonday=new Date(prevMondayStr+'T12:00:00');
+  prevPrevMonday.setDate(prevPrevMonday.getDate()-7);
+  const prevPrevDates=getWeekDates(prevPrevMonday.toISOString().split('T')[0]);
+  const prevPrevLogs=logs.filter(l=>prevPrevDates.includes(l.date));
+
+  // Calc prev week stats
+  const sessions=prevWeekLogs.length;
+  const totalMins=prevWeekLogs.reduce((a,l)=>a+l.dur,0);
+  const activeDays=new Set(prevWeekLogs.map(l=>l.date)).size;
+  const goalDays=prevWeekDates.filter(d=>
+    logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120)
+  ).length;
+
+  // Best day
+  const dayTotals=prevWeekDates.map(d=>({date:d,mins:logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)}));
+  const bestDay=dayTotals.reduce((a,b)=>b.mins>a.mins?b:a,{date:'',mins:0});
+  const bestDayName=bestDay.mins>0?new Date(bestDay.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'}):'';
+
+  // Comparison to week before
+  const prevSessions=prevPrevLogs.length;
+  const prevTotalMins=prevPrevLogs.reduce((a,l)=>a+l.dur,0);
+  let compLine='';
+  if(prevPrevLogs.length===0){
+    compLine='First full week tracked — great start.';
+  } else if(sessions>prevSessions){
+    compLine=`Up from ${prevSessions} session${prevSessions!==1?'s':''} the week before. Keep building.`;
+  } else if(sessions===prevSessions){
+    const timeDiff=totalMins-prevTotalMins;
+    compLine=timeDiff>5?`Same sessions as the previous week but ${fmtMin(timeDiff)} more time.`:
+              timeDiff<-5?`Same sessions as the previous week but ${fmtMin(Math.abs(timeDiff))} less time.`:
+              'Consistent with the previous week.';
+  } else {
+    compLine=`Down from ${prevSessions} session${prevSessions!==1?'s':''} the week before. This week is a new start.`;
+  }
+
+  // Headline — honest, based on actual data
+  let headline='',headlineColor='var(--text1)';
+  if(sessions===0){return'';}
+  else if(sessions>=6){headline='Strong week.';headlineColor='var(--green)';}
+  else if(sessions>=4){headline='Solid week.';headlineColor='var(--accent)';}
+  else if(sessions>=2){headline='Getting there.';headlineColor='var(--accent)';}
+  else{headline='A start is a start.';headlineColor='var(--text2)';}
+
+  // Format the week range label
+  const weekEnd=prevWeekDates[6];
+  const fmtShort=d=>new Date(d+'T12:00:00').toLocaleDateString('en',{month:'short',day:'numeric'});
+  const weekLabel=`${fmtShort(prevMondayStr)} – ${fmtShort(weekEnd)}`;
+
+  return`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:9px;position:relative">
+    <button onclick="dismissWeeklySummary()" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:14px;color:var(--text5);cursor:pointer;padding:2px 6px;line-height:1" title="Dismiss">✕</button>
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Weekly Recap</div>
+    <div style="font-size:9px;color:var(--text5);margin-bottom:10px">${weekLabel}</div>
+    <div style="font-size:20px;font-weight:700;color:${headlineColor};margin-bottom:10px">${headline}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
+        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${sessions}</div>
+        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Session${sessions!==1?'s':''}</div>
+      </div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
+        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${fmtMin(totalMins)}</div>
+        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Total time</div>
+      </div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
+        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${activeDays}<span style="font-size:12px;color:var(--text4)">/7</span></div>
+        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Active days</div>
+      </div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
+        <div style="font-size:18px;font-weight:700;color:${goalDays>0?'var(--green)':'var(--text4)'};line-height:1">${goalDays}<span style="font-size:12px;color:var(--text4)">/7</span></div>
+        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Goal days hit</div>
+      </div>
+    </div>
+    ${bestDayName?`<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Best day: <strong style="color:var(--text2)">${bestDayName}</strong> — ${fmtMin(bestDay.mins)}</div>`:''}
+    <div style="font-size:11px;color:var(--text4);line-height:1.6;border-top:1px solid var(--stat-border);padding-top:8px">${compLine}</div>
+  </div>`;
+}
+function dismissWeeklySummary(){
+  char.weeklySummaryDismissed=getMondayOf(today());
+  saveChar();render();
+}
+
 // ── TODAY ──────────────────────────────────────────────────────────────────────
 function renderToday(){
   const td=today(),tMin=todayMin(),goal=char.dailyGoalMin||120;
@@ -671,6 +788,7 @@ function renderToday(){
         <div style="font-size:10px;color:var(--text4);margin-top:1px">${lastLog.date} · ${fmtMin(lastLog.dur)}</div>
       </div>
     </div>`:'';
+  const weeklySummary=buildWeeklySummary();
   return`
   <div class="coach-card">
     <div style="display:flex;gap:10px;align-items:flex-start">
@@ -682,6 +800,7 @@ function renderToday(){
       </div>
     </div>
   </div>
+  ${weeklySummary}
   <div class="card card-gold">
     <div class="ci-ring-wrap">${ciRingSVG()}</div>
     <div class="ci-set-row">
@@ -822,9 +941,13 @@ function renderPhotos(){
 
   return`
   ${photoNudge}
-  <button class="btn-gold" id="open-photo-guide-btn" style="margin-bottom:8px">📷 Take Progress Photo</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+    <button class="btn-gold" id="open-photo-guide-btn">📷 Take Photo</button>
+    <button class="btn-ghost" id="open-photo-library-btn" style="font-size:13px">🖼 Choose Existing</button>
+  </div>
   ${compareBtn}
   <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none">
+  <input type="file" id="photo-file-library" accept="image/*" style="display:none">
   <div class="sec-title">Photo Timeline</div>
   ${timelineHtml}`;
 }
@@ -869,14 +992,14 @@ function mountPhotoGuideSheet(){
 
       <div style="display:flex;gap:8px">
         <button class="btn-ghost" id="photo-guide-cancel" style="flex:0 0 80px">Cancel</button>
-        <button class="btn-gold" id="photo-guide-shoot" style="flex:1">Ready — Open Camera</button>
+        <button class="btn-gold" id="photo-guide-shoot" style="flex:1">📷 Open Camera</button>
+        <button class="btn-ghost" id="photo-guide-library" style="flex:1">🖼 Library</button>
       </div>
     </div>`;
     document.getElementById('root').appendChild(el);
     document.getElementById('photo-guide-cancel').onclick=()=>{photoGuideStep=1;el.remove();};
-    document.getElementById('photo-guide-shoot').onclick=()=>{
-      document.getElementById('photo-file').click();
-    };
+    document.getElementById('photo-guide-shoot').onclick=()=>{document.getElementById('photo-file').click();};
+    document.getElementById('photo-guide-library').onclick=()=>{document.getElementById('photo-file-library').click();};
 
   } else if(photoGuideStep===2){
     if(!pendingPhotoCI)pendingPhotoCI=LEVELS[char.ciLevel||0].ci;
@@ -1074,13 +1197,26 @@ function renderReports(){
   const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*88)),isT=wDays[i]===today();
     return`<div class="bar-col"><div class="bar-val">${m>0?fmtMin(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
   }).join('');
-  const catTotals=CATS.filter(c=>c.id!=='custom').map(c=>({...c,total:logs.filter(l=>l.cat===c.id).reduce((a,l)=>a+l.dur,0)}));
-  const totM=catTotals.reduce((a,c)=>a+c.total,0)||1;
-  const catBars=catTotals.map(c=>{const p=Math.round((c.total/totM)*100);
+  // Method breakdown — only methods actually used, by name
+  const methodTotals={};
+  logs.forEach(l=>{
+    if(!l.method)return;
+    if(!methodTotals[l.method])methodTotals[l.method]={mins:0,cat:l.cat};
+    methodTotals[l.method].mins+=l.dur;
+  });
+  const usedMethods=Object.entries(methodTotals).sort((a,b)=>b[1].mins-a[1].mins);
+  const totMethodM=usedMethods.reduce((a,[,v])=>a+v.mins,0)||1;
+  const catBars=usedMethods.map(([method,{mins,cat}])=>{
+    const c=catFor(cat);
+    const p=Math.round((mins/totMethodM)*100);
     return`<div style="margin-bottom:9px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--text2)">${c.icon} ${c.label}</span><span style="color:${c.color}">${fmtMin(c.total)} (${p}%)</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${method}</span>
+        <span style="color:${c.color};flex-shrink:0">${fmtMin(mins)} · ${p}%</span>
+      </div>
       <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
-    </div>`;}).join('');
+    </div>`;
+  }).join('');
   const cal35=[];for(let i=34;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);cal35.push(d.toISOString().split('T')[0]);}
   const activeDays=new Set(logs.map(l=>l.date));
   const goalDaysSet=new Set();
@@ -1310,7 +1446,16 @@ function renderProfileScreen(){
     <div class="divider">── New Profile ──</div>
     <input class="gold-inp" id="new-name" placeholder="Enter your name..." maxlength="24">
     <button class="btn-gold" id="create-btn">Create Profile</button>
-    ${currentPid?`<button id="cancel-p" style="background:none;border:none;color:var(--text5);font-size:12px;margin-top:14px;cursor:pointer;font-family:'DM Sans',sans-serif;display:block;width:100%;text-align:center">Cancel</button>`:''}
+    <div class="divider" style="margin-top:6px">── Data Backup ──</div>
+    <div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:14px;width:100%;margin-bottom:6px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Save a backup file of all your data. Import it any time — especially useful after updating the app.</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-outline" id="backup-btn" style="flex:1;padding:10px">⬇ Export Backup</button>
+        <button class="btn-ghost" id="restore-btn" style="flex:1;padding:10px;font-size:12px">⬆ Import Backup</button>
+      </div>
+      <input type="file" id="restore-file" accept=".json" style="display:none">
+    </div>
+    ${currentPid?`<button id="cancel-p" style="background:none;border:none;color:var(--text5);font-size:12px;margin-top:8px;cursor:pointer;font-family:'DM Sans',sans-serif;display:block;width:100%;text-align:center">Cancel</button>`:''}
   </div>`;
   document.querySelectorAll('.pcard[data-pid]').forEach(el=>{
     if(el.dataset.pid!==currentPid)el.onclick=()=>switchProfile(el.dataset.pid);
@@ -1318,6 +1463,68 @@ function renderProfileScreen(){
   document.getElementById('create-btn').onclick=()=>{const n=document.getElementById('new-name').value.trim();if(n)createProfile(n);};
   document.getElementById('new-name').onkeydown=e=>{if(e.key==='Enter'){const n=e.target.value.trim();if(n)createProfile(n);}};
   document.getElementById('cancel-p')?.addEventListener('click',()=>{showProfileScreen=false;render();});
+  document.getElementById('backup-btn')?.addEventListener('click',exportBackup);
+  document.getElementById('restore-btn')?.addEventListener('click',()=>document.getElementById('restore-file').click());
+  document.getElementById('restore-file')?.addEventListener('change',e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{importBackup(ev.target.result);};
+    reader.readAsText(file);
+    e.target.value='';
+  });
+}
+
+// ── BACKUP / RESTORE ───────────────────────────────────────────────────────────
+function exportBackup(){
+  const backup={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    profiles,
+    data:{}
+  };
+  profiles.forEach(p=>{
+    backup.data[p.id]={
+      char:S.get(`rst-${p.id}-char`),
+      logs:S.get(`rst-${p.id}-logs`),
+      photos:S.get(`rst-${p.id}-photos`)
+    };
+  });
+  const json=JSON.stringify(backup,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const dateStr=today().replace(/-/g,'');
+  a.href=url;a.download=`restoretrack-backup-${dateStr}.json`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('✅ Backup saved!');
+}
+function importBackup(jsonText){
+  let backup;
+  try{backup=JSON.parse(jsonText);}
+  catch{showToast('⚠ Invalid backup file');return;}
+  if(!backup.profiles||!backup.data){showToast('⚠ Unrecognised backup format');return;}
+  confirmDialog(
+    'Import this backup?',
+    `This will restore ${backup.profiles.length} profile${backup.profiles.length!==1?'s':''} from ${backup.exportedAt?.slice(0,10)||'unknown date'}. Your current data will be replaced.`,
+    'Import',
+    ()=>{
+      // Write all profile data back to localStorage
+      backup.profiles.forEach(p=>{
+        const d=backup.data[p.id]||{};
+        if(d.char)S.set(`rst-${p.id}-char`,d.char);
+        if(d.logs)S.set(`rst-${p.id}-logs`,d.logs);
+        if(d.photos)S.set(`rst-${p.id}-photos`,d.photos);
+      });
+      S.set('rst-profiles',backup.profiles);
+      // Switch to first profile
+      const firstPid=backup.profiles[0]?.id;
+      if(firstPid)S.set('rst-active-pid',firstPid);
+      showToast('✅ Backup restored!');
+      // Full reload to pick up all new data
+      setTimeout(()=>{loadAll();render();},400);
+    }
+  );
 }
 
 // ── CI SHEET ───────────────────────────────────────────────────────────────────
@@ -1458,8 +1665,6 @@ function mountSheet(){
       </label>
       <div id="manual-duration-preview" style="text-align:center;font-size:13px;color:var(--text3);min-height:20px;margin-top:10px">${calcManualPreview()}</div>
     </div>`:''}
-    <div class="sec-title">Notes (Optional)</div>
-    <textarea id="s-notes" placeholder="Comfort level, observations, feedback...">${sheetNotes}</textarea>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn-ghost" id="s-cancel" style="flex:0 0 76px">Cancel</button>
       <div style="flex:1">${isTimer
@@ -1474,23 +1679,20 @@ function mountSheet(){
   document.getElementById('mp-timer').onclick=()=>{logMode='timer';manualStillActive=false;refreshSheet();};
   document.getElementById('mp-manual').onclick=()=>{logMode='manual';refreshSheet();};
   document.getElementById('s-cancel').onclick=()=>{showSessionSheet=false;render();};
-  document.getElementById('s-notes')?.addEventListener('input',e=>sheetNotes=e.target.value);
   document.getElementById('m-start')?.addEventListener('input',e=>{manualStart=e.target.value;updateManualPreview();});
   document.getElementById('m-end')?.addEventListener('input',e=>{manualEnd=e.target.value;updateManualPreview();});
   document.getElementById('m-still-active')?.addEventListener('change',e=>{
     manualStillActive=e.target.checked;
     refreshSheet();
   });
-  document.getElementById('s-start')?.addEventListener('click',()=>{sheetNotes=document.getElementById('s-notes')?.value||'';beginSession();});
+  document.getElementById('s-start')?.addEventListener('click',()=>{beginSession();});
   document.getElementById('s-start-from')?.addEventListener('click',()=>{
     if(!sheetMethod||!sheetCat||!manualStart)return;
-    sheetNotes=document.getElementById('s-notes')?.value||'';
     beginSessionFrom(manualStart);
   });
   document.getElementById('s-log')?.addEventListener('click',()=>{
-    sheetNotes=document.getElementById('s-notes')?.value||'';
     const mins=calcManualMins();
-    if(mins>0)logManual(sheetMethod,sheetCat,mins,sheetNotes);
+    if(mins>0)logManual(sheetMethod,sheetCat,mins,'');
   });
   document.getElementById('add-cust-btn')?.addEventListener('click',()=>{
     const inp=document.getElementById('cust-inp');const save=document.getElementById('save-cust-chk')?.checked!==false;
@@ -1562,6 +1764,11 @@ function attachEvents(){
   document.getElementById('open-photo-guide-btn')?.addEventListener('click',()=>{
     photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;mountPhotoGuideSheet();
   });
+  document.getElementById('open-photo-library-btn')?.addEventListener('click',()=>{
+    // Skip the tips guide for existing photos — go straight to file picker then tag step
+    photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
+    document.getElementById('photo-file-library').click();
+  });
   const pf=document.getElementById('photo-file');
   if(pf){pf.addEventListener('change',e=>{
     const file=e.target.files[0];if(!file)return;
@@ -1573,8 +1780,20 @@ function attachEvents(){
       mountPhotoGuideSheet();
     };
     reader.readAsDataURL(file);
-    // Reset so same file can be re-selected if retaking
     pf.value='';
+  });}
+  const pfl=document.getElementById('photo-file-library');
+  if(pfl){pfl.addEventListener('change',e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      pendingPhotoData=ev.target.result;
+      photoGuideStep=2;
+      const ex=document.getElementById('photo-guide-ov');if(ex)ex.remove();
+      mountPhotoGuideSheet();
+    };
+    reader.readAsDataURL(file);
+    pfl.value='';
   });}
   document.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{
     e.stopPropagation();
