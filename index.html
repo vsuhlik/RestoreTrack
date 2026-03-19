@@ -256,7 +256,22 @@ const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;re
 const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${r}m`:`${h}h`};
 const today=()=>new Date().toISOString().split('T')[0];
 const todayLogs=()=>logs.filter(l=>l.date===today());
-const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0);
+
+// How many minutes of the currently running session fall within today only
+// Handles sessions that started yesterday or days ago (T-tape / long sessions)
+function liveTimerTodayMins(){
+  if(!activeTimer||!activeTimer.startedAt)return 0;
+  const midnight=new Date();midnight.setHours(0,0,0,0);
+  // Approximate original session start = now minus total elapsed seconds
+  const totalElapsedMs=timerSecs*1000;
+  const sessionStartMs=Date.now()-totalElapsedMs;
+  // Only count time from midnight (or session start if it started today)
+  const countFromMs=Math.max(sessionStartMs,midnight.getTime());
+  const msSinceCount=Date.now()-countFromMs;
+  return Math.floor(msSinceCount/60000);
+}
+
+const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
 const thisWeekDays=()=>{const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;};
 const dayLbl=d=>['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(d+'T12:00:00').getDay()];
 const catFor=id=>CATS.find(c=>c.id===id)||{icon:'?',color:'#888',mult:1,label:'',methods:[]};
@@ -355,13 +370,41 @@ function deleteProfile(pid){
     render();
   }
 }
+let liveTickCount=0;
 function startInterval(){
-  stopInterval();timerInterval=setInterval(()=>{
+  stopInterval();liveTickCount=0;
+  timerInterval=setInterval(()=>{
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
     const el=document.getElementById('mc-run-time');if(el)el.textContent=fmtHMS(timerSecs);
+    const el2=document.getElementById('mc-run-time-2');if(el2)el2.textContent=fmtHMS(timerSecs);
     const si=document.getElementById('sheet-timer');if(si)si.textContent=fmtHMS(timerSecs);
+    // Every 60 seconds — refresh live stats elements without full re-render
+    liveTickCount++;
+    if(liveTickCount%60===0){
+      refreshLiveStats();
+    }
   },1000);
+}
+function refreshLiveStats(){
+  // Update goal bar and today stats inline if on Today tab
+  const tMin=todayMin();
+  const goal=char.dailyGoalMin||120;
+  const goalPct=Math.min(100,Math.round((tMin/goal)*100));
+  // Goal bar fill
+  const fill=document.querySelector('.goal-fill');
+  if(fill){
+    fill.style.width=goalPct+'%';
+    fill.className='goal-fill '+(goalPct>=100?'goal-fill-ok':'goal-fill-warn');
+  }
+  // Goal text
+  const goalTexts=document.querySelectorAll('[data-live="goal-text"]');
+  goalTexts.forEach(el=>{el.textContent=goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go';});
+  const goalDone=document.querySelector('[data-live="goal-done"]');
+  if(goalDone)goalDone.textContent=fmtMin(tMin)+' done';
+  // Today stat tile
+  const todayStat=document.querySelector('[data-live="today-min"]');
+  if(todayStat)todayStat.textContent=fmtMin(tMin);
 }
 function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
 function beginSession(){
@@ -855,7 +898,22 @@ function renderToday(){
       <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px;flex:1">⏹ Save</button>
     </div>
   </div>`:'';
-  const sessHtml=tSess.length?tSess.map(l=>{const cat=catFor(l.cat);return`
+  // Live session card for Today's Sessions list (shows active session alongside completed ones)
+  const liveSessionCard=isRunning?`
+    <div style="display:flex;gap:10px;align-items:flex-start;background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:10px;margin-bottom:7px">
+      <div style="width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${catFor(activeTimer.cat).icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--green)">${activeTimer.method}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">
+          <span class="live-dot" style="margin-right:4px"></span>
+          Running · <span id="mc-run-time-2">${fmtHMS(timerSecs)}</span>
+          ${timerSecs>=86400?` · ${Math.floor(timerSecs/86400)}d ${Math.floor((timerSecs%86400)/3600)}h today: ${fmtMin(liveTimerTodayMins())}`:''}
+        </div>
+      </div>
+    </div>`:'';
+
+  const sessHtml=(liveSessionCard||tSess.length)?
+    liveSessionCard+tSess.map(l=>{const cat=catFor(l.cat);return`
     <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;padding:10px;margin-bottom:7px">
       <div style="width:34px;height:34px;border-radius:8px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${cat.icon}</div>
       <div style="flex:1;min-width:0">
@@ -863,7 +921,8 @@ function renderToday(){
         <div style="font-size:10px;color:var(--text4);margin-top:1px">${fmtMin(l.dur)}${l.notes?' · '+l.notes.slice(0,45):''}</div>
       </div>
       <button class="del-btn" data-id="${l.id}" style="margin-top:2px">✕</button>
-    </div>`}).join(''):`<div class="empty">No sessions today yet.<br>Tap <strong>Start Session</strong> to begin.</div>`;
+    </div>`}).join('')
+    :`<div class="empty">No sessions today yet.<br>Tap <strong>Start Session</strong> to begin.</div>`;
 
   // Last session summary (shown when no active timer and no sessions today)
   const lastLog=logs.find(l=>l.date!==td);
@@ -905,12 +964,12 @@ function renderToday(){
     </div>
     <div class="goal-bar"><div class="goal-fill ${goalPct>=100?'goal-fill-ok':'goal-fill-warn'}" style="width:${goalPct}%"></div></div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-top:2px">
-      <span>${fmtMin(tMin)} done</span>
-      <span>${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go'}</span>
+      <span data-live="goal-done">${fmtMin(tMin)} done</span>
+      <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go'}</span>
     </div>
   </div>
   <div class="sg4">
-    <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(tMin)}</div><div class="sl">Today</div></div>
+    <div class="stat"><div class="sv" style="font-size:13px" data-live="today-min">${fmtMin(tMin)}</div><div class="sl">Today</div></div>
     <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(monthMin)}</div><div class="sl">Month</div></div>
     <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(yearMin)}</div><div class="sl">Year</div></div>
     <div class="stat"><div class="sv" style="font-size:13px;color:#F59E0B">${char.streak}🔥</div><div class="sl">Streak</div></div>
@@ -1384,7 +1443,12 @@ function openCompareViewer(){
 
 // ── REPORTS ────────────────────────────────────────────────────────────────────
 function renderReports(){
-  const wDays=thisWeekDays(),wMins=wDays.map(d=>logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0));
+  const td=today();
+  const liveMins=liveTimerTodayMins();
+  const wDays=thisWeekDays(),wMins=wDays.map(d=>{
+    const logged=logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0);
+    return logged+(d===td?liveMins:0); // add live time to today's bar
+  });
   const maxM=Math.max(...wMins,1);
   const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*88)),isT=wDays[i]===today();
     return`<div class="bar-col"><div class="bar-val">${m>0?fmtMin(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
@@ -1414,8 +1478,8 @@ function renderReports(){
   const goalDaysSet=new Set();
   cal35.forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
   const calDots=cal35.map(d=>`<div class="cal-dot${goalDaysSet.has(d)?' goal':activeDays.has(d)?' on':''}${d===today()?' now':''}"></div>`).join('');
-  const weekTotal=wMins.reduce((a,m)=>a+m,0);
-  const monthTotal=logs.filter(l=>l.date.slice(0,7)===today().slice(0,7)).reduce((a,l)=>a+l.dur,0);
+  const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
+  const monthTotal=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0)+liveMins;
   const histHtml=logs.length?logs.slice(0,40).map(l=>{const cat=catFor(l.cat);return`
     <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;padding:10px;margin-bottom:7px">
       <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
