@@ -256,8 +256,8 @@ const S={
 };
 function loadAll(){
   profiles=S.get('rst-profiles')||[];currentPid=S.get('rst-active-pid');
-  if(currentPid&&profiles.find(p=>p.id===currentPid))loadProfile(currentPid);
-  else if(profiles.length>0){currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);loadProfile(currentPid);}
+  if(currentPid&&profiles.find(p=>p.id===currentPid)){showProfileScreen=false;loadProfile(currentPid);}
+  else if(profiles.length>0){showProfileScreen=false;currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);loadProfile(currentPid);}
   else showProfileScreen=true;
 }
 function loadProfile(pid){
@@ -1785,7 +1785,7 @@ function importBackup(jsonText){
       if(firstPid)S.set('rst-active-pid',firstPid);
       showToast('✅ Backup restored!');
       // Full reload to pick up all new data
-      setTimeout(()=>{loadAll();render();},400);
+      setTimeout(()=>{loadAll();showProfileScreen=false;tab='today';render();},400);
     }
   );
 }
