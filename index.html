@@ -11,7 +11,7 @@
 [data-theme="forest"]{--bg:#0A1409;--bg-card:rgba(11,22,10,.97);--bg-card-gold:linear-gradient(135deg,rgba(14,28,13,.98),rgba(9,18,8,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#060E05;--bg-hdr:linear-gradient(180deg,#142010,#0A1409);--bg-sheet:#0e1c0d;--bg-ps:#0A1409;--hdr-border:rgba(76,175,80,.25);--nav-border:rgba(76,175,80,.15);--card-border:rgba(76,175,80,.12);--card-border-gold:rgba(76,175,80,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#4CAF50;--acc6:rgba(76,175,80,.06);--acc12:rgba(76,175,80,.12);--acc18:rgba(76,175,80,.18);--acc30:rgba(76,175,80,.3);--acc45:rgba(76,175,80,.5);--text1:#D0EDD0;--text2:#7aaa77;--text3:#5a8855;--text4:#4a7048;--text5:#3a583a;--text6:#2a3e2a;--green:#4CAF50;--green-bg:rgba(76,175,80,.06);--green-border:rgba(76,175,80,.3);--scrollbar:#1a2e1a}
 [data-theme="ocean"]{--bg:#050D18;--bg-card:rgba(7,16,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(8,20,42,.98),rgba(5,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#030A12;--bg-hdr:linear-gradient(180deg,#0A1A32,#050D18);--bg-sheet:#081428;--bg-ps:#050D18;--hdr-border:rgba(56,180,212,.25);--nav-border:rgba(56,180,212,.15);--card-border:rgba(56,180,212,.12);--card-border-gold:rgba(56,180,212,.28);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#38B4D4;--acc6:rgba(56,180,212,.06);--acc12:rgba(56,180,212,.12);--acc18:rgba(56,180,212,.18);--acc30:rgba(56,180,212,.3);--acc45:rgba(56,180,212,.5);--text1:#C8E8F5;--text2:#6898AA;--text3:#4a7888;--text4:#3a6272;--text5:#2e5060;--text6:#22404e;--green:#22b4a0;--green-bg:rgba(34,180,160,.06);--green-border:rgba(34,180,160,.3);--scrollbar:#0d2234}
 [data-theme="neon"]{--bg:#07060E;--bg-card:rgba(12,9,22,.97);--bg-card-gold:linear-gradient(135deg,rgba(18,10,32,.98),rgba(10,6,20,.98));--bg-stat:rgba(255,255,255,.025);--bg-nav:#050409;--bg-hdr:linear-gradient(180deg,#10081C,#07060E);--bg-sheet:#0e0a1e;--bg-ps:#07060E;--hdr-border:rgba(220,0,255,.3);--nav-border:rgba(220,0,255,.18);--card-border:rgba(220,0,255,.14);--card-border-gold:rgba(220,0,255,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.06);--accent:#DC00FF;--acc6:rgba(220,0,255,.06);--acc12:rgba(220,0,255,.12);--acc18:rgba(220,0,255,.2);--acc30:rgba(220,0,255,.32);--acc45:rgba(220,0,255,.55);--text1:#F0E5FF;--text2:#9966CC;--text3:#7744AA;--text4:#5a3388;--text5:#442266;--text6:#331144;--green:#aa00ff;--green-bg:rgba(170,0,255,.06);--green-border:rgba(170,0,255,.3);--scrollbar:#1a0e2a}
-[data-theme="neon"] .hdr-title,[data-theme="neon"] .ci-big,[data-theme="neon"] .big-timer{text-shadow:0 0 14px var(--accent),0 0 28px var(--acc18)}
+[data-theme="neon"] .hdr-title,[data-theme="neon"] .big-timer{text-shadow:0 0 14px var(--accent),0 0 28px var(--acc18)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;transition:background .3s}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px}
@@ -39,8 +39,6 @@ body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;mi
 .coach-cta{display:inline-block;margin-top:9px;background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .coach-cta:hover{background:var(--acc18)}
 /* BARS & STATS */
-.xp-bar{height:8px;background:var(--bg-stat);border-radius:4px;overflow:hidden}
-.xp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acc18),var(--accent),var(--acc45));transition:width .8s ease}
 .goal-bar{height:10px;background:var(--bg-stat);border-radius:5px;overflow:hidden;margin:5px 0}
 .goal-fill{height:100%;border-radius:5px;transition:width .6s ease}
 .goal-fill-ok{background:linear-gradient(90deg,#0f5c2e,#22a85a)}
@@ -50,14 +48,7 @@ body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;mi
 .stat{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px 10px}
 .sv{font-size:20px;font-weight:700;color:var(--text1);line-height:1}
 .sl{font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
-/* JOURNEY LADDER */
-.lrow{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--stat-border)}
-.lrow:last-child{border-bottom:none}
-.lcirc{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;font-family:'Cinzel',serif}
-.la{background:var(--acc18);border:1.5px solid var(--accent);color:var(--accent)}
-.ld{background:var(--acc6);border:1px solid var(--acc30);color:var(--text3)}
-.lf{background:var(--bg-stat);border:1px solid var(--stat-border);color:var(--text5)}
-/* CI SELECTOR */
+/* CHARTS */
 .ci-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
 .ci-sel-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:7px 4px;cursor:pointer;text-align:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--text3);transition:all .15s}
 .ci-sel-btn.active{background:var(--acc12);border-color:var(--acc30);color:var(--accent)}
@@ -96,12 +87,9 @@ textarea:focus{border-color:var(--acc30)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:4px 0}
 .cal-dot{aspect-ratio:1;border-radius:3px;background:var(--bg-stat)}
 .cal-dot.on{background:var(--acc45)}
+.cal-dot.rest{background:rgba(100,120,200,.4);border:1px solid rgba(100,120,200,.5)}
 .cal-dot.goal{background:rgba(34,168,90,.55)}
 .cal-dot.now{border:1.5px solid var(--accent)}
-/* CI REFERENCE */
-.ci-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--stat-border);align-items:flex-start}
-.ci-row:last-child{border-bottom:none}
-.ci-badge{background:var(--acc12);border:1px solid var(--acc30);border-radius:5px;padding:2px 6px;font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:var(--accent);width:44px;text-align:center;flex-shrink:0}
 /* ACHIEVEMENTS */
 .ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ach-card{border-radius:10px;padding:12px 9px;text-align:center}
@@ -146,23 +134,8 @@ textarea:focus{border-color:var(--acc30)}
 .page-title{font-family:'Cinzel',serif;font-size:14px;color:var(--accent);margin-bottom:2px}
 .page-sub{font-size:11px;color:var(--text4);margin-bottom:12px}
 .empty{text-align:center;padding:36px 16px;color:var(--text5);font-size:12px;line-height:2}
-.ci-big{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:var(--accent);line-height:1}
-.divider{width:100%;text-align:center;font-size:10px;color:var(--text5);text-transform:uppercase;letter-spacing:1px;margin:10px 0 8px}
-.photo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:9px}
-.photo-thumb{aspect-ratio:1;border-radius:8px;object-fit:cover;width:100%;cursor:pointer;border:1px solid var(--stat-border);background:var(--bg-stat);display:flex;align-items:center;justify-content:center;color:var(--text5);font-size:11px;text-align:center;transition:border-color .2s;overflow:hidden}
-.photo-thumb:hover{border-color:var(--acc30)}
-.photo-thumb img{width:100%;height:100%;object-fit:cover}
 .photo-viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;max-width:480px;margin:0 auto}
-.photo-viewer img{max-width:100%;max-height:70vh;border-radius:10px;object-fit:contain}
-.time-entry{display:flex;align-items:center;gap:8px;justify-content:center;margin:10px 0}
-.time-inp{background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 6px;color:var(--accent);font-size:28px;font-weight:700;font-family:'Cinzel',serif;outline:none;text-align:center;width:72px}
-.time-sep{font-size:28px;font-weight:700;color:var(--text4);font-family:'Cinzel',serif}
-.time-lbl{font-size:10px;color:var(--text4);text-align:center;margin-top:2px}
-/* TIMELINE PHOTO ENTRIES */
-.photo-tl{border-left:2px solid var(--acc18);margin-left:16px;padding-left:16px;margin-bottom:12px;position:relative}
-.photo-tl-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-card);position:absolute;left:-6px;top:4px}
-.photo-tl-date{font-size:10px;color:var(--text4);margin-bottom:5px;font-weight:600}
-.photo-tl-ci{font-family:'Cinzel',serif;font-size:9px;color:var(--accent);font-weight:700}
+.divider{width:100%;text-align:center;font-size:10px;color:var(--text5);text-transform:uppercase;letter-spacing:1px;margin:10px 0 8px}
 </style>
 </head>
 <body>
@@ -187,7 +160,7 @@ const ciDesc=(l)=>l.ci==='CI-0'?'Starting point of restoration. No loose skin pr
   `<span style="color:var(--text3);font-weight:600">Soft:</span> ${l.soft}<br><span style="color:var(--text3);font-weight:600">Hard:</span> ${l.hard}`;
 const CATS=[
   {id:'manual',label:'Manual',icon:'✋',color:'#F59E0B',
-   methods:['MM1 (Manual Method 1)','MM2 (Manual Method 2)','MM3 (Manual Method 3)','MM4 (Manual Method 4)','MM5 (Manual Method 5)','Squeeze-Stretch Method','O-Rings']},
+   methods:['MM1 (Manual Method 1)','MM2 (Manual Method 2)','MM3 (Manual Method 3)','MM4 (Manual Method 4)','MM5 (Manual Method 5)','Squeeze-Stretch Method',"André's Method",'O-Rings']},
   {id:'device',label:'Devices',icon:'⚙',color:'#60A5FA',
    methods:['DTR (Dual Tension Restorer)','TLC Tugger','TLC-X','CAT II Q','HyperRestore','Mantor','Foreskinned','PUD (Penis Uncircumcising Device)','FIT V4','Airforce']},
   {id:'tape',label:'Taping',icon:'📐',color:'#A78BFA',
@@ -199,25 +172,36 @@ const CATS=[
   {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
 ];
 const ACHS=[
-  {id:'first',icon:'🌱',title:'First Step',desc:'Log your first session',check:c=>c.sessions>=1},
-  {id:'s10',icon:'📝',title:'Building Habit',desc:'Log 10 sessions',check:c=>c.sessions>=10},
-  {id:'s50',icon:'💪',title:'Committed',desc:'Log 50 sessions',check:c=>c.sessions>=50},
-  {id:'s100',icon:'🏅',title:'Century',desc:'Log 100 sessions',check:c=>c.sessions>=100},
-  {id:'str3',icon:'🔥',title:'On Fire',desc:'3-day streak',check:c=>c.streak>=3},
-  {id:'str7',icon:'⚡',title:'Week Warrior',desc:'7-day streak',check:c=>c.streak>=7},
-  {id:'str30',icon:'👑',title:'Month Champion',desc:'30-day streak',check:c=>c.streak>=30},
-  {id:'goal5',icon:'🎯',title:'Goal Getter',desc:'Hit daily goal 5 times',check:c=>c.goalDays>=5},
-  {id:'goal20',icon:'💎',title:'Consistent',desc:'Hit daily goal 20 times',check:c=>c.goalDays>=20},
-  {id:'h10',icon:'⏱',title:'Ten Hours',desc:'10 total hours',check:c=>c.minutes>=600},
-  {id:'h50',icon:'⌛',title:'Dedicated',desc:'50 total hours',check:c=>c.minutes>=3000},
-  {id:'h100',icon:'🏆',title:'Century Hours',desc:'100 total hours',check:c=>c.minutes>=6000},
-  {id:'m3',icon:'🔬',title:'Explorer',desc:'Try 3 different methods',check:c=>c.methods.length>=3},
-  {id:'m5',icon:'🧪',title:'Methodical',desc:'Try 5 different methods',check:c=>c.methods.length>=5},
-  {id:'ci1',icon:'✨',title:'First Progress',desc:'Reach CI-1',check:c=>(c.ciLevel||0)>=1},
-  {id:'ci3',icon:'🌿',title:'Advancing',desc:'Reach CI-3',check:c=>(c.ciLevel||0)>=3},
-  {id:'ci5',icon:'⭐',title:'Halfway',desc:'Reach CI-5',check:c=>(c.ciLevel||0)>=5},
-  {id:'ci7',icon:'🔮',title:'Almost There',desc:'Reach CI-7',check:c=>(c.ciLevel||0)>=7},
-  {id:'ci10',icon:'🏆',title:'Restored',desc:'Complete the journey',check:c=>(c.ciLevel||0)>=10}
+  // Session count
+  {id:'first',icon:'🌱',title:'First Session',desc:'Log your very first session',check:c=>c.sessions>=1},
+  {id:'s10',icon:'📝',title:'10 Sessions',desc:'Log 10 sessions',check:c=>c.sessions>=10},
+  {id:'s50',icon:'💪',title:'50 Sessions',desc:'Log 50 sessions',check:c=>c.sessions>=50},
+  {id:'s100',icon:'🏅',title:'100 Sessions',desc:'Log 100 sessions',check:c=>c.sessions>=100},
+  {id:'s365',icon:'📅',title:'365 Sessions',desc:'Log 365 sessions — a full year of effort',check:c=>c.sessions>=365},
+  // Time
+  {id:'h10',icon:'⏱',title:'10 Hours',desc:'Accumulate 10 total hours',check:c=>c.minutes>=600},
+  {id:'h50',icon:'⌛',title:'50 Hours',desc:'Accumulate 50 total hours',check:c=>c.minutes>=3000},
+  {id:'h100',icon:'💯',title:'100 Hours',desc:'Accumulate 100 total hours',check:c=>c.minutes>=6000},
+  {id:'h250',icon:'🔥',title:'250 Hours',desc:'Accumulate 250 total hours',check:c=>c.minutes>=15000},
+  {id:'h500',icon:'⚡',title:'500 Hours',desc:'Accumulate 500 total hours — serious dedication',check:c=>c.minutes>=30000},
+  // Streaks
+  {id:'str3',icon:'3️⃣',title:'3-Day Streak',desc:'Restore 3 days in a row',check:c=>c.streak>=3},
+  {id:'str7',icon:'7️⃣',title:'Week Streak',desc:'Restore 7 days in a row',check:c=>c.streak>=7},
+  {id:'str30',icon:'👑',title:'Month Streak',desc:'Restore 30 days in a row',check:c=>c.streak>=30},
+  {id:'str90',icon:'🌟',title:'90-Day Streak',desc:'Restore 90 days in a row',check:c=>c.streak>=90},
+  // Goal days
+  {id:'goal5',icon:'🎯',title:'Goal Getter',desc:'Hit your daily goal 5 times',check:c=>c.goalDays>=5},
+  {id:'goal30',icon:'💎',title:'Goal Month',desc:'Hit your daily goal 30 times',check:c=>c.goalDays>=30},
+  {id:'goal100',icon:'🏆',title:'100 Goal Days',desc:'Hit your daily goal 100 times',check:c=>c.goalDays>=100},
+  // CI progress
+  {id:'ci1',icon:'✨',title:'CI-1',desc:'Reach CI-1',check:c=>(c.ciLevel||0)>=1},
+  {id:'ci3',icon:'🌿',title:'CI-3',desc:'Reach CI-3',check:c=>(c.ciLevel||0)>=3},
+  {id:'ci5',icon:'⭐',title:'CI-5 — Halfway',desc:'Reach CI-5',check:c=>(c.ciLevel||0)>=5},
+  {id:'ci7',icon:'🔮',title:'CI-7',desc:'Reach CI-7',check:c=>(c.ciLevel||0)>=7},
+  {id:'ci10',icon:'🏆',title:'Fully Restored',desc:'Reach CI-10 — journey complete',check:c=>(c.ciLevel||0)>=10},
+  // Photos
+  {id:'photo1',icon:'📸',title:'First Photo',desc:'Add your first progress photo',check:(_,photos)=>photos&&photos.length>=1},
+  {id:'photo5',icon:'🖼',title:'Photo Journal',desc:'Add 5 progress photos',check:(_,photos)=>photos&&photos.length>=5},
 ];
 const THEMES=[
   {id:'shadow',name:'Shadow',bg:'#0D0B14',accent:'#C9A84C',text:'#E2DDD0',mid:'#3d2a00'},
@@ -226,23 +210,11 @@ const THEMES=[
   {id:'ocean',name:'Ocean',bg:'#050D18',accent:'#38B4D4',text:'#C8E8F5',mid:'#0a4070'},
   {id:'neon',name:'Neon',bg:'#07060E',accent:'#DC00FF',text:'#F0E5FF',mid:'#6600AA'}
 ];
-const QUOTES=[
-  "Every session is a message to your body: grow.","Progress is measured in months, not days.",
-  "You are restoring what was taken. That is strength.","Consistency beats intensity every time.",
-  "The body remembers how to grow.","Thousands are walking this path with you.",
-  "Slow and steady wins the long game.","Your patience today is your progress tomorrow.",
-  "Tension plus time equals growth.","Every session counts, even the short ones.",
-  "You started. That alone puts you ahead.","Rest is part of the process too.",
-  "Trust the process. The results follow.","Small efforts, compounded daily, become transformation.",
-  "What you restore, no one can take again.","Dedication is showing up even on the hard days.",
-  "Your body is on your side.","Months from now you'll be glad you started today.",
-  "Every restorer started at CI-0. Every one.","The marathon runner doesn't sprint every mile."
-];
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let profiles=[],currentPid=null,currentTheme='shadow';
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
-  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
+  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[]};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -275,7 +247,6 @@ const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
 const thisWeekDays=()=>{const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;};
 const dayLbl=d=>['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(d+'T12:00:00').getDay()];
 const catFor=id=>CATS.find(c=>c.id===id)||{icon:'?',color:'#888',mult:1,label:'',methods:[]};
-const dailyQuote=()=>QUOTES[Math.floor((new Date().getDate()*13+new Date().getMonth()*7)%QUOTES.length)];
 
 // ── STORAGE ────────────────────────────────────────────────────────────────────
 const S={
@@ -296,6 +267,7 @@ function loadProfile(pid){
   if(!char.customMethods)char.customMethods=[];
   if(char.ciLevel===undefined)char.ciLevel=0;
   if(!char.ciHistory)char.ciHistory=[];
+  if(!char.restDays)char.restDays=[];
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
   const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
@@ -443,14 +415,28 @@ function logManual(method,catId,totalMins,notes){
 function awardSession(method,catId,totalMins,notes){
   const td=today();
   let ns=char.streak;
-  if(char.lastDate){const diff=Math.round((new Date(td)-new Date(char.lastDate))/86400000);if(diff===1)ns++;else if(diff>1)ns=1;}else ns=1;
+  if(char.lastDate){
+    const diff=Math.round((new Date(td)-new Date(char.lastDate))/86400000);
+    if(diff===1)ns++;
+    else if(diff>1){
+      // Check if gap days were all rest days — if so, streak survives
+      let gapBroken=false;
+      for(let i=1;i<diff;i++){
+        const gapDate=new Date(char.lastDate+'T12:00:00');
+        gapDate.setDate(gapDate.getDate()+i);
+        const gapStr=gapDate.toISOString().split('T')[0];
+        if(!(char.restDays||[]).includes(gapStr)){gapBroken=true;break;}
+      }
+      ns=gapBroken?1:ns+1;
+    }
+  }else ns=1;
   const prevTodayMin=todayMin();
   const nm=char.methods.includes(method)?char.methods:[...char.methods,method];
   let ngd=char.goalDays;
   if(prevTodayMin<char.dailyGoalMin&&(prevTodayMin+totalMins)>=char.dailyGoalMin)ngd++;
-  char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd};
+  char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
   const newly=[];
-  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
   logs=[{id:Date.now(),date:td,method,cat:catId,dur:totalMins,notes,xp:0},...logs];
   saveChar();saveLogs();
   showSessFlash(`✓ ${fmtMin(totalMins)}`);
@@ -459,13 +445,28 @@ function awardSession(method,catId,totalMins,notes){
   else showToast(`${fmtMin(totalMins)} logged · Session #${char.sessions}`);
 }
 
+// ── REST DAY ────────────────────────────────────────────────────────────────────
+function markRestDay(){
+  const td=today();
+  const restDays=char.restDays||[];
+  if(restDays.includes(td)){
+    // Toggle off
+    char.restDays=restDays.filter(d=>d!==td);
+    showToast('Rest day removed');
+  } else {
+    char.restDays=[...restDays,td];
+    showToast('🛌 Rest day marked — your streak is protected');
+  }
+  saveChar();render();
+}
+
 // ── CI LEVEL ───────────────────────────────────────────────────────────────────
 function setCILevel(n){
   const prev=char.ciLevel||0;if(n===prev)return;
   char.ciLevel=n;
   char.ciHistory=[...(char.ciHistory||[]),{ci:n,date:today()}];
   const newly=[];
-  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
   saveChar();
   if(n>prev)showToast(`🎉 ${LEVELS[n].ci} reached!`);
   if(newly.length)setTimeout(()=>showToast(`🏅 ${newly[0]} unlocked!`),1800);
@@ -934,6 +935,17 @@ function renderToday(){
         <div style="font-size:10px;color:var(--text4);margin-top:1px">${lastLog.date} · ${fmtMin(lastLog.dur)}</div>
       </div>
     </div>`:'';
+  const lastMethod=char.lastMethod||null;
+  const lastCat=char.lastCat||null;
+  const quickLogBtn=lastMethod&&lastCat&&!activeTimer?`
+    <button id="quick-start-btn" style="width:100%;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:7px;text-align:left;transition:border-color .2s">
+      <span style="font-size:18px">${catFor(lastCat).icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--accent)">Quick Start</div>
+        <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lastMethod}</div>
+      </div>
+      <span style="font-size:11px;color:var(--accent);font-weight:700">▶</span>
+    </button>`:'';
   const weeklySummary=buildWeeklySummary();
   return`
   <div class="coach-card">
@@ -947,36 +959,36 @@ function renderToday(){
     </div>
   </div>
   ${weeklySummary}
-  <div class="card card-gold">
-    <div class="ci-ring-wrap">${ciRingSVG()}</div>
-    <div class="ci-set-row">
-      <div style="font-size:10px;color:var(--text4)">Not right?</div>
-      <div class="ci-set-btn" id="update-ci-btn">Update my CI level</div>
-    </div>
-  </div>
   <div class="card" style="margin-bottom:9px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-      <div style="font-size:11px;color:var(--text3)">Daily Goal</div>
-      <div style="display:flex;align-items:center;gap:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <div style="font-family:Cinzel,serif;font-size:22px;font-weight:900;color:var(--accent);cursor:pointer" onclick="tab='journey';render()" title="Go to Journey">${LEVELS[char.ciLevel||0].ci}</div>
+        <div style="font-size:10px;color:var(--text4)">Daily Goal</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
         <input class="goal-inp" id="goal-inp" type="number" min="5" max="1440" value="${goal}">
-        <span style="font-size:10px;color:var(--text4)">min/day</span>
+        <span style="font-size:10px;color:var(--text4)">min</span>
       </div>
     </div>
     <div class="goal-bar"><div class="goal-fill ${goalPct>=100?'goal-fill-ok':'goal-fill-warn'}" style="width:${goalPct}%"></div></div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-top:2px">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-top:4px">
       <span data-live="goal-done">${fmtMin(tMin)} done</span>
       <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go'}</span>
     </div>
-  </div>
-  <div class="sg4">
-    <div class="stat"><div class="sv" style="font-size:13px" data-live="today-min">${fmtMin(tMin)}</div><div class="sl">Today</div></div>
-    <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(monthMin)}</div><div class="sl">Month</div></div>
-    <div class="stat"><div class="sv" style="font-size:13px">${fmtMin(yearMin)}</div><div class="sl">Year</div></div>
-    <div class="stat"><div class="sv" style="font-size:13px;color:#F59E0B">${char.streak}🔥</div><div class="sl">Streak</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--stat-border)">
+      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--text1)" data-live="today-min">${fmtMin(tMin)}</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Today</div></div>
+      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--text1)">${fmtMin(monthMin)}</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Month</div></div>
+      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--text1)">${fmtMin(yearMin)}</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Year</div></div>
+      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#F59E0B">${char.streak}🔥</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Streak</div></div>
+    </div>
   </div>
   ${timerBlock}
+  ${quickLogBtn}
   ${!activeTimer?`<button id="start-session-btn" class="btn-gold" style="margin-bottom:7px">+ Start Session</button>`:''}
-  <button id="log-past-btn" class="btn-ghost" style="width:100%;font-size:12px;margin-bottom:12px">Log Past Session</button>
+  <div style="display:flex;gap:7px;margin-bottom:12px">
+    <button id="log-past-btn" class="btn-ghost" style="flex:1;font-size:12px">Log Past Session</button>
+    <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:11px 14px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:12px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
+  </div>
   ${lastSessHtml}
   <div class="sec-title">Today's Sessions</div>${sessHtml}`;
 }
@@ -1013,6 +1025,13 @@ function renderJourney(){
     </div>`;
   }).join('');
 
+  // Cumulative hours — shown instead of redundant stat tiles
+  const totalHrs=(char.minutes/60);
+  const hrLabel=totalHrs<1?`${char.minutes} minutes`:totalHrs<24?`${totalHrs.toFixed(1)} hours`:`${Math.floor(totalHrs/24)} days, ${Math.round(totalHrs%24)} hours`;
+  const cumulativeLine=char.minutes>0?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 14px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
+    You've dedicated <strong style="color:var(--accent)">${hrLabel}</strong> to restoration${char.streak>1?` — currently on a <strong style="color:#F59E0B">${char.streak}-day streak</strong>`:''}.${char.sessions>0?` ${char.sessions} session${char.sessions!==1?'s':''} logged.`:''}
+  </div>`:'';
+
   return`
   <div class="card card-gold" style="padding:18px 14px 16px">
     <div class="ci-ring-wrap" style="margin-bottom:10px">${ciRingSVG()}</div>
@@ -1040,10 +1059,9 @@ function renderJourney(){
 
   <div class="sg4" style="margin-top:0">
     <div class="stat"><div class="sv">${char.sessions}</div><div class="sl">Sessions</div></div>
-    <div class="stat"><div class="sv">${(char.minutes/60).toFixed(1)}h</div><div class="sl">Hours</div></div>
-    <div class="stat"><div class="sv" style="color:#F59E0B">${char.streak}</div><div class="sl">🔥 Streak</div></div>
-    <div class="stat"><div class="sv" style="color:var(--accent)">${char.methods.length}</div><div class="sl">Methods</div></div>
   </div>
+
+  ${cumulativeLine}
 
   <div class="sec-title">CI Reference</div>
   <div class="card" style="padding:8px 12px">${refGuide}</div>`;
@@ -1477,7 +1495,8 @@ function renderReports(){
   const activeDays=new Set(logs.map(l=>l.date));
   const goalDaysSet=new Set();
   cal35.forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
-  const calDots=cal35.map(d=>`<div class="cal-dot${goalDaysSet.has(d)?' goal':activeDays.has(d)?' on':''}${d===today()?' now':''}"></div>`).join('');
+  const restDaySet=new Set(char.restDays||[]);
+  const calDots=cal35.map(d=>`<div class="cal-dot${goalDaysSet.has(d)?' goal':restDaySet.has(d)?' rest':activeDays.has(d)?' on':''}${d===today()?' now':''}"></div>`).join('');
   const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
   const monthTotal=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0)+liveMins;
   const histHtml=logs.length?logs.slice(0,40).map(l=>{const cat=catFor(l.cat);return`
@@ -1491,7 +1510,18 @@ function renderReports(){
     </div>`}).join(''):`<div class="empty">No sessions logged yet.</div>`;
 
   // ── CI PROGRESSION CHART ──
-  const ciChart=buildCIChart();
+
+  // Notes viewer — sessions that have notes, full text
+  const notedLogs=logs.filter(l=>l.notes&&l.notes.trim().length>0).slice(0,30);
+  const notesHtml=notedLogs.length?notedLogs.map(l=>{const cat=catFor(l.cat);return`
+    <div style="padding:9px 0;border-bottom:1px solid var(--stat-border)">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+        <span style="font-size:13px">${cat.icon}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--text2)">${l.method}</span>
+        <span style="font-size:10px;color:var(--text5);margin-left:auto">${l.date} · ${fmtMin(l.dur)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${l.notes}</div>
+    </div>`}).join(''):`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
 
   return`<div class="page-title">Reports</div>
   <div class="page-sub">Your restoration journey in numbers.</div>
@@ -1501,8 +1531,6 @@ function renderReports(){
     <div class="stat"><div class="sv" style="font-size:15px">${(char.minutes/60).toFixed(1)}h</div><div class="sl">All Time</div></div>
     <div class="stat"><div class="sv" style="font-size:15px;color:#F59E0B">${char.streak}</div><div class="sl">Best Streak</div></div>
   </div>
-  <div class="sec-title">CI Progression</div>
-  <div class="card" style="padding:14px 10px 10px">${ciChart}</div>
   <div class="sec-title">This Week</div>
   <div class="card"><div class="bar-wrap">${bars}</div></div>
   <div class="sec-title">Activity Calendar (35 days)</div>
@@ -1512,6 +1540,7 @@ function renderReports(){
     <div style="display:flex;gap:10px;margin-top:7px;font-size:9px;color:var(--text4);flex-wrap:wrap">
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--acc45);vertical-align:middle;margin-right:3px"></span>Active</span>
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(34,168,90,.55);vertical-align:middle;margin-right:3px"></span>Goal met</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(100,120,200,.4);vertical-align:middle;margin-right:3px"></span>Rest day</span>
     </div>
   </div>
   <div class="sec-title">Method Breakdown</div>
@@ -1522,118 +1551,10 @@ function renderReports(){
     <div style="font-size:10px;color:var(--text4);margin-top:2px">${logs.length} sessions · CSV format</div></div>
     <button class="btn-outline" id="export-btn">📊 Export CSV</button>
   </div>
+  <div class="sec-title">Session Notes</div>
+  <div class="card" style="padding:8px 12px">${notesHtml}</div>
   <div class="sec-title">Session History</div>${histHtml}`;
 }
-
-// ── CI PROGRESSION CHART ───────────────────────────────────────────────────────
-function buildCIChart(){
-  const history=char.ciHistory||[];
-  const currentCI=char.ciLevel||0;
-
-  // Build point list — deduplicate same-day entries, keep latest per day
-  // Include current CI as the final point at today
-  const raw=[...history];
-  // Always anchor the last known point to today's date if current CI set
-  if(currentCI>0){
-    // Add today as the current level if not already recorded today
-    const td=today();
-    if(!raw.length||raw[raw.length-1]?.date!==td){
-      raw.push({ci:currentCI,date:td});
-    }
-  }
-
-  if(raw.length<2){
-    return`<div style="text-align:center;padding:20px 10px;color:var(--text5);font-size:11px;line-height:2">
-      Update your CI level at least twice to see your progression chart.<br>
-      <span style="font-size:10px">Go to Journey → Update to set your current CI.</span>
-    </div>`;
-  }
-
-  // Sort by date
-  const pts=raw.sort((a,b)=>a.date.localeCompare(b.date));
-
-  // Chart dimensions
-  const W=310,H=120,padL=28,padR=10,padT=10,padB=22;
-  const chartW=W-padL-padR,chartH=H-padT-padB;
-
-  // X scale — date range
-  const dates=pts.map(p=>new Date(p.date+'T12:00:00'));
-  const minT=dates[0].getTime(),maxT=dates[dates.length-1].getTime();
-  const xRange=maxT-minT||1;
-  const xOf=t=>padL+((t-minT)/xRange)*chartW;
-
-  // Y scale — CI 0–10
-  const yOf=ci=>padT+chartH-((ci/10)*chartH);
-
-  // Build stepped path (horizontal then vertical — staircase)
-  let pathD='';
-  for(let i=0;i<pts.length;i++){
-    const x=xOf(dates[i].getTime());
-    const y=yOf(pts[i].ci);
-    if(i===0){pathD+=`M${x.toFixed(1)},${y.toFixed(1)}`;}
-    else{
-      // Step: go horizontal first at prev Y, then vertical to new Y
-      const prevY=yOf(pts[i-1].ci);
-      pathD+=` H${x.toFixed(1)} V${y.toFixed(1)}`;
-    }
-  }
-  // Extend to right edge at current level
-  const lastX=xOf(dates[dates.length-1].getTime());
-  const lastY=yOf(pts[pts.length-1].ci);
-
-  // Area fill path
-  const areaD=pathD+` H${(padL+chartW).toFixed(1)} V${(padT+chartH).toFixed(1)} H${padL.toFixed(1)} Z`;
-
-  // Y axis labels — 0, 2, 4, 6, 8, 10
-  const yLabels=[0,2,4,6,8,10].map(v=>{
-    const y=yOf(v);
-    return`<text x="${(padL-5).toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="7" fill="var(--text5)" text-anchor="end" font-family="DM Sans,sans-serif">${v}</text>
-    <line x1="${padL}" y1="${y.toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--stat-border)" stroke-width="0.5"/>`;
-  }).join('');
-
-  // X axis date labels — first and last
-  const fmtDateShort=d=>{const dt=new Date(d+'T12:00:00');return`${dt.toLocaleString('default',{month:'short'})} '${String(dt.getFullYear()).slice(2)}`;};
-  const xLabels=`
-    <text x="${padL}" y="${H-4}" font-size="7" fill="var(--text5)" text-anchor="start" font-family="DM Sans,sans-serif">${fmtDateShort(pts[0].date)}</text>
-    <text x="${(padL+chartW).toFixed(1)}" y="${H-4}" font-size="7" fill="var(--text5)" text-anchor="end" font-family="DM Sans,sans-serif">${fmtDateShort(pts[pts.length-1].date)}</text>`;
-
-  // Data point dots + tooltips
-  const dots=pts.map((p,i)=>{
-    const x=xOf(dates[i].getTime());
-    const y=yOf(p.ci);
-    const isLast=i===pts.length-1;
-    return`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${isLast?4:3}" fill="${isLast?'var(--accent)':'var(--bg-card)'}" stroke="var(--accent)" stroke-width="1.5"/>
-    ${isLast?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="var(--accent)" opacity="0.15"/>`:''}
-    <title>${p.date}: CI-${p.ci}</title>`;
-  }).join('');
-
-  // Current CI callout label at last point
-  const callout=`<text x="${(Math.min(lastX+6,padL+chartW-18)).toFixed(1)}" y="${(lastY-6).toFixed(1)}" font-size="9" font-weight="700" fill="var(--accent)" font-family="Cinzel,serif">CI-${pts[pts.length-1].ci}</text>`;
-
-  const totalDays=Math.round(xRange/86400000);
-  const spanLabel=totalDays<60?`${totalDays}d`:totalDays<365?`${Math.round(totalDays/30.4)}mo`:`${(totalDays/365).toFixed(1)}yr`;
-
-  return`
-  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;padding:0 4px">
-    <div style="font-size:11px;font-weight:600;color:var(--text2)">CI-0 → CI-${pts[pts.length-1].ci}</div>
-    <div style="font-size:10px;color:var(--text4)">${spanLabel} tracked</div>
-  </div>
-  <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible">
-    <defs>
-      <linearGradient id="ciAreaGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.18"/>
-        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>
-      </linearGradient>
-    </defs>
-    ${yLabels}
-    <path d="${areaD}" fill="url(#ciAreaGrad)"/>
-    <path d="${pathD}" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    ${dots}
-    ${callout}
-    ${xLabels}
-  </svg>`;
-}
-
 // ── MILESTONES ─────────────────────────────────────────────────────────────────
 function renderAch(){
   const unlocked=char.achievements.length;
@@ -1699,6 +1620,16 @@ function renderProfileScreen(){
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Appearance</div>
       <div class="theme-row">${chips}</div>
     </div>
+    <div class="divider">── Reminders ──</div>
+    <div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:14px;width:100%;margin-bottom:6px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Get a browser reminder to restore. Works even when the app isn't open.</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="time" id="reminder-time" value="${char.reminderTime||'09:00'}"
+          style="flex:1;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 10px;color:var(--accent);font-size:16px;font-weight:700;outline:none;font-family:DM Sans,sans-serif">
+        <button id="reminder-btn" class="btn-outline" style="flex:0 0 auto;white-space:nowrap">${char.reminderEnabled?'✓ On':'Set Reminder'}</button>
+      </div>
+      ${char.reminderEnabled?`<div style="font-size:10px;color:var(--green)">Reminder set for ${char.reminderTime} daily. <button onclick="cancelReminder()" style="background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline">Cancel</button></div>`:'<div style="font-size:10px;color:var(--text5)">Requires notification permission.</div>'}
+    </div>
     <div class="divider">── New Profile ──</div>
     <input class="gold-inp" id="new-name" placeholder="Enter your name..." maxlength="24">
     <button class="btn-gold" id="create-btn">Create Profile</button>
@@ -1715,6 +1646,10 @@ function renderProfileScreen(){
   </div>`;
   document.querySelectorAll('.pcard[data-pid]').forEach(el=>{
     if(el.dataset.pid!==currentPid)el.onclick=()=>switchProfile(el.dataset.pid);
+  });
+  document.getElementById('reminder-btn')?.addEventListener('click',()=>{
+    const t=document.getElementById('reminder-time')?.value||'09:00';
+    setReminder(t);
   });
   document.getElementById('create-btn').onclick=()=>{const n=document.getElementById('new-name').value.trim();if(n)createProfile(n);};
   document.getElementById('new-name').onkeydown=e=>{if(e.key==='Enter'){const n=e.target.value.trim();if(n)createProfile(n);}};
@@ -1781,6 +1716,47 @@ function importBackup(jsonText){
       setTimeout(()=>{loadAll();render();},400);
     }
   );
+}
+
+// ── REMINDERS ──────────────────────────────────────────────────────────────────
+function setReminder(timeStr){
+  if(!('Notification' in window)){showToast('Notifications not supported in this browser');return;}
+  Notification.requestPermission().then(perm=>{
+    if(perm!=='granted'){showToast('Notification permission denied');return;}
+    char.reminderTime=timeStr;
+    char.reminderEnabled=true;
+    saveChar();
+    scheduleReminder();
+    showToast(`✓ Reminder set for ${timeStr} daily`);
+    renderProfileScreen();
+  });
+}
+function cancelReminder(){
+  char.reminderEnabled=false;
+  saveChar();
+  showToast('Reminder cancelled');
+  renderProfileScreen();
+}
+function scheduleReminder(){
+  if(!char.reminderEnabled||!char.reminderTime)return;
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const [h,m]=char.reminderTime.split(':').map(Number);
+  const now=new Date();
+  const next=new Date();
+  next.setHours(h,m,0,0);
+  if(next<=now)next.setDate(next.getDate()+1);
+  const ms=next-now;
+  setTimeout(()=>{
+    // Only fire if user hasn't already logged today
+    if(todayMin()<10){
+      new Notification('RestoreTrack',{
+        body:`Time to restore! You haven't logged a session today.`,
+        icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">◉</text></svg>'
+      });
+    }
+    // Schedule next day
+    if(char.reminderEnabled)scheduleReminder();
+  },ms);
 }
 
 // ── CI SHEET ───────────────────────────────────────────────────────────────────
@@ -2003,6 +1979,11 @@ function mountStopSheet(){
 
 // ── EVENTS ─────────────────────────────────────────────────────────────────────
 function attachEvents(){
+  document.getElementById('quick-start-btn')?.addEventListener('click',()=>{
+    if(!char.lastMethod||!char.lastCat)return;
+    sheetMethod=char.lastMethod;sheetCat=char.lastCat;sheetNotes='';
+    beginSession();
+  });
   document.getElementById('start-session-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
   document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStillActive=false;render();});
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
@@ -2072,7 +2053,7 @@ function attachEvents(){
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
-loadAll();render();
+loadAll();render();scheduleReminder();
 </script>
 </body>
 </html>
