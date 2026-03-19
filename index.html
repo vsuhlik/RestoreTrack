@@ -18,7 +18,7 @@ body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;mi
 .app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:70px}
 .hdr{background:var(--bg-hdr);border-bottom:1px solid var(--hdr-border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
 .hdr-title{font-family:'Cinzel',serif;font-size:13px;color:var(--accent);letter-spacing:2px}
-.ci-pill{background:var(--acc12);border:1px solid var(--pill-border,var(--acc30));border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'Cinzel',serif}
+.ci-pill{background:var(--acc12);border:1px solid var(--pill-border,var(--acc30));border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'Cinzel',serif;white-space:nowrap}
 .profile-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .profile-btn:hover{border-color:var(--acc30);color:var(--accent)}
 .content{padding:12px;flex:1}
@@ -719,15 +719,15 @@ function render(){
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
-      <div style="display:flex;align-items:center;gap:9px">
-        <div class="hdr-title">◉ RESTORETRACK</div>
-        <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer" title="Go to Journey">${LEVELS[ci].ci}</div>
-        ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px">
+      <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
+        <div class="hdr-title" style="flex-shrink:0">◉ RESTORETRACK</div>
+        <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
+        ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
-          <span style="font-size:10px;font-weight:600;color:var(--green)">${fmtHMS(timerSecs)}</span>
+          <span style="font-size:10px;font-weight:600;color:var(--green);white-space:nowrap">${fmtHMS(timerSecs)}</span>
         </div>`:''}
       </div>
-      <button class="profile-btn" id="pbtn">👤 ${char.name} ▾</button>
+      <button class="profile-btn" id="pbtn" style="flex-shrink:0;margin-left:10px">👤 ${char.name} ▾</button>
     </div>
     <div class="content" id="content"></div>
     <div class="nav">${renderNav()}</div>
@@ -870,6 +870,62 @@ function dismissWeeklySummary(){
   saveChar();render();
 }
 
+// ── NEXT MILESTONE ─────────────────────────────────────────────────────────────
+function buildNextMilestone(){
+  // Find the closest upcoming achievement that has measurable progress
+  const candidates=[];
+  for(const a of ACHS){
+    if(char.achievements.includes(a.id))continue;
+    // Only include milestones we can show a progress bar for
+    let current=0,target=0,label='';
+    if(a.id.startsWith('s')){
+      // Session count milestones
+      const n=parseInt(a.id.slice(1));if(isNaN(n))continue;
+      current=char.sessions;target=n;label=`sessions`;
+    } else if(a.id.startsWith('h')){
+      // Hour milestones — convert minutes to hours
+      const n=parseInt(a.id.slice(1));if(isNaN(n))continue;
+      current=Math.floor(char.minutes/60);target=n;label=`hours`;
+    } else if(a.id.startsWith('str')){
+      const n=parseInt(a.id.slice(3));if(isNaN(n))continue;
+      current=char.streak;target=n;label=`day streak`;
+    } else if(a.id.startsWith('goal')){
+      const n=parseInt(a.id.slice(4));if(isNaN(n))continue;
+      current=char.goalDays;target=n;label=`goal days`;
+    } else if(a.id.startsWith('ci')){
+      const n=parseInt(a.id.slice(2));if(isNaN(n))continue;
+      current=char.ciLevel||0;target=n;label=`CI level`;
+    } else if(a.id.startsWith('photo')){
+      const n=parseInt(a.id.slice(5));if(isNaN(n))continue;
+      current=photos.length;target=n;label=`photo${n!==1?'s':''}`;
+    } else continue;
+    if(target<=0||current>=target)continue;
+    const remaining=target-current;
+    const pct=Math.round((current/target)*100);
+    candidates.push({a,current,target,remaining,pct,label});
+  }
+  if(!candidates.length)return'';
+  // Sort by closest (highest pct complete)
+  candidates.sort((a,b)=>b.pct-a.pct);
+  const {a,current,target,remaining,pct,label}=candidates[0];
+  const remainingStr=label==='hours'?`${remaining}h`:label==='CI level'?`${remaining} CI level${remaining!==1?'s':''}`:
+    `${remaining} ${label}`;
+  return`<div class="card" style="margin-bottom:9px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="font-size:22px">${a.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text1)">${a.title}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">${remainingStr} to go · ${a.desc}</div>
+      </div>
+      <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0">${pct}%</div>
+    </div>
+    <div style="height:6px;background:var(--bg-stat);border-radius:3px;overflow:hidden">
+      <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,var(--acc18),var(--accent));width:${pct}%;transition:width .6s"></div>
+    </div>
+    <div style="font-size:9px;color:var(--text5);margin-top:4px;text-align:right">${current} / ${target} ${label}</div>
+  </div>`;
+}
+
 // ── TODAY ──────────────────────────────────────────────────────────────────────
 function renderToday(){
   const td=today(),tMin=todayMin(),goal=char.dailyGoalMin||120;
@@ -990,7 +1046,8 @@ function renderToday(){
     <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:11px 14px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:12px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
   </div>
   ${lastSessHtml}
-  <div class="sec-title">Today's Sessions</div>${sessHtml}`;
+  ${buildNextMilestone()}
+  ${liveSessionCard?`<div class="sec-title">Active Session</div>${liveSessionCard}`:''}`;
 }
 
 // ── JOURNEY ────────────────────────────────────────────────────────────────────
@@ -1491,12 +1548,26 @@ function renderReports(){
       <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
     </div>`;
   }).join('');
-  const cal35=[];for(let i=34;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);cal35.push(d.toISOString().split('T')[0]);}
+  // Current month calendar
+  const now=new Date();
+  const year=now.getFullYear(),month=now.getMonth();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const firstDow=new Date(year,month,1).getDay(); // 0=Sun
+  const calDays=[];
+  // Leading empty slots for alignment
+  for(let i=0;i<firstDow;i++)calDays.push(null);
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    calDays.push(ds);
+  }
   const activeDays=new Set(logs.map(l=>l.date));
   const goalDaysSet=new Set();
-  cal35.forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
+  calDays.filter(Boolean).forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
   const restDaySet=new Set(char.restDays||[]);
-  const calDots=cal35.map(d=>`<div class="cal-dot${goalDaysSet.has(d)?' goal':restDaySet.has(d)?' rest':activeDays.has(d)?' on':''}${d===today()?' now':''}"></div>`).join('');
+  const calDots=calDays.map(d=>d===null
+    ?`<div></div>`
+    :`<div class="cal-dot${goalDaysSet.has(d)?' goal':restDaySet.has(d)?' rest':activeDays.has(d)?' on':''}${d===today()?' now':''}" title="${d}"></div>`
+  ).join('');
   const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
   const monthTotal=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0)+liveMins;
   const histHtml=logs.length?logs.slice(0,40).map(l=>{const cat=catFor(l.cat);return`
@@ -1523,6 +1594,7 @@ function renderReports(){
       <div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${l.notes}</div>
     </div>`}).join(''):`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
 
+  const monthName=now.toLocaleString('default',{month:'long',year:'numeric'});
   return`<div class="page-title">Reports</div>
   <div class="page-sub">Your restoration journey in numbers.</div>
   <div class="sg2">
@@ -1533,7 +1605,7 @@ function renderReports(){
   </div>
   <div class="sec-title">This Week</div>
   <div class="card"><div class="bar-wrap">${bars}</div></div>
-  <div class="sec-title">Activity Calendar (35 days)</div>
+  <div class="sec-title">Activity — ${monthName}</div>
   <div class="card">
     <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text5);margin-bottom:4px"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
     <div class="cal-grid">${calDots}</div>
