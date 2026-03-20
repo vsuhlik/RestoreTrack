@@ -737,7 +737,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.7</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.8</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1711,7 +1711,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.7</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.8</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2391,15 +2391,32 @@ function commMilestonePost(title,icon){
 function commReact(postId,r){
   if(!db||!fbUID)return;
   const stored=JSON.parse(localStorage.getItem('rst-reactions')||'{}');
-  const key=`${postId}-${r}`;
+  // stored[postId] = the reaction type the user has on this post ('fire','muscle','heart') or undefined
+  const current=stored[postId]; // what they've already picked
   const field=r==='fire'?'rf':r==='muscle'?'rm':'rh';
-  const already=!!stored[key];
-  db.collection('posts').doc(postId).update({
-    [field]:firebase.firestore.FieldValue.increment(already?-1:1)
-  }).catch(()=>{});
-  if(already)delete stored[key];else stored[key]=1;
+  const prevField=current==='fire'?'rf':current==='muscle'?'rm':current==='heart'?'rh':null;
+
+  if(current===r){
+    // Tapping same reaction again — remove it
+    db.collection('posts').doc(postId).update({
+      [field]:firebase.firestore.FieldValue.increment(-1)
+    }).catch(()=>{});
+    delete stored[postId];
+    commState.posts=commState.posts.map(p=>p.id===postId?{...p,[field]:Math.max(0,(p[field]||0)-1)}:p);
+  } else {
+    // Switching to a different reaction (or picking for first time)
+    const updates={[field]:firebase.firestore.FieldValue.increment(1)};
+    if(prevField)updates[prevField]=firebase.firestore.FieldValue.increment(-1);
+    db.collection('posts').doc(postId).update(updates).catch(()=>{});
+    stored[postId]=r;
+    commState.posts=commState.posts.map(p=>{
+      if(p.id!==postId)return p;
+      const updated={...p,[field]:(p[field]||0)+1};
+      if(prevField)updated[prevField]=Math.max(0,(p[prevField]||0)-1);
+      return updated;
+    });
+  }
   localStorage.setItem('rst-reactions',JSON.stringify(stored));
-  commState.posts=commState.posts.map(p=>p.id===postId?{...p,[field]:(p[field]||0)+(already?-1:1)}:p);
   refreshCommUI();
 }
 
@@ -2477,19 +2494,29 @@ function renderCommunity(){
     <div class="sec-title">Recently Active</div>
     ${recentlyActive.map(u=>buildUserCard(u,now,isJoined)).join('')}`:'';
 
-  const feedCards=commState.posts.length
-    ?commState.posts.map(p=>buildPostCard(p,now,reacted,isJoined)).join('')
+  const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
+  const milestonePosts=commState.posts.filter(p=>p.type==='milestone');
+
+  const feedCards=regularPosts.length
+    ?regularPosts.map(p=>buildPostCard(p,now,reacted,isJoined)).join('')
     :`<div style="text-align:center;padding:24px 12px;color:var(--text5);font-size:11px">${isJoined?'No posts yet — share the first update!':'No posts yet.'}</div>`;
+
+  const milestoneCards=milestonePosts.length
+    ?milestonePosts.map(p=>buildPostCard(p,now,reacted,isJoined)).join('')
+    :'';
 
   return`${joinBanner}
   <div class="sec-title">${active.length>0?`${active.length} Restoring Right Now 🟢`:`Active Now${totalOnline>0?` · ${totalOnline} online`:''}` }</div>
   ${activeCards}
   ${recentCards}
   <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px">
-    <div class="sec-title" style="margin:0">Community Feed</div>
+    <div class="sec-title" style="margin:0">Community Posts</div>
     ${isJoined?`<button id="comm-post-btn" class="btn-outline" style="padding:5px 14px;font-size:11px">+ Post Update</button>`:''}
   </div>
-  ${feedCards}`;
+  ${feedCards}
+  ${milestoneCards.length?`
+  <div class="sec-title" style="margin-top:6px">Recent Milestones 🏅</div>
+  ${milestoneCards}`:''}`;
 }
 
 function buildUserCard(u,now,isJoined){
@@ -2545,9 +2572,12 @@ function buildPostCard(p,now,reacted,isJoined){
     <div style="display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--stat-border);flex-wrap:wrap">
       ${reactions.map(({r,emoji,field})=>{
         const count=p[field]||0;
-        const myR=isJoined&&!!reacted[`${p.id}-${r}`];
+        const myPick=isJoined?reacted[p.id]:null; // which reaction this user chose
+        const myR=myPick===r; // is THIS the one they picked?
+        const hasPick=!!myPick; // have they picked any reaction?
+        const dimmed=isJoined&&hasPick&&!myR; // they picked a different one
         return`<button onclick="${isJoined?`commReact('${p.id}','${r}')`:`showToast('Join the community to react')`}"
-          style="background:${myR?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${myR?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;color:${myR?'var(--accent)':isJoined?'var(--text4)':'var(--text5)'};display:inline-flex;align-items:center;gap:3px;font-family:DM Sans,sans-serif;${!isJoined?'opacity:.55':''}">
+          style="background:${myR?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${myR?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;color:${myR?'var(--accent)':isJoined?'var(--text4)':'var(--text5)'};display:inline-flex;align-items:center;gap:3px;font-family:DM Sans,sans-serif;opacity:${!isJoined?'.55':dimmed?'.4':'1'};transition:opacity .15s">
           ${emoji}<span style="font-size:11px;font-weight:${myR?700:400}">${count||''}</span>
         </button>`;
       }).join('')}
