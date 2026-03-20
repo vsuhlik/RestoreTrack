@@ -737,7 +737,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.8</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.9</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1711,7 +1711,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.8</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.9</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2217,7 +2217,7 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 }
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
-let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,authError:null};
+let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null};
 
 function initFirebase(){
   if(db)return; // already initialised
@@ -2312,6 +2312,7 @@ function startCommunityListeners(){
   if(!db||!fbUID)return;
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts)commState.unsubPosts();
+  if(commState.unsubEncourage)commState.unsubEncourage();
   commState.unsubUsers=db.collection('community_users')
     .orderBy('lastSeen','desc').limit(60)
     .onSnapshot(snap=>{
@@ -2327,6 +2328,23 @@ function startCommunityListeners(){
     .onSnapshot(snap=>{
       commState.posts=snap.docs.map(d=>({id:d.id,...d.data()}));
       refreshCommUI();
+    },()=>{});
+  // Listen for incoming encouragements on our own subcollection
+  // Only show ones received since we started listening (not historical)
+  const encCutoff=firebase.firestore.Timestamp.now();
+  commState.unsubEncourage=db.collection('community_users').doc(fbUID)
+    .collection('encouragements')
+    .where('ts','>',encCutoff)
+    .orderBy('ts','desc').limit(10)
+    .onSnapshot(snap=>{
+      snap.docChanges().forEach(change=>{
+        if(change.type==='added'){
+          const d=change.doc.data();
+          const from=d.fromName||'Someone';
+          const avatar=d.fromAvatar||'👊';
+          showToast(`${avatar} ${from} sent you encouragement!`);
+        }
+      });
     },()=>{});
   if(char.communityEnabled&&char.communityDisplayName)syncPresence();
 }
@@ -2358,7 +2376,8 @@ function leaveComm(){
   char.communityEnabled=false;char.communityDisplayName='';saveChar();
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts)commState.unsubPosts();
-  commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,authError:null};
+  if(commState.unsubEncourage)commState.unsubEncourage();
+  commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null};
   db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
   const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
   render();
@@ -2425,7 +2444,18 @@ function deleteCommPost(postId){
   db.collection('posts').doc(postId).delete().catch(()=>{});
 }
 
-function commEncourage(uid){showToast('👊 Encouragement sent!');}
+function commEncourage(uid){
+  if(!db||!fbUID||!fbIsGoogle){showToast('Sign in to send encouragement');return;}
+  if(uid===fbUID){showToast('That\'s you 😄');return;}
+  db.collection('community_users').doc(uid)
+    .collection('encouragements').add({
+      fromUID:fbUID,
+      fromName:char.communityDisplayName||'Someone',
+      fromAvatar:char.communityAvatar||'👊',
+      ts:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(()=>showToast('👊 Encouragement sent!'))
+    .catch(()=>showToast('⚠ Could not send — try again'));
+}
 
 // ── COMMUNITY RENDER ───────────────────────────────────────────────────────────
 function renderCommunity(){
