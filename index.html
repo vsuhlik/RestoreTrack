@@ -737,7 +737,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.6</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.7</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1711,7 +1711,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.6</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.7</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2275,23 +2275,25 @@ function initFirebase(){
 function signInWithGoogle(displayName){
   if(!fbAuth)return;
   const provider=new firebase.auth.GoogleAuthProvider();
-  // Use redirect on mobile (Safari), popup on desktop
-  const isMobile=/iPhone|iPad|Android/i.test(navigator.userAgent);
-  if(isMobile){
-    // Store pending display name before redirect
-    localStorage.setItem('rst-comm-pending-name',displayName||'');
-    fbAuth.signInWithRedirect(provider);
-  } else {
-    fbAuth.signInWithPopup(provider).then(result=>{
-      fbUID=result.user.uid;fbIsGoogle=true;
-      const name=displayName||localStorage.getItem('rst-comm-pending-name')||'';
-      localStorage.removeItem('rst-comm-pending-name');
-      if(name)finaliseJoin(name);
-      else refreshCommUI();
-    }).catch(e=>{
-      if(e.code!=='auth/popup-closed-by-user')showToast('⚠ Sign-in failed. Try again.');
-    });
-  }
+  // Try popup first on all platforms — it's cleaner and avoids page reload
+  // Safari on iOS may block popups; if so we fall back to redirect
+  fbAuth.signInWithPopup(provider).then(result=>{
+    fbUID=result.user.uid;fbIsGoogle=true;
+    commState.ready=true;commState.authError=null;
+    const name=displayName||localStorage.getItem('rst-comm-pending-name')||'';
+    localStorage.removeItem('rst-comm-pending-name');
+    if(name)finaliseJoin(name);
+    else refreshCommUI();
+  }).catch(e=>{
+    if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'){
+      // Popup blocked (Safari) — fall back to redirect
+      localStorage.setItem('rst-comm-pending-name',displayName||'');
+      fbAuth.signInWithRedirect(provider);
+    } else if(e.code!=='auth/popup-closed-by-user'){
+      showToast('⚠ Sign-in failed. Try again.');
+      console.warn('Google sign-in error:',e.code,e.message);
+    }
+  });
 }
 
 // handleGoogleRedirect is no longer needed — getRedirectResult is called
