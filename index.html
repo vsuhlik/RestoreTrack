@@ -217,7 +217,7 @@ let profiles=[],currentPid=null,currentTheme='shadow';
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
   dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
-  communityBio:'',communityShareStats:true,communitySharePhotos:false};
+  communityBio:'',communityShareStats:true};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -278,7 +278,6 @@ function loadProfile(pid){
   if(!char.communityAvatar)char.communityAvatar='🌱';
   if(char.communityBio===undefined)char.communityBio='';
   if(char.communityShareStats===undefined)char.communityShareStats=true;
-  if(char.communitySharePhotos===undefined)char.communitySharePhotos=false;
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
   const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
@@ -741,7 +740,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.0</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.1</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1718,7 +1717,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.0</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.1</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2385,7 +2384,6 @@ function syncPresence(){
     avatar:char.communityAvatar||'🌱',
     bio:char.communityBio||'',
     shareStats:char.communityShareStats!==false,
-    sharePhotos:char.communitySharePhotos===true,
     ci:char.ciLevel||0,
     streak:char.streak||0,
     sessions:char.communityShareStats!==false?char.sessions:null,
@@ -2728,13 +2726,6 @@ function showUserProfile(uid){
       </div>`:''}
     </div>`:'';
 
-  // Shared photos (loaded from Firestore storage URLs)
-  const photosSection=u.sharePhotos?`
-    <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Shared Photos</div>
-    <div id="profile-photos-${uid}" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px">
-      <div style="font-size:10px;color:var(--text5);padding:8px 0">Loading photos...</div>
-    </div>`:'';
-
   el.innerHTML=`<div class="sheet" style="max-height:88vh">
     <div class="sheet-handle"></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
@@ -2753,31 +2744,10 @@ function showUserProfile(uid){
     </div>
     ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${u.bio}"</div>`:''}
     ${statsHtml}
-    ${photosSection}
     <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
-
-  // Load shared photos if enabled
-  if(u.sharePhotos&&db){
-    db.collection('community_users').doc(uid).collection('shared_photos')
-      .orderBy('date','desc').limit(9)
-      .get().then(snap=>{
-        const container=document.getElementById(`profile-photos-${uid}`);
-        if(!container)return;
-        if(snap.empty){container.innerHTML=`<div style="font-size:10px;color:var(--text5);padding:8px 0;grid-column:span 3">No shared photos yet.</div>`;return;}
-        container.innerHTML=snap.docs.map(d=>{
-          const p=d.data();
-          return`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg-stat);border:1px solid var(--stat-border)">
-            <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy">
-          </div>`;
-        }).join('');
-      }).catch(()=>{
-        const container=document.getElementById(`profile-photos-${uid}`);
-        if(container)container.innerHTML=`<div style="font-size:10px;color:var(--text5);padding:8px 0;grid-column:span 3">Could not load photos.</div>`;
-      });
-  }
 }
 
 function showUserProfile_me(){
@@ -2789,7 +2759,6 @@ function showCommSettings(){
   const el=document.createElement('div');el.className='overlay';el.id='comm-settings-ov';
   const visible=char.communityVisible!==false;
   const shareStats=char.communityShareStats!==false;
-  const sharePhotos=char.communitySharePhotos===true;
   el.innerHTML=`<div class="sheet" style="max-height:88vh;padding-bottom:28px">
     <div class="sheet-handle"></div>
     <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:16px">Community Settings</div>
@@ -2834,14 +2803,6 @@ function showCommSettings(){
         <div style="font-size:10px;color:var(--text4);margin-top:1px">Show sessions, hours, and streak when others view your profile</div>
       </div>
     </label>
-    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--bg-stat);border-radius:10px;margin-bottom:14px">
-      <input type="checkbox" id="comm-photos-toggle" ${sharePhotos?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
-      <div>
-        <div style="font-size:12px;font-weight:600;color:var(--text2)">Share progress photos</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:1px">Let others view photos you mark as shared in the Photos tab</div>
-      </div>
-    </label>
-
     <button class="btn-ghost" id="comm-settings-done" style="width:100%;margin-bottom:8px">Done</button>
     <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list. Your posts expire naturally after 14 days. You can rejoin anytime.','Leave',leaveComm)"
       style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">
@@ -2866,10 +2827,6 @@ function showCommSettings(){
   };
   document.getElementById('comm-stats-toggle').onchange=e=>{
     char.communityShareStats=e.target.checked;saveChar();syncPresence();
-  };
-  document.getElementById('comm-photos-toggle').onchange=e=>{
-    char.communitySharePhotos=e.target.checked;saveChar();syncPresence();
-    if(e.target.checked)showToast('Mark individual photos as shared in the Photos tab');
   };
 }
 
