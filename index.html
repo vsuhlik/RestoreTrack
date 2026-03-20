@@ -9,18 +9,17 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0D0B14;--bg-card:rgba(22,18,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(22,18,34,.98),rgba(16,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#0E0C17;--bg-hdr:linear-gradient(180deg,#1a1628,#130F1E);--bg-sheet:#12101e;--bg-ps:#0D0B14;--hdr-border:rgba(201,168,76,.25);--nav-border:rgba(201,168,76,.15);--card-border:rgba(201,168,76,.1);--card-border-gold:rgba(201,168,76,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#C9A84C;--acc6:rgba(201,168,76,.06);--acc12:rgba(201,168,76,.12);--acc18:rgba(201,168,76,.18);--acc30:rgba(201,168,76,.3);--acc45:rgba(201,168,76,.5);--text1:#E2DDD0;--text2:#aaa;--text3:#888;--text4:#555;--text5:#444;--text6:#333;--green:#22a85a;--green-bg:rgba(34,168,90,.06);--green-border:rgba(34,168,90,.3);--scrollbar:#2a2535}
-[data-theme="ivory"]{--bg:#F0EDE6;--bg-card:rgba(255,255,255,.97);--bg-card-gold:linear-gradient(135deg,rgba(255,252,244,.99),rgba(245,238,222,.99));--bg-stat:rgba(0,0,0,.04);--bg-nav:#FFF;--bg-hdr:linear-gradient(180deg,#FFF,#F0EDE6);--bg-sheet:#FAFAF7;--bg-ps:#F0EDE6;--hdr-border:rgba(122,92,16,.2);--nav-border:rgba(122,92,16,.12);--card-border:rgba(122,92,16,.15);--card-border-gold:rgba(122,92,16,.3);--stat-border:rgba(0,0,0,.09);--surf-border:rgba(0,0,0,.07);--accent:#7A5C10;--acc6:rgba(122,92,16,.06);--acc12:rgba(122,92,16,.1);--acc18:rgba(122,92,16,.14);--acc30:rgba(122,92,16,.28);--acc45:rgba(122,92,16,.45);--text1:#1a1710;--text2:#5a5040;--text3:#7a6a50;--text4:#9a8a70;--text5:#aaa090;--text6:#bfb8a8;--green:#1a8040;--green-bg:rgba(26,128,64,.06);--green-border:rgba(26,128,64,.3);--scrollbar:#d0cbc4}
-[data-theme="forest"]{--bg:#0A1409;--bg-card:rgba(11,22,10,.97);--bg-card-gold:linear-gradient(135deg,rgba(14,28,13,.98),rgba(9,18,8,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#060E05;--bg-hdr:linear-gradient(180deg,#142010,#0A1409);--bg-sheet:#0e1c0d;--bg-ps:#0A1409;--hdr-border:rgba(76,175,80,.25);--nav-border:rgba(76,175,80,.15);--card-border:rgba(76,175,80,.12);--card-border-gold:rgba(76,175,80,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#4CAF50;--acc6:rgba(76,175,80,.06);--acc12:rgba(76,175,80,.12);--acc18:rgba(76,175,80,.18);--acc30:rgba(76,175,80,.3);--acc45:rgba(76,175,80,.5);--text1:#D0EDD0;--text2:#7aaa77;--text3:#5a8855;--text4:#4a7048;--text5:#3a583a;--text6:#2a3e2a;--green:#4CAF50;--green-bg:rgba(76,175,80,.06);--green-border:rgba(76,175,80,.3);--scrollbar:#1a2e1a}
-[data-theme="ocean"]{--bg:#050D18;--bg-card:rgba(7,16,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(8,20,42,.98),rgba(5,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#030A12;--bg-hdr:linear-gradient(180deg,#0A1A32,#050D18);--bg-sheet:#081428;--bg-ps:#050D18;--hdr-border:rgba(56,180,212,.25);--nav-border:rgba(56,180,212,.15);--card-border:rgba(56,180,212,.12);--card-border-gold:rgba(56,180,212,.28);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#38B4D4;--acc6:rgba(56,180,212,.06);--acc12:rgba(56,180,212,.12);--acc18:rgba(56,180,212,.18);--acc30:rgba(56,180,212,.3);--acc45:rgba(56,180,212,.5);--text1:#C8E8F5;--text2:#6898AA;--text3:#4a7888;--text4:#3a6272;--text5:#2e5060;--text6:#22404e;--green:#22b4a0;--green-bg:rgba(34,180,160,.06);--green-border:rgba(34,180,160,.3);--scrollbar:#0d2234}
-[data-theme="neon"]{--bg:#07060E;--bg-card:rgba(12,9,22,.97);--bg-card-gold:linear-gradient(135deg,rgba(18,10,32,.98),rgba(10,6,20,.98));--bg-stat:rgba(255,255,255,.025);--bg-nav:#050409;--bg-hdr:linear-gradient(180deg,#10081C,#07060E);--bg-sheet:#0e0a1e;--bg-ps:#07060E;--hdr-border:rgba(220,0,255,.3);--nav-border:rgba(220,0,255,.18);--card-border:rgba(220,0,255,.14);--card-border-gold:rgba(220,0,255,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.06);--accent:#DC00FF;--acc6:rgba(220,0,255,.06);--acc12:rgba(220,0,255,.12);--acc18:rgba(220,0,255,.2);--acc30:rgba(220,0,255,.32);--acc45:rgba(220,0,255,.55);--text1:#F0E5FF;--text2:#9966CC;--text3:#7744AA;--text4:#5a3388;--text5:#442266;--text6:#331144;--green:#aa00ff;--green-bg:rgba(170,0,255,.06);--green-border:rgba(170,0,255,.3);--scrollbar:#1a0e2a}
-[data-theme="neon"] .hdr-title,[data-theme="neon"] .big-timer{text-shadow:0 0 14px var(--accent),0 0 28px var(--acc18)}
+:root{--bg:#0D0B14;--bg-card:rgba(22,18,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(22,18,34,.98),rgba(16,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#0E0C17;--bg-hdr:linear-gradient(180deg,#1a1628,#130F1E);--bg-sheet:#12101e;--bg-ps:#0D0B14;--hdr-border:rgba(201,168,76,.25);--nav-border:rgba(201,168,76,.15);--card-border:rgba(201,168,76,.1);--card-border-gold:rgba(201,168,76,.3);--stat-border:rgba(255,255,255,.06);--accent:#C9A84C;--acc6:rgba(201,168,76,.06);--acc12:rgba(201,168,76,.12);--acc18:rgba(201,168,76,.18);--acc30:rgba(201,168,76,.3);--acc45:rgba(201,168,76,.5);--text1:#E2DDD0;--text2:#aaa;--text3:#888;--text4:#555;--text5:#444;--text6:#333;--green:#22a85a;--green-bg:rgba(34,168,90,.06);--green-border:rgba(34,168,90,.3);--scrollbar:#2a2535}
+[data-theme="ivory"]{--bg:#F0EDE6;--bg-card:rgba(255,255,255,.97);--bg-card-gold:linear-gradient(135deg,rgba(255,252,244,.99),rgba(245,238,222,.99));--bg-stat:rgba(0,0,0,.04);--bg-nav:#FFF;--bg-hdr:linear-gradient(180deg,#FFF,#F0EDE6);--bg-sheet:#FAFAF7;--bg-ps:#F0EDE6;--hdr-border:rgba(122,92,16,.2);--nav-border:rgba(122,92,16,.12);--card-border:rgba(122,92,16,.15);--card-border-gold:rgba(122,92,16,.3);--stat-border:rgba(0,0,0,.09);--accent:#7A5C10;--acc6:rgba(122,92,16,.06);--acc12:rgba(122,92,16,.1);--acc18:rgba(122,92,16,.14);--acc30:rgba(122,92,16,.28);--acc45:rgba(122,92,16,.45);--text1:#1a1710;--text2:#5a5040;--text3:#7a6a50;--text4:#9a8a70;--text5:#aaa090;--text6:#bfb8a8;--green:#1a8040;--green-bg:rgba(26,128,64,.06);--green-border:rgba(26,128,64,.3);--scrollbar:#d0cbc4}
+[data-theme="forest"]{--bg:#0A1409;--bg-card:rgba(11,22,10,.97);--bg-card-gold:linear-gradient(135deg,rgba(14,28,13,.98),rgba(9,18,8,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#060E05;--bg-hdr:linear-gradient(180deg,#142010,#0A1409);--bg-sheet:#0e1c0d;--bg-ps:#0A1409;--hdr-border:rgba(76,175,80,.25);--nav-border:rgba(76,175,80,.15);--card-border:rgba(76,175,80,.12);--card-border-gold:rgba(76,175,80,.3);--stat-border:rgba(255,255,255,.06);--accent:#4CAF50;--acc6:rgba(76,175,80,.06);--acc12:rgba(76,175,80,.12);--acc18:rgba(76,175,80,.18);--acc30:rgba(76,175,80,.3);--acc45:rgba(76,175,80,.5);--text1:#D0EDD0;--text2:#7aaa77;--text3:#5a8855;--text4:#4a7048;--text5:#3a583a;--text6:#2a3e2a;--green:#4CAF50;--green-bg:rgba(76,175,80,.06);--green-border:rgba(76,175,80,.3);--scrollbar:#1a2e1a}
+[data-theme="ocean"]{--bg:#050D18;--bg-card:rgba(7,16,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(8,20,42,.98),rgba(5,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#030A12;--bg-hdr:linear-gradient(180deg,#0A1A32,#050D18);--bg-sheet:#081428;--bg-ps:#050D18;--hdr-border:rgba(56,180,212,.25);--nav-border:rgba(56,180,212,.15);--card-border:rgba(56,180,212,.12);--card-border-gold:rgba(56,180,212,.28);--stat-border:rgba(255,255,255,.06);--accent:#38B4D4;--acc6:rgba(56,180,212,.06);--acc12:rgba(56,180,212,.12);--acc18:rgba(56,180,212,.18);--acc30:rgba(56,180,212,.3);--acc45:rgba(56,180,212,.5);--text1:#C8E8F5;--text2:#6898AA;--text3:#4a7888;--text4:#3a6272;--text5:#2e5060;--text6:#22404e;--green:#22b4a0;--green-bg:rgba(34,180,160,.06);--green-border:rgba(34,180,160,.3);--scrollbar:#0d2234}
+[data-theme="neon"]{--bg:#07060E;--bg-card:rgba(12,9,22,.97);--bg-card-gold:linear-gradient(135deg,rgba(18,10,32,.98),rgba(10,6,20,.98));--bg-stat:rgba(255,255,255,.025);--bg-nav:#050409;--bg-hdr:linear-gradient(180deg,#10081C,#07060E);--bg-sheet:#0e0a1e;--bg-ps:#07060E;--hdr-border:rgba(220,0,255,.3);--nav-border:rgba(220,0,255,.18);--card-border:rgba(220,0,255,.14);--card-border-gold:rgba(220,0,255,.3);--stat-border:rgba(255,255,255,.06);--accent:#DC00FF;--acc6:rgba(220,0,255,.06);--acc12:rgba(220,0,255,.12);--acc18:rgba(220,0,255,.2);--acc30:rgba(220,0,255,.32);--acc45:rgba(220,0,255,.55);--text1:#F0E5FF;--text2:#9966CC;--text3:#7744AA;--text4:#5a3388;--text5:#442266;--text6:#331144;--green:#aa00ff;--green-bg:rgba(170,0,255,.06);--green-border:rgba(170,0,255,.3);--scrollbar:#1a0e2a}
+[data-theme="neon"] .big-timer{text-shadow:0 0 14px var(--accent),0 0 28px var(--acc18)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;transition:background .3s}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px}
 .app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:70px}
 .hdr{background:var(--bg-hdr);border-bottom:1px solid var(--hdr-border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
-.hdr-title{font-family:'Cinzel',serif;font-size:13px;color:var(--accent);letter-spacing:2px}
 .ci-pill{background:var(--acc12);border:1px solid var(--pill-border,var(--acc30));border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'Cinzel',serif;white-space:nowrap}
 .profile-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .profile-btn:hover{border-color:var(--acc30);color:var(--accent)}
@@ -31,7 +30,6 @@ body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;mi
 /* CI RING */
 .ci-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 4px}
 .ci-ring-wrap svg{filter:drop-shadow(0 0 6px var(--acc12))}
-.ci-set-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
 .ci-set-btn{background:var(--acc6);border:1px solid var(--acc30);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .ci-set-btn:hover{background:var(--acc12)}
 /* COACH CARD */
@@ -132,7 +130,7 @@ textarea:focus{border-color:var(--acc30)}
 .goal-inp{background:var(--bg-stat);border:1px solid var(--acc30);border-radius:7px;padding:5px 8px;color:var(--accent);font-size:15px;font-weight:700;width:76px;outline:none;text-align:center;font-family:'Cinzel',serif}
 .xp-tag{background:var(--acc6);border:1px solid var(--acc30);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--accent);font-weight:600;display:inline-block;margin-top:6px}
 .mode-row{display:flex;gap:6px;margin-bottom:10px}
-.mode-pill{flex:1;padding:8px;border-radius:8px;background:var(--bg-stat);border:1px solid var(--surf-border);cursor:pointer;font-size:12px;font-weight:500;color:var(--text4);font-family:'DM Sans',sans-serif;text-align:center;transition:all .2s}
+.mode-pill{flex:1;padding:8px;border-radius:8px;background:var(--bg-stat);border:1px solid var(--stat-border);cursor:pointer;font-size:12px;font-weight:500;color:var(--text4);font-family:'DM Sans',sans-serif;text-align:center;transition:all .2s}
 .mode-pill.active{background:var(--acc12);border-color:var(--acc30);color:var(--accent)}
 .page-title{font-family:'Cinzel',serif;font-size:14px;color:var(--accent);margin-bottom:2px}
 .page-sub{font-size:11px;color:var(--text4);margin-bottom:12px}
@@ -251,7 +249,7 @@ function liveTimerTodayMins(){
 const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
 const thisWeekDays=()=>{const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;};
 const dayLbl=d=>['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(d+'T12:00:00').getDay()];
-const catFor=id=>CATS.find(c=>c.id===id)||{icon:'?',color:'#888',mult:1,label:'',methods:[]};
+const catFor=id=>CATS.find(c=>c.id===id)||{icon:'?',color:'#888',label:'',methods:[]};
 
 // ── STORAGE ────────────────────────────────────────────────────────────────────
 const S={
@@ -273,8 +271,8 @@ function loadProfile(pid){
   if(char.ciLevel===undefined)char.ciLevel=0;
   if(!char.ciHistory)char.ciHistory=[];
   if(!char.restDays)char.restDays=[];
-  if(!char.communityEnabled)char.communityEnabled=false;
-  if(!char.communityDisplayName)char.communityDisplayName='';
+  if(char.communityEnabled===undefined)char.communityEnabled=false;
+  if(char.communityDisplayName===undefined)char.communityDisplayName='';
   if(char.communityVisible===undefined)char.communityVisible=true;
   if(!char.communityAvatar)char.communityAvatar='🌱';
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
@@ -450,7 +448,7 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
   char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
   const newly=[];
   for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
-  logs=[{id:Date.now(),date:td,method,cat:catId,dur:totalMins,notes,xp:0},...logs];
+  logs=[{id:Date.now(),date:td,method,cat:catId,dur:totalMins,notes},...logs];
   saveChar();saveLogs();
   showSessFlash(`✓ ${fmtMin(totalMins)}`);
   if(newly.length){
@@ -482,17 +480,20 @@ function setCILevel(n){
   char.ciLevel=n;
   char.ciHistory=[...(char.ciHistory||[]),{ci:n,date:today()}];
   const newly=[];
-  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
   saveChar();
   if(n>prev)showToast(`🎉 ${LEVELS[n].ci} reached!`);
-  if(newly.length)setTimeout(()=>showToast(`🏅 ${newly[0]} unlocked!`),1800);
+  if(newly.length){
+    setTimeout(()=>showToast(`🏅 ${newly[0].title} unlocked!`),1800);
+    newly.forEach(m=>commMilestonePost(m.title,m.icon));
+  }
   showCISheet=false;render();
 }
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
 function addPhoto(ciLevel,dataUrl,note,dateStr){
   const photoDate=dateStr||today();
-  photos=[{id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||'',analysis:null},...photos];
+  photos=[{id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||''},...photos];
   savePhotos();showToast('📸 Progress photo saved!');tab='photos';render();
 }
 function deletePhoto(id){
@@ -736,7 +737,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.5</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.6</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1710,7 +1711,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.5</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.6</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2230,7 +2231,14 @@ function initFirebase(){
         fbUID=user.uid;
         fbIsGoogle=user.providerData.some(p=>p.providerId==='google.com');
         commState.ready=true;commState.authError=null;
-        startCommunityListeners();
+        // Check if this is a pending new join (redirect came back)
+        const pendingName=localStorage.getItem('rst-comm-pending-name');
+        if(fbIsGoogle&&pendingName){
+          localStorage.removeItem('rst-comm-pending-name');
+          finaliseJoin(pendingName);
+        } else {
+          startCommunityListeners();
+        }
       } else {
         // Not signed in — sign in anonymously for browsing
         fbAuth.signInAnonymously().catch(e=>{
@@ -2267,25 +2275,27 @@ function signInWithGoogle(displayName){
   }
 }
 
-// Handle Google redirect result on page load
+// Handle Google redirect result — safety net for browsers where onAuthStateChanged
+// fires before getRedirectResult resolves
 function handleGoogleRedirect(){
   if(!fbAuth)return;
   fbAuth.getRedirectResult().then(result=>{
     if(!result||!result.user)return;
-    fbUID=result.user.uid;fbIsGoogle=true;
-    const name=localStorage.getItem('rst-comm-pending-name')||'';
-    localStorage.removeItem('rst-comm-pending-name');
-    if(name)finaliseJoin(name);
-    else if(char.communityEnabled)startCommunityListeners();
+    // onAuthStateChanged should already have handled this, but just in case:
+    const pendingName=localStorage.getItem('rst-comm-pending-name');
+    if(pendingName&&result.user){
+      localStorage.removeItem('rst-comm-pending-name');
+      fbUID=result.user.uid;fbIsGoogle=true;
+      finaliseJoin(pendingName);
+    }
   }).catch(()=>{});
 }
 
 function finaliseJoin(name){
   char.communityDisplayName=name.trim();
   char.communityEnabled=true;char.communityVisible=true;saveChar();
+  tab='community'; // always land on community after joining
   startCommunityListeners();
-  // Sync presence after a short delay to ensure timer state is fully restored
-  // — important on iPhone where Google redirect reloads the page
   setTimeout(()=>{syncPresence();refreshCommUI();},1200);
   render();
 }
