@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>RestoreTrack</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0D0B14;--bg-card:rgba(22,18,34,.97);--bg-card-gold:linear-gradient(135deg,rgba(22,18,34,.98),rgba(16,12,28,.98));--bg-stat:rgba(255,255,255,.03);--bg-nav:#0E0C17;--bg-hdr:linear-gradient(180deg,#1a1628,#130F1E);--bg-sheet:#12101e;--bg-ps:#0D0B14;--hdr-border:rgba(201,168,76,.25);--nav-border:rgba(201,168,76,.15);--card-border:rgba(201,168,76,.1);--card-border-gold:rgba(201,168,76,.3);--stat-border:rgba(255,255,255,.06);--surf-border:rgba(255,255,255,.07);--accent:#C9A84C;--acc6:rgba(201,168,76,.06);--acc12:rgba(201,168,76,.12);--acc18:rgba(201,168,76,.18);--acc30:rgba(201,168,76,.3);--acc45:rgba(201,168,76,.5);--text1:#E2DDD0;--text2:#aaa;--text3:#888;--text4:#555;--text5:#444;--text6:#333;--green:#22a85a;--green-bg:rgba(34,168,90,.06);--green-border:rgba(34,168,90,.3);--scrollbar:#2a2535}
@@ -214,7 +217,8 @@ const THEMES=[
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let profiles=[],currentPid=null,currentTheme='shadow';
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
-  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[]};
+  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],
+  communityEnabled:false,communityDisplayName:'',communityVisible:true};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -269,6 +273,9 @@ function loadProfile(pid){
   if(char.ciLevel===undefined)char.ciLevel=0;
   if(!char.ciHistory)char.ciHistory=[];
   if(!char.restDays)char.restDays=[];
+  if(!char.communityEnabled)char.communityEnabled=false;
+  if(!char.communityDisplayName)char.communityDisplayName='';
+  if(char.communityVisible===undefined)char.communityVisible=true;
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
   const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
@@ -386,6 +393,7 @@ function beginSession(){
   activeTimer={startedAt:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
   timerSecs=0;saveTimer(activeTimer);startInterval();showSessionSheet=false;
   if(navigator.vibrate)navigator.vibrate(60);
+  syncPresence();
   render();
 }
 function stopSession(){
@@ -407,7 +415,9 @@ function commitSession(notes){
   const catId=activeTimer?activeTimer.cat:sheetCat;
   awardSession(method,catId,finalMins,notes||sheetNotes||'');
   stopInterval();activeTimer=null;timerSecs=0;sheetMethod='';sheetCat=null;sheetNotes='';
-  saveTimer(null);showStopSheet=false;render();
+  saveTimer(null);showStopSheet=false;
+  syncPresence();
+  render();
 }
 function logManual(method,catId,totalMins,notes,dateStr){
   if(totalMins<=0)return;
@@ -438,11 +448,14 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
   if(prevTodayMin<char.dailyGoalMin&&(prevTodayMin+totalMins)>=char.dailyGoalMin)ngd++;
   char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
   const newly=[];
-  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push(a.title);}
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
   logs=[{id:Date.now(),date:td,method,cat:catId,dur:totalMins,notes,xp:0},...logs];
   saveChar();saveLogs();
   showSessFlash(`✓ ${fmtMin(totalMins)}`);
-  if(newly.length)showToast(`🏅 ${newly[0]} — milestone reached!`);
+  if(newly.length){
+    showToast(`🏅 ${newly[0].title} — milestone reached!`);
+    newly.forEach(m=>commMilestonePost(m.title,m.icon));
+  }
   else if(ns>1)showToast(`${fmtMin(totalMins)} logged · ${ns}-day streak 🔥`);
   else showToast(`${fmtMin(totalMins)} logged · Session #${char.sessions}`);
 }
@@ -722,7 +735,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.0</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.1</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -742,6 +755,12 @@ function render(){
   else if(tab==='photos')c.innerHTML=renderPhotos();
   else if(tab==='reports')c.innerHTML=renderReports();
   else if(tab==='ach')c.innerHTML=renderAch();
+  else if(tab==='community'){
+    c.innerHTML=renderCommunity();
+    attachCommunityEvents();
+    // Initialise Firebase the first time community tab is opened
+    if(!commState.ready)initFirebase();
+  }
   attachEvents();
   if(showSessionSheet)mountSheet();
   else if(showStopSheet)mountStopSheet();
@@ -749,7 +768,7 @@ function render(){
 }
 function renderNav(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
-  return[{id:'today',icon:'◉',lbl:'Today'},{id:'journey',icon:'◑',lbl:'Journey'},{id:'photos',icon:'📸',lbl:'Photos'},{id:'reports',icon:'▦',lbl:'Reports'},{id:'ach',icon:'★',lbl:'Milestones'}]
+  return[{id:'today',icon:'◉',lbl:'Today'},{id:'journey',icon:'◑',lbl:'Journey'},{id:'photos',icon:'📸',lbl:'Photos'},{id:'reports',icon:'▦',lbl:'Reports'},{id:'ach',icon:'★',lbl:'Miles'},{id:'community',icon:'◈',lbl:'Community'}]
     .map(t=>`<button class="nav-btn${tab===t.id?' active':''}" data-tab="${t.id}">
       <span class="nav-icon" style="position:relative;display:inline-block">${t.icon}${running&&t.id==='today'?`<span style="position:absolute;top:-1px;right:-3px;width:6px;height:6px;border-radius:50%;background:var(--green);border:1px solid var(--bg-nav)"></span>`:''}</span>${t.lbl}
     </button>`).join('');
@@ -1690,7 +1709,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.0</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.1</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2183,8 +2202,363 @@ function attachEvents(){
   }));
 }
 
+// ── COMMUNITY / FIREBASE ───────────────────────────────────────────────────────
+const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
+let db=null,fbAuth=null,fbUID=null;
+let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null};
+
+function initFirebase(){
+  if(commState.ready)return;
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
+    db=firebase.firestore();fbAuth=firebase.auth();
+    fbAuth.signInAnonymously().then(c=>{
+      fbUID=c.user.uid;commState.ready=true;
+      if(char.communityEnabled)startCommunityListeners();
+      else{commState.loading=false;refreshCommUI();}
+    }).catch(e=>{console.warn('FB auth:',e);commState.loading=false;refreshCommUI();});
+  }catch(e){console.warn('FB init:',e);commState.loading=false;refreshCommUI();}
+}
+
+function startCommunityListeners(){
+  if(!db||!fbUID)return;
+  if(commState.unsubUsers)commState.unsubUsers();
+  if(commState.unsubPosts)commState.unsubPosts();
+  // Active users — ordered by lastSeen, filter visible client-side
+  commState.unsubUsers=db.collection('community_users')
+    .orderBy('lastSeen','desc').limit(60)
+    .onSnapshot(snap=>{
+      commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false);
+      commState.loading=false;refreshCommUI();
+    },e=>{console.warn('Users snap:',e);commState.loading=false;refreshCommUI();});
+  // Posts — last 14 days
+  const cutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-14*86400000));
+  commState.unsubPosts=db.collection('posts')
+    .where('ts','>',cutoff).orderBy('ts','desc').limit(40)
+    .onSnapshot(snap=>{
+      commState.posts=snap.docs.map(d=>({id:d.id,...d.data()}));
+      refreshCommUI();
+    },e=>console.warn('Posts snap:',e));
+  syncPresence();
+}
+
+function refreshCommUI(){
+  if(tab!=='community')return;
+  const c=document.getElementById('content');
+  if(c){c.innerHTML=renderCommunity();attachCommunityEvents();}
+}
+
+function syncPresence(){
+  if(!db||!fbUID||!char.communityEnabled||!char.communityDisplayName)return;
+  const running=!!activeTimer&&!!activeTimer.startedAt;
+  db.collection('community_users').doc(fbUID).set({
+    name:char.communityDisplayName,
+    ci:char.ciLevel||0,
+    streak:char.streak||0,
+    active:running,
+    method:running?(activeTimer.method||''):'',
+    todayMins:todayMin(),
+    lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
+    visible:char.communityVisible!==false,
+    joinedAt:firebase.firestore.FieldValue.serverTimestamp()
+  },{merge:true}).catch(()=>{});
+}
+
+function joinComm(name){
+  if(!name.trim())return;
+  char.communityDisplayName=name.trim();
+  char.communityEnabled=true;char.communityVisible=true;saveChar();
+  if(!commState.ready)initFirebase();
+  else startCommunityListeners();
+  render();
+}
+
+function leaveComm(){
+  if(db&&fbUID)db.collection('community_users').doc(fbUID).update({visible:false}).catch(()=>{});
+  char.communityEnabled=false;char.communityDisplayName='';saveChar();
+  if(commState.unsubUsers)commState.unsubUsers();
+  if(commState.unsubPosts)commState.unsubPosts();
+  commState.users=[];commState.posts=[];commState.loading=true;commState.ready=false;
+  db=null;fbAuth=null;fbUID=null;
+  const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
+  render();
+}
+
+function commPost(text){
+  if(!db||!fbUID||!text.trim())return;
+  db.collection('posts').add({
+    text:text.trim().slice(0,160),uid:fbUID,
+    name:char.communityDisplayName||'Anonymous',
+    ci:char.ciLevel||0,
+    ts:firebase.firestore.FieldValue.serverTimestamp(),
+    rf:0,rm:0,rh:0,type:'post'
+  }).then(()=>showToast('✓ Posted to community!')).catch(()=>showToast('⚠ Could not post'));
+}
+
+function commMilestonePost(title,icon){
+  if(!db||!fbUID||!char.communityEnabled||!char.communityDisplayName)return;
+  db.collection('posts').add({
+    text:`Just unlocked: ${title}`,uid:fbUID,
+    name:char.communityDisplayName,ci:char.ciLevel||0,
+    ts:firebase.firestore.FieldValue.serverTimestamp(),
+    rf:0,rm:0,rh:0,type:'milestone',mIcon:icon,mTitle:title
+  }).catch(()=>{});
+}
+
+function commReact(postId,r){
+  if(!db)return;
+  const stored=JSON.parse(localStorage.getItem('rst-reactions')||'{}');
+  const key=`${postId}-${r}`;
+  const field=r==='fire'?'rf':r==='muscle'?'rm':'rh';
+  const already=!!stored[key];
+  db.collection('posts').doc(postId).update({
+    [field]:firebase.firestore.FieldValue.increment(already?-1:1)
+  }).catch(()=>{});
+  if(already)delete stored[key];else stored[key]=1;
+  localStorage.setItem('rst-reactions',JSON.stringify(stored));
+  commState.posts=commState.posts.map(p=>p.id===postId?{...p,[field]:(p[field]||0)+(already?-1:1)}:p);
+  refreshCommUI();
+}
+
+function deleteCommPost(postId){
+  if(!db||!fbUID)return;
+  db.collection('posts').doc(postId).delete().catch(()=>{});
+}
+
+function commEncourage(uid){showToast('👊 Encouragement sent!');}
+
+function toggleCommVisible(){
+  char.communityVisible=!char.communityVisible;saveChar();syncPresence();refreshCommUI();
+}
+
+// ── COMMUNITY RENDER ───────────────────────────────────────────────────────────
+function renderCommunity(){
+  // Not joined yet
+  if(!char.communityEnabled||!char.communityDisplayName){
+    return`<div style="text-align:center;padding:28px 8px 20px">
+      <div style="font-size:44px;margin-bottom:12px">◉</div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);margin-bottom:10px;letter-spacing:1px">Join the Community</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.8;margin-bottom:22px">
+        Restoration is a long, solitary journey — but you're not alone.<br>
+        See who's restoring right now, share wins, and encourage each other.<br>
+        <span style="color:var(--text5)">Completely anonymous. No account needed.</span>
+      </div>
+    </div>
+    <input class="gold-inp" id="comm-name-inp" placeholder="Choose a display name..." maxlength="24" style="text-align:center;font-size:15px;margin-bottom:6px">
+    <div style="font-size:10px;color:var(--text5);text-align:center;margin-bottom:14px">Your real name is never shared. Change it anytime.</div>
+    <button class="btn-gold" id="comm-join-btn">◉ Join Community</button>`;
+  }
+
+  // Loading state
+  if(!commState.ready||commState.loading){
+    return`<div style="text-align:center;padding:80px 20px">
+      <div style="font-size:32px;margin-bottom:12px">◉</div>
+      <div style="font-size:11px;color:var(--text4)">Connecting to community...</div>
+    </div>`;
+  }
+
+  const reacted=JSON.parse(localStorage.getItem('rst-reactions')||'{}');
+  const now=Date.now();
+  const running=!!activeTimer&&!!activeTimer.startedAt;
+
+  // Split users: actively restoring vs recently seen (30 min window)
+  const active=commState.users.filter(u=>{
+    if(!u.active||!u.lastSeen)return false;
+    const ms=u.lastSeen.toMillis?u.lastSeen.toMillis():0;
+    return(now-ms)<30*60*1000;
+  });
+  const recentlyActive=commState.users.filter(u=>{
+    if(u.active)return false;
+    if(!u.lastSeen)return false;
+    const ms=u.lastSeen.toMillis?u.lastSeen.toMillis():0;
+    return(now-ms)<30*60*1000;
+  });
+  const allVisible=[...active,...recentlyActive];
+
+  // Your status bar
+  const myStatus=`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:10px">
+    <div style="position:relative;flex-shrink:0">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--acc12);border:2px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-weight:700;color:var(--accent);font-size:15px">${(char.communityDisplayName||'?')[0].toUpperCase()}</div>
+      ${running?`<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:700;font-size:13px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.communityDisplayName}</div>
+      <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[char.ciLevel||0].ci} · ${char.communityVisible!==false?(running?'<span style="color:var(--green)">● Restoring now</span>':'● Visible'):'○ Hidden'}</div>
+    </div>
+    <button onclick="showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 11px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">⚙ Settings</button>
+  </div>`;
+
+  // Active restoring cards
+  const activeCards=active.length?active.map(u=>buildUserCard(u,now,reacted)).join('')
+    :`<div style="text-align:center;padding:16px 12px;color:var(--text5);font-size:11px;background:var(--bg-stat);border-radius:10px;margin-bottom:7px">No one restoring right now.<br>Start a session to be first.</div>`;
+
+  // Recently active (not in a session but online in last 30 min)
+  const recentCards=recentlyActive.length?`
+    <div class="sec-title">Recently Active</div>
+    ${recentlyActive.map(u=>buildUserCard(u,now,reacted)).join('')}`:'';
+
+  // Feed
+  const feedCards=commState.posts.length?commState.posts.map(p=>buildPostCard(p,now,reacted)).join('')
+    :`<div style="text-align:center;padding:24px 12px;color:var(--text5);font-size:11px">No posts yet — share the first update!</div>`;
+
+  return`${myStatus}
+  <div class="sec-title">${active.length>0?`${active.length} Restoring Right Now 🟢`:'Active Now'}</div>
+  ${activeCards}
+  ${recentCards}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px">
+    <div class="sec-title" style="margin:0">Community Feed</div>
+    <button id="comm-post-btn" class="btn-outline" style="padding:5px 14px;font-size:11px">+ Post Update</button>
+  </div>
+  ${feedCards}`;
+}
+
+function buildUserCard(u,now,reacted){
+  const isMe=u.uid===fbUID;
+  const initial=(u.name||'?')[0].toUpperCase();
+  const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
+  const minsAgo=Math.floor((now-ms)/60000);
+  const timeStr=u.active?(u.todayMins>0?fmtMin(u.todayMins)+' today':'Active now'):(minsAgo<2?'Just now':minsAgo+'m ago');
+  return`<div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:flex-start">
+    <div style="position:relative;flex-shrink:0">
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--acc12);border:1px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-weight:700;color:var(--accent);font-size:15px">${initial}</div>
+      ${u.active?`<div style="position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
+        <span style="font-weight:700;font-size:13px;color:var(--text1)">${u.name||'Restorer'}</span>
+        <span style="font-family:Cinzel,serif;font-size:10px;color:var(--accent)">${LEVELS[u.ci||0].ci}</span>
+        ${(u.streak||0)>1?`<span style="font-size:10px;color:#F59E0B">${u.streak}🔥</span>`:''}
+        ${isMe?`<span style="font-size:9px;color:var(--text5)">(you)</span>`:''}
+      </div>
+      <div style="font-size:10px;color:var(--text4);margin-top:3px">${u.active&&u.method?`<span style="color:var(--text3)">${u.method}</span> · `:''}${u.active?`<span style="color:var(--green)">${timeStr}</span>`:`<span>${timeStr}</span>`}</div>
+    </div>
+    ${!isMe?`<button onclick="commEncourage('${u.uid}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 11px;font-size:14px;cursor:pointer;flex-shrink:0" title="Send encouragement">👊</button>`:''}
+  </div>`;
+}
+
+function buildPostCard(p,now,reacted){
+  if(!p.ts)return'';
+  const ms=p.ts.toMillis?p.ts.toMillis():now;
+  const diff=now-ms;
+  const ago=diff<3600000?Math.floor(diff/60000)+'m ago':diff<86400000?Math.floor(diff/3600000)+'h ago':Math.floor(diff/86400000)+'d ago';
+  const isMe=p.uid===fbUID;
+  const isMilestone=p.type==='milestone';
+  const initial=(p.name||'?')[0].toUpperCase();
+  const reactions=[{r:'fire',emoji:'🔥',field:'rf'},{r:'muscle',emoji:'💪',field:'rm'},{r:'heart',emoji:'❤️',field:'rh'}];
+  return`<div style="background:var(--bg-card);border:1px solid ${isMilestone?'var(--card-border-gold)':'var(--card-border)'};border-radius:12px;padding:12px;margin-bottom:7px">
+    <div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:9px">
+      ${isMilestone
+        ?`<div style="width:36px;height:36px;border-radius:50%;background:var(--acc12);border:1px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${p.mIcon||'🏅'}</div>`
+        :`<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-stat);border:1px solid var(--stat-border);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-weight:700;color:var(--accent);flex-shrink:0;font-size:14px">${initial}</div>`
+      }
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-weight:600;font-size:12px;color:var(--text1)">${p.name||'Restorer'}</span>
+          <span style="font-family:Cinzel,serif;font-size:9px;color:var(--accent)">${LEVELS[p.ci||0].ci}</span>
+          <span style="font-size:9px;color:var(--text5);margin-left:auto;flex-shrink:0">${ago}</span>
+        </div>
+        ${isMilestone
+          ?`<div style="font-size:12px;color:var(--text2);line-height:1.5"><span style="color:var(--accent);font-weight:600">${p.mTitle||p.text}</span> — milestone unlocked 🎉</div>`
+          :`<div style="font-size:12px;color:var(--text2);line-height:1.55">${p.text||''}</div>`
+        }
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--stat-border)">
+      ${reactions.map(({r,emoji,field})=>{
+        const count=p[field]||0;
+        const myR=!!reacted[`${p.id}-${r}`];
+        return`<button onclick="commReact('${p.id}','${r}')"
+          style="background:${myR?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${myR?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;color:${myR?'var(--accent)':'var(--text4)'};display:flex;align-items:center;gap:3px;font-family:DM Sans,sans-serif">
+          ${emoji} <span style="font-weight:${myR?700:400}">${count}</span>
+        </button>`;
+      }).join('')}
+      ${isMe?`<button onclick="confirmDialog('Delete post?','This will remove your post from the community feed.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif">✕ Delete</button>`:''}
+    </div>
+  </div>`;
+}
+
+function attachCommunityEvents(){
+  document.getElementById('comm-join-btn')?.addEventListener('click',()=>{
+    const name=document.getElementById('comm-name-inp')?.value||'';
+    if(name.trim())joinComm(name);
+    else showToast('Please enter a display name');
+  });
+  document.getElementById('comm-name-inp')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){const n=e.target.value.trim();if(n)joinComm(n);}
+  });
+  document.getElementById('comm-post-btn')?.addEventListener('click',showPostSheet);
+}
+
+function showPostSheet(){
+  const ex=document.getElementById('post-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='post-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:12px">Post to Community</div>
+    <textarea id="post-text" placeholder="Share a win, an observation, or some encouragement..." style="min-height:90px;font-size:13px;margin-bottom:4px"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text5)">Be real — this community appreciates honesty over hype.</div>
+      <div id="post-char" style="font-size:10px;color:var(--text5)">0 / 160</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" onclick="document.getElementById('post-ov').remove()" style="flex:0 0 76px">Cancel</button>
+      <button class="btn-gold" id="post-submit" style="flex:1">Post</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  const ta=document.getElementById('post-text');
+  ta.addEventListener('input',()=>{
+    const n=ta.value.length;
+    const cc=document.getElementById('post-char');
+    if(cc){cc.textContent=`${n} / 160`;cc.style.color=n>140?'#c0392b':'var(--text5)';}
+  });
+  document.getElementById('post-submit').onclick=()=>{
+    const text=ta.value.trim();if(!text)return;
+    commPost(text);el.remove();
+  };
+  ta.focus();
+}
+
+function showCommSettings(){
+  const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='comm-settings-ov';
+  const visible=char.communityVisible!==false;
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:16px">Community Settings</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Display Name</div>
+      <div style="display:flex;gap:7px">
+        <input class="gold-inp" id="comm-name-edit" value="${char.communityDisplayName||''}" maxlength="24" style="margin:0;flex:1">
+        <button class="btn-outline" id="comm-name-save">Save</button>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 12px;background:var(--bg-stat);border-radius:10px;margin-bottom:14px">
+      <input type="checkbox" id="comm-vis-toggle" ${visible?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">Show me as active</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">When off, you browse without appearing in the active list</div>
+      </div>
+    </label>
+    <button class="btn-ghost" id="comm-settings-done" style="width:100%;margin-bottom:8px">Done</button>
+    <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list. Your posts remain until they expire naturally. You can rejoin anytime.','Leave',leaveComm)" style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Leave Community</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+  document.getElementById('comm-settings-done').onclick=()=>el.remove();
+  document.getElementById('comm-name-save').onclick=()=>{
+    const n=document.getElementById('comm-name-edit').value.trim();
+    if(!n)return;char.communityDisplayName=n;saveChar();syncPresence();
+    showToast('Display name updated');el.remove();refreshCommUI();
+  };
+  document.getElementById('comm-vis-toggle').onchange=e=>{
+    char.communityVisible=e.target.checked;saveChar();syncPresence();refreshCommUI();
+  };
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────────
 loadAll();render();scheduleReminder();
+if(char.communityEnabled)initFirebase();
 </script>
 </body>
 </html>
