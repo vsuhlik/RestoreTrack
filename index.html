@@ -218,7 +218,7 @@ const THEMES=[
 let profiles=[],currentPid=null,currentTheme='shadow';
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
   dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],
-  communityEnabled:false,communityDisplayName:'',communityVisible:true};
+  communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱'};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -276,6 +276,7 @@ function loadProfile(pid){
   if(!char.communityEnabled)char.communityEnabled=false;
   if(!char.communityDisplayName)char.communityDisplayName='';
   if(char.communityVisible===undefined)char.communityVisible=true;
+  if(!char.communityAvatar)char.communityAvatar='🌱';
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
   const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
@@ -735,7 +736,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.3</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.5</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1709,7 +1710,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.3</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.5</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2203,6 +2204,16 @@ function attachEvents(){
 }
 
 // ── COMMUNITY / FIREBASE ───────────────────────────────────────────────────────
+const COMM_AVATARS=[
+  '🌱','🌿','🍃','🌳','🌾','🌊','🔥','⚡','💎','✨',
+  '🦅','🐉','🦁','🐺','🦊','🐻','🦋','🐬','🦅','🌙',
+  '⭐','🌟','💫','☀️','🌈','❄️','🍀','🎯','🔮','⚔️',
+  '🛡️','🗡️','🏹','🔑','🪬','🧬','💪','🤝','👊','🙌',
+  '🎖️','🏅','🥇','🏆','🎗️','🎪','🎭','🎨','🎵','🎶'
+];
+function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
+  return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2px solid ${border};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.52)}px;flex-shrink:0;line-height:1">${emoji||'🌱'}</div>`;
+}
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
 let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,authError:null};
@@ -2273,6 +2284,9 @@ function finaliseJoin(name){
   char.communityDisplayName=name.trim();
   char.communityEnabled=true;char.communityVisible=true;saveChar();
   startCommunityListeners();
+  // Sync presence after a short delay to ensure timer state is fully restored
+  // — important on iPhone where Google redirect reloads the page
+  setTimeout(()=>{syncPresence();refreshCommUI();},1200);
   render();
 }
 
@@ -2310,6 +2324,7 @@ function syncPresence(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
   db.collection('community_users').doc(fbUID).set({
     name:char.communityDisplayName,
+    avatar:char.communityAvatar||'🌱',
     ci:char.ciLevel||0,
     streak:char.streak||0,
     active:running,
@@ -2336,6 +2351,7 @@ function commPost(text){
   db.collection('posts').add({
     text:text.trim().slice(0,160),uid:fbUID,
     name:char.communityDisplayName||'Anonymous',
+    avatar:char.communityAvatar||'🌱',
     ci:char.ciLevel||0,
     ts:firebase.firestore.FieldValue.serverTimestamp(),
     rf:0,rm:0,rh:0,type:'post'
@@ -2346,7 +2362,9 @@ function commMilestonePost(title,icon){
   if(!db||!fbUID||!fbIsGoogle||!char.communityEnabled||!char.communityDisplayName)return;
   db.collection('posts').add({
     text:`Just unlocked: ${title}`,uid:fbUID,
-    name:char.communityDisplayName,ci:char.ciLevel||0,
+    name:char.communityDisplayName,
+    avatar:char.communityAvatar||'🌱',
+    ci:char.ciLevel||0,
     ts:firebase.firestore.FieldValue.serverTimestamp(),
     rf:0,rm:0,rh:0,type:'milestone',mIcon:icon,mTitle:title
   }).catch(()=>{});
@@ -2423,7 +2441,7 @@ function renderCommunity(){
   // My status bar — shown when joined
   `<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:10px">
     <div style="position:relative;flex-shrink:0">
-      <div style="width:36px;height:36px;border-radius:50%;background:var(--acc12);border:2px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-weight:700;color:var(--accent);font-size:15px">${(char.communityDisplayName||'?')[0].toUpperCase()}</div>
+      ${avatarCircle(char.communityAvatar||'🌱',38,'var(--acc30)','var(--acc12)')}
       ${running?`<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
     </div>
     <div style="flex:1;min-width:0">
@@ -2458,7 +2476,6 @@ function renderCommunity(){
 
 function buildUserCard(u,now,isJoined){
   const isMe=u.uid===fbUID;
-  const initial=(u.name||'?')[0].toUpperCase();
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
   const minsAgo=Math.floor((now-ms)/60000);
   const timeStr=u.active?(u.todayMins>0?fmtMin(u.todayMins)+' today':'Active now'):(minsAgo<2?'Just now':minsAgo+'m ago');
@@ -2468,7 +2485,7 @@ function buildUserCard(u,now,isJoined){
       :`<button onclick="showToast('Join the community to encourage others')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0;opacity:.4" title="Join to encourage">👊</button>`;
   return`<div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:center">
     <div style="position:relative;flex-shrink:0">
-      <div style="width:38px;height:38px;border-radius:50%;background:var(--acc12);border:1px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-weight:700;color:var(--accent);font-size:15px">${initial}</div>
+      ${avatarCircle(u.avatar||'🌱',38,'var(--acc30)','var(--acc12)')}
       ${u.active?`<div style="position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
     </div>
     <div style="flex:1;min-width:0">
@@ -2495,7 +2512,7 @@ function buildPostCard(p,now,reacted,isJoined){
   const reactions=[{r:'fire',emoji:'🔥',field:'rf'},{r:'muscle',emoji:'💪',field:'rm'},{r:'heart',emoji:'❤️',field:'rh'}];
   return`<div style="background:var(--bg-card);border:1px solid ${isMilestone?'var(--card-border-gold)':'var(--card-border)'};border-radius:12px;padding:12px;margin-bottom:7px">
     <div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:9px">
-      <div style="width:38px;height:38px;border-radius:50%;background:${isMilestone?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isMilestone?'var(--acc30)':'var(--stat-border)'};display:flex;align-items:center;justify-content:center;font-size:${isMilestone?'18':'14'}px;font-family:Cinzel,serif;font-weight:700;color:var(--accent);flex-shrink:0">${isMilestone?(p.mIcon||'🏅'):initial}</div>
+      <div style="width:38px;height:38px;border-radius:50%;background:${isMilestone?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isMilestone?'var(--acc30)':'var(--stat-border)'};display:flex;align-items:center;justify-content:center;font-size:${isMilestone?'18':'20'}px;flex-shrink:0;line-height:1">${isMilestone?(p.mIcon||'🏅'):(p.avatar||'🌱')}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:4px">
           <span style="font-weight:600;font-size:12px;color:var(--text1)">${p.name||'Restorer'}</span>
@@ -2575,6 +2592,13 @@ function showCommSettings(){
     <div class="sheet-handle"></div>
     <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:16px">Community Settings</div>
     <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Avatar</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${avatarCircle(char.communityAvatar||'🌱',44,'var(--acc30)','var(--acc12)')}
+        <button onclick="showAvatarPicker()" class="btn-outline" style="flex:1;padding:9px">Change Avatar</button>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
       <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Display Name</div>
       <div style="display:flex;gap:7px">
         <input class="gold-inp" id="comm-name-edit" value="${char.communityDisplayName||''}" maxlength="24" style="margin:0;flex:1">
@@ -2604,10 +2628,49 @@ function showCommSettings(){
   };
 }
 
+function showAvatarPicker(){
+  const ex=document.getElementById('avatar-pick-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='avatar-pick-ov';
+  const current=char.communityAvatar||'🌱';
+  const grid=COMM_AVATARS.map(a=>`
+    <button onclick="selectAvatar('${a}')" style="width:48px;height:48px;border-radius:10px;background:${a===current?'var(--acc12)':'var(--bg-stat)'};border:2px solid ${a===current?'var(--accent)':'var(--stat-border)'};cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s">${a}</button>`).join('');
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      ${avatarCircle(current,44,'var(--acc30)','var(--acc12)')}
+      <div>
+        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Choose Avatar</div>
+        <div style="font-size:10px;color:var(--text5);margin-top:3px">Visible to the community</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-height:52vh;overflow-y:auto;padding:2px">${grid}</div>
+    <button class="btn-ghost" onclick="document.getElementById('avatar-pick-ov').remove()" style="width:100%;margin-top:14px">Done</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
+function selectAvatar(emoji){
+  char.communityAvatar=emoji;saveChar();syncPresence();
+  // Refresh picker highlight
+  document.querySelectorAll('#avatar-pick-ov button').forEach(b=>{
+    const isSel=b.textContent===emoji;
+    b.style.background=isSel?'var(--acc12)':'var(--bg-stat)';
+    b.style.borderColor=isSel?'var(--accent)':'var(--stat-border)';
+  });
+  // Update the avatar preview in settings sheet if open
+  const preview=document.querySelector('#comm-settings-ov [data-avatar-preview]');
+  if(preview)preview.textContent=emoji;
+  refreshCommUI();
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────────
 loadAll();render();scheduleReminder();
 // Handle Google redirect result (fires after mobile sign-in redirect)
-if(char.communityEnabled){initFirebase();setTimeout(handleGoogleRedirect,800);}
+if(char.communityEnabled){
+  initFirebase();
+  setTimeout(handleGoogleRedirect,800);
+  if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2000);}
+}
 else if(localStorage.getItem('rst-comm-pending-name')){initFirebase();setTimeout(handleGoogleRedirect,800);}
 </script>
 </body>
