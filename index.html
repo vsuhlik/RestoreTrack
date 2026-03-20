@@ -754,7 +754,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.3</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.4</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1775,7 +1775,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.3</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2428,6 +2428,8 @@ function startCommunityListeners(){
       });
     },()=>{});
   if(char.communityEnabled&&char.communityDisplayName)syncPresence();
+  // Flush any milestone posts that were earned before Firebase auth resolved
+  flushMilestonePosts();
 }
 
 function refreshCommUI(){
@@ -2489,8 +2491,15 @@ function commPost(text){
   }).then(()=>showToast('✓ Posted to community!')).catch(()=>showToast('⚠ Could not post'));
 }
 
+let pendingMilestonePosts=[]; // queued if Firebase not ready when milestone earned
+
 function commMilestonePost(title,icon){
-  if(!db||!fbUID||!fbIsGoogle||!char.communityEnabled||!char.communityDisplayName)return;
+  if(!char.communityEnabled||!char.communityDisplayName)return;
+  // If Firebase isn't ready yet, queue it — will flush once auth resolves
+  if(!db||!fbUID||!fbIsGoogle){
+    pendingMilestonePosts.push({title,icon});
+    return;
+  }
   db.collection('posts').add({
     text:`Just unlocked: ${title}`,uid:fbUID,
     name:char.communityDisplayName,
@@ -2499,6 +2508,13 @@ function commMilestonePost(title,icon){
     ts:firebase.firestore.FieldValue.serverTimestamp(),
     rf:0,rm:0,rh:0,type:'milestone',mIcon:icon,mTitle:title
   }).catch(()=>{});
+}
+
+function flushMilestonePosts(){
+  if(!pendingMilestonePosts.length)return;
+  const queue=[...pendingMilestonePosts];
+  pendingMilestonePosts=[];
+  queue.forEach(m=>commMilestonePost(m.title,m.icon));
 }
 
 function commReact(postId,r){
