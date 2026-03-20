@@ -722,7 +722,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v0.9</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.0</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1267,7 +1267,7 @@ function renderPhotos(){
   </div>
   ${compareBtn}
   <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none">
-  <input type="file" id="photo-file-library" accept="image/*" style="display:none">
+  <input type="file" id="photo-file-library" accept="image/*" multiple style="display:none">
   <div class="sec-title">Photo Timeline</div>
   ${eraHtml}`;
 }
@@ -1276,6 +1276,7 @@ function renderPhotos(){
 let photoGuideStep=1;
 let pendingPhotoData=null;
 let pendingPhotoCI=null;
+let photoQueue=[]; // [{data, fileName}] for multi-select batch tagging
 
 function mountPhotoGuideSheet(){
   const ex=document.getElementById('photo-guide-ov');if(ex)ex.remove();
@@ -1324,6 +1325,12 @@ function mountPhotoGuideSheet(){
   } else if(photoGuideStep===2){
     if(!pendingPhotoCI)pendingPhotoCI=LEVELS[char.ciLevel||0].ci;
 
+    // Queue state — which photo are we on?
+    const queueTotal=photoQueue.length;
+    const queueIdx=queueTotal>0?photoQueue.findIndex(q=>q.data===pendingPhotoData):0;
+    const isQueued=queueTotal>1;
+    const isLast=!isQueued||queueIdx===queueTotal-1;
+
     const ciCards=LEVELS.map((l,i)=>{
       const isSel=pendingPhotoCI===l.ci;
       return`<div data-pci="${l.ci}" onclick="pendingPhotoCI='${l.ci}';document.querySelectorAll('#photo-guide-ov .pci-card').forEach(c=>{const s=c.dataset.pci===pendingPhotoCI;c.style.background=s?'var(--acc12)':'var(--bg-stat)';c.style.borderColor=s?'var(--acc30)':'var(--stat-border)';c.querySelector('.pci-label').style.color=s?'var(--accent)':'var(--text3)';c.querySelector('.pci-check').textContent=s?'✓':'';c.querySelector('.pci-check').style.background=s?'var(--accent)':'transparent';c.querySelector('.pci-check').style.borderColor=s?'var(--accent)':'var(--stat-border)';})"
@@ -1338,42 +1345,65 @@ function mountPhotoGuideSheet(){
 
     el.innerHTML=`<div class="sheet" style="max-height:88vh">
       <div class="sheet-handle"></div>
-      <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:10px">Tag Your Photo</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Tag Your Photo</div>
+        ${isQueued?`<div style="font-size:11px;color:var(--text4);background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:3px 10px">${queueIdx+1} of ${queueTotal}</div>`:''}
+      </div>
+
+      ${isQueued?`<div style="height:4px;background:var(--bg-stat);border-radius:2px;overflow:hidden;margin-bottom:12px">
+        <div style="height:100%;background:var(--accent);border-radius:2px;width:${Math.round(((queueIdx+1)/queueTotal)*100)}%;transition:width .3s"></div>
+      </div>`:''}
 
       <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
         <img src="${pendingPhotoData}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--acc30);flex-shrink:0" alt="Preview">
-        <div style="font-size:10px;color:var(--text4);line-height:1.7;padding-top:2px">Select the CI level that best matches what you see in your photo. Read the descriptions and pick the closest match.</div>
+        <div style="font-size:10px;color:var(--text4);line-height:1.7;padding-top:2px">Select the CI level that best matches this photo. Date it correctly if it was taken in the past.</div>
       </div>
 
-      <div style="max-height:36vh;overflow-y:auto;padding-right:2px;margin-bottom:12px">${ciCards}</div>
+      <div style="max-height:32vh;overflow-y:auto;padding-right:2px;margin-bottom:12px">${ciCards}</div>
 
       <div style="margin-bottom:10px">
         <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Photo date</div>
         <input type="date" id="photo-date-inp" value="${today()}" max="${today()}"
           style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif">
-        <div style="font-size:9px;color:var(--text5);margin-top:4px">Change this for existing photos taken in the past.</div>
+        <div style="font-size:9px;color:var(--text5);margin-top:4px">Change this for older photos.</div>
       </div>
 
       <input type="text" id="photo-note-inp" placeholder="Optional note — method, how long in, anything relevant..." style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 11px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:12px">
 
       <div style="display:flex;gap:8px">
-        <button class="btn-ghost" id="photo-retake" style="flex:0 0 80px">↺ Retake</button>
-        <button class="btn-gold" id="photo-confirm-save" style="flex:1">Save to Timeline</button>
+        <button class="btn-ghost" id="photo-cancel-queue" style="flex:0 0 80px">${isQueued?'Cancel all':'↺ Retake'}</button>
+        <button class="btn-gold" id="photo-confirm-save" style="flex:1">${isLast?'Save to Timeline':'Save & Next →'}</button>
       </div>
     </div>`;
     document.getElementById('root').appendChild(el);
 
-    document.getElementById('photo-retake').onclick=()=>{
+    document.getElementById('photo-cancel-queue').onclick=()=>{
+      // Cancel — clear queue and go back
+      photoQueue=[];
       photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
-      el.remove();mountPhotoGuideSheet();
+      el.remove();
+      if(!isQueued)mountPhotoGuideSheet(); // single photo — back to guide
+      // multi — just close, user can restart
     };
     document.getElementById('photo-confirm-save').onclick=()=>{
       const note=document.getElementById('photo-note-inp')?.value||'';
       const dateVal=document.getElementById('photo-date-inp')?.value||today();
       if(!pendingPhotoData||!pendingPhotoCI)return;
       addPhoto(pendingPhotoCI,pendingPhotoData,note,dateVal);
-      photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
-      el.remove();
+
+      if(isQueued&&!isLast){
+        // Advance to next photo in queue
+        const nextIdx=queueIdx+1;
+        pendingPhotoData=photoQueue[nextIdx].data;
+        pendingPhotoCI=LEVELS[char.ciLevel||0].ci; // reset to current CI for each
+        el.remove();
+        mountPhotoGuideSheet();
+      } else {
+        // Done — clear queue
+        photoQueue=[];
+        photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
+        el.remove();
+      }
     };
   }
 }
@@ -1660,7 +1690,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v0.9</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.0</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2112,15 +2142,25 @@ function attachEvents(){
   });}
   const pfl=document.getElementById('photo-file-library');
   if(pfl){pfl.addEventListener('change',e=>{
-    const file=e.target.files[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      pendingPhotoData=ev.target.result;
-      photoGuideStep=2;
-      const ex=document.getElementById('photo-guide-ov');if(ex)ex.remove();
-      mountPhotoGuideSheet();
-    };
-    reader.readAsDataURL(file);
+    const files=Array.from(e.target.files);if(!files.length)return;
+    photoQueue=[];
+    let loaded=0;
+    files.forEach((file,i)=>{
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        photoQueue[i]={data:ev.target.result,fileName:file.name};
+        loaded++;
+        if(loaded===files.length){
+          // All files read — start tagging the first one
+          pendingPhotoData=photoQueue[0].data;
+          pendingPhotoCI=LEVELS[char.ciLevel||0].ci;
+          photoGuideStep=2;
+          const ex=document.getElementById('photo-guide-ov');if(ex)ex.remove();
+          mountPhotoGuideSheet();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
     pfl.value='';
   });}
   document.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{
