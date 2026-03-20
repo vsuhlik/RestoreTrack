@@ -2225,11 +2225,28 @@ function initFirebase(){
     if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
     db=firebase.firestore();
     fbAuth=firebase.auth();
-    // Listen for auth state — fires immediately if already signed in
+    // Eagerly check redirect result BEFORE registering onAuthStateChanged
+    // This ensures Google auth is processed first on redirect return
+    fbAuth.getRedirectResult().then(result=>{
+      if(result&&result.user){
+        const pendingName=localStorage.getItem('rst-comm-pending-name')||'';
+        if(pendingName){
+          localStorage.removeItem('rst-comm-pending-name');
+          fbUID=result.user.uid;fbIsGoogle=true;
+          commState.ready=true;commState.authError=null;
+          finaliseJoin(pendingName);
+          return; // onAuthStateChanged will still fire but we're already done
+        }
+      }
+    }).catch(()=>{});
+    // Listen for auth state changes
     fbAuth.onAuthStateChanged(user=>{
       if(user){
+        const isGoogle=user.providerData.some(p=>p.providerId==='google.com');
+        // Never let an anonymous auth overwrite a Google auth
+        if(!isGoogle&&fbIsGoogle)return;
         fbUID=user.uid;
-        fbIsGoogle=user.providerData.some(p=>p.providerId==='google.com');
+        fbIsGoogle=isGoogle;
         commState.ready=true;commState.authError=null;
         // Check if this is a pending new join (redirect came back)
         const pendingName=localStorage.getItem('rst-comm-pending-name');
@@ -2240,7 +2257,9 @@ function initFirebase(){
           startCommunityListeners();
         }
       } else {
-        // Not signed in — sign in anonymously for browsing
+        // Only sign in anonymously if there is NO pending Google redirect
+        // — if there is one, wait for the Google auth to arrive
+        if(localStorage.getItem('rst-comm-pending-name'))return;
         fbAuth.signInAnonymously().catch(e=>{
           commState.authError='Could not connect. Check your internet connection.';
           commState.loading=false;refreshCommUI();
@@ -2275,21 +2294,8 @@ function signInWithGoogle(displayName){
   }
 }
 
-// Handle Google redirect result — safety net for browsers where onAuthStateChanged
-// fires before getRedirectResult resolves
-function handleGoogleRedirect(){
-  if(!fbAuth)return;
-  fbAuth.getRedirectResult().then(result=>{
-    if(!result||!result.user)return;
-    // onAuthStateChanged should already have handled this, but just in case:
-    const pendingName=localStorage.getItem('rst-comm-pending-name');
-    if(pendingName&&result.user){
-      localStorage.removeItem('rst-comm-pending-name');
-      fbUID=result.user.uid;fbIsGoogle=true;
-      finaliseJoin(pendingName);
-    }
-  }).catch(()=>{});
-}
+// handleGoogleRedirect is no longer needed — getRedirectResult is called
+// eagerly inside initFirebase before onAuthStateChanged can interfere
 
 function finaliseJoin(name){
   char.communityDisplayName=name.trim();
@@ -2675,13 +2681,12 @@ function selectAvatar(emoji){
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
 loadAll();render();scheduleReminder();
-// Handle Google redirect result (fires after mobile sign-in redirect)
-if(char.communityEnabled){
+// Init Firebase if already a community member, or if returning from Google redirect
+if(char.communityEnabled||localStorage.getItem('rst-comm-pending-name')){
   initFirebase();
-  setTimeout(handleGoogleRedirect,800);
-  if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2000);}
+  // If a session is already running, sync presence once Firebase auth settles
+  if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
 }
-else if(localStorage.getItem('rst-comm-pending-name')){initFirebase();setTimeout(handleGoogleRedirect,800);}
 </script>
 </body>
 </html>
