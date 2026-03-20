@@ -216,7 +216,8 @@ const THEMES=[
 let profiles=[],currentPid=null,currentTheme='shadow';
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
   dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],
-  communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱'};
+  communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
+  communityBio:'',communityShareStats:true,communitySharePhotos:false};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -275,6 +276,9 @@ function loadProfile(pid){
   if(char.communityDisplayName===undefined)char.communityDisplayName='';
   if(char.communityVisible===undefined)char.communityVisible=true;
   if(!char.communityAvatar)char.communityAvatar='🌱';
+  if(char.communityBio===undefined)char.communityBio='';
+  if(char.communityShareStats===undefined)char.communityShareStats=true;
+  if(char.communitySharePhotos===undefined)char.communitySharePhotos=false;
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
   const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
@@ -737,7 +741,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v1.9</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.0</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -760,7 +764,10 @@ function render(){
   else if(tab==='community'){
     c.innerHTML=renderCommunity();
     attachCommunityEvents();
-    // Initialise Firebase the first time community tab is opened
+    // Clear encouragement badge when user visits community tab
+    commState.newEncouragements=[];
+    const badge=document.querySelector('.enc-badge');
+    if(badge)badge.remove();
     if(!commState.ready)initFirebase();
   }
   attachEvents();
@@ -1711,7 +1718,7 @@ function renderProfileScreen(){
   </div>`).join('');
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.9</span></div>
+      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.0</span></div>
       <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
     </div>
     ${profiles.map(p=>{
@@ -2217,7 +2224,7 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 }
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
-let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null};
+let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[]};
 
 function initFirebase(){
   if(db)return; // already initialised
@@ -2329,8 +2336,7 @@ function startCommunityListeners(){
       commState.posts=snap.docs.map(d=>({id:d.id,...d.data()}));
       refreshCommUI();
     },()=>{});
-  // Listen for incoming encouragements on our own subcollection
-  // Only show ones received since we started listening (not historical)
+  // Listen for incoming encouragements
   const encCutoff=firebase.firestore.Timestamp.now();
   commState.unsubEncourage=db.collection('community_users').doc(fbUID)
     .collection('encouragements')
@@ -2342,7 +2348,23 @@ function startCommunityListeners(){
           const d=change.doc.data();
           const from=d.fromName||'Someone';
           const avatar=d.fromAvatar||'👊';
-          showToast(`${avatar} ${from} sent you encouragement!`);
+          // Add to persistent notification list
+          commState.newEncouragements.unshift({from,avatar,ts:Date.now()});
+          if(commState.newEncouragements.length>5)commState.newEncouragements.pop();
+          // Show toast regardless of which tab they're on
+          showToast(`${avatar} ${from} encouraged you!`);
+          // Refresh nav badge
+          const navComm=document.querySelector('[data-tab="community"] .nav-icon');
+          if(navComm&&tab!=='community'){
+            if(!navComm.querySelector('.enc-badge')){
+              const badge=document.createElement('span');
+              badge.className='enc-badge';
+              badge.style.cssText='position:absolute;top:-2px;right:-4px;width:8px;height:8px;border-radius:50%;background:#e74c3c;border:1.5px solid var(--bg-nav)';
+              navComm.appendChild(badge);
+            }
+          }
+          // If on community tab, refresh it to show the notification card
+          if(tab==='community')refreshCommUI();
         }
       });
     },()=>{});
@@ -2361,8 +2383,13 @@ function syncPresence(){
   db.collection('community_users').doc(fbUID).set({
     name:char.communityDisplayName,
     avatar:char.communityAvatar||'🌱',
+    bio:char.communityBio||'',
+    shareStats:char.communityShareStats!==false,
+    sharePhotos:char.communitySharePhotos===true,
     ci:char.ciLevel||0,
     streak:char.streak||0,
+    sessions:char.communityShareStats!==false?char.sessions:null,
+    totalHours:char.communityShareStats!==false?Math.floor(char.minutes/60):null,
     active:running,
     method:running?(activeTimer.method||''):'',
     todayMins:todayMin(),
@@ -2505,7 +2532,7 @@ function renderCommunity(){
   </div>`:
   // My status bar — shown when joined
   `<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:10px">
-    <div style="position:relative;flex-shrink:0">
+    <div style="position:relative;flex-shrink:0;cursor:pointer" onclick="showUserProfile('${fbUID||''}')">
       ${avatarCircle(char.communityAvatar||'🌱',38,'var(--acc30)','var(--acc12)')}
       ${running?`<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
     </div>
@@ -2515,6 +2542,17 @@ function renderCommunity(){
     </div>
     <button onclick="showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 11px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">⚙</button>
   </div>`;
+
+  // Encouragement notifications card
+  const encCard=commState.newEncouragements.length?`
+    <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:12px;padding:12px 14px;margin-bottom:9px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:8px">👊 Encouragements</div>
+      ${commState.newEncouragements.map(e=>`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:18px">${e.avatar}</span>
+          <span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text1)">${e.from}</strong> encouraged you!</span>
+        </div>`).join('')}
+    </div>`:'';
 
   const activeCards=active.length
     ?active.map(u=>buildUserCard(u,now,isJoined)).join('')
@@ -2536,6 +2574,7 @@ function renderCommunity(){
     :'';
 
   return`${joinBanner}
+  ${encCard}
   <div class="sec-title">${active.length>0?`${active.length} Restoring Right Now 🟢`:`Active Now${totalOnline>0?` · ${totalOnline} online`:''}` }</div>
   ${activeCards}
   ${recentCards}
@@ -2556,9 +2595,9 @@ function buildUserCard(u,now,isJoined){
   const timeStr=u.active?(u.todayMins>0?fmtMin(u.todayMins)+' today':'Active now'):(minsAgo<2?'Just now':minsAgo+'m ago');
   const encourageBtn=isMe?''
     :isJoined
-      ?`<button onclick="commEncourage('${u.uid}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>`
-      :`<button onclick="showToast('Join the community to encourage others')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0;opacity:.4" title="Join to encourage">👊</button>`;
-  return`<div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:center">
+      ?`<button onclick="event.stopPropagation();commEncourage('${u.uid}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>`
+      :`<button onclick="event.stopPropagation();showToast('Join the community to encourage others')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0;opacity:.4" title="Join to encourage">👊</button>`;
+  return`<div onclick="showUserProfile('${u.uid}')" style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:center;cursor:pointer">
     <div style="position:relative;flex-shrink:0">
       ${avatarCircle(u.avatar||'🌱',38,'var(--acc30)','var(--acc12)')}
       ${u.active?`<div style="position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
@@ -2662,13 +2701,99 @@ function showPostSheet(){
   ta.focus();
 }
 
+function showUserProfile(uid){
+  const u=commState.users.find(x=>x.uid===uid);
+  if(!u)return;
+  const isMe=u.uid===fbUID;
+  const ex=document.getElementById('user-profile-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='user-profile-ov';
+
+  const statsHtml=u.shareStats!==false&&(u.sessions||u.totalHours)?`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px">
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:16px;font-weight:700;color:var(--text1)">${LEVELS[Math.min(u.ci||0,10)].ci}</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">CI Level</div>
+      </div>
+      ${u.sessions?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:16px;font-weight:700;color:var(--text1)">${u.sessions}</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">Sessions</div>
+      </div>`:''}
+      ${u.totalHours?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:16px;font-weight:700;color:var(--text1)">${u.totalHours}h</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">Hours</div>
+      </div>`:''}
+      ${(u.streak||0)>0?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:16px;font-weight:700;color:#F59E0B">${u.streak}🔥</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">Streak</div>
+      </div>`:''}
+    </div>`:'';
+
+  // Shared photos (loaded from Firestore storage URLs)
+  const photosSection=u.sharePhotos?`
+    <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Shared Photos</div>
+    <div id="profile-photos-${uid}" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px">
+      <div style="font-size:10px;color:var(--text5);padding:8px 0">Loading photos...</div>
+    </div>`:'';
+
+  el.innerHTML=`<div class="sheet" style="max-height:88vh">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="position:relative">
+        ${avatarCircle(u.avatar||'🌱',52,'var(--acc30)','var(--acc12)')}
+        ${u.active?`<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid var(--bg-sheet)"></div>`:''}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:Cinzel,serif;font-size:17px;font-weight:700;color:var(--text1)">${u.name||'Restorer'}</div>
+        <div style="font-size:11px;color:var(--text4);margin-top:3px">${u.active?`<span style="color:var(--green)">● Restoring now</span>`:u.lastSeen?'Recently active':''}</div>
+      </div>
+      ${isMe?'':
+        `<button onclick="event.stopPropagation();commEncourage('${u.uid}');document.getElementById('user-profile-ov').remove();"
+          style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:9px 14px;font-size:16px;cursor:pointer;flex-shrink:0">👊</button>`
+      }
+    </div>
+    ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${u.bio}"</div>`:''}
+    ${statsHtml}
+    ${photosSection}
+    <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%">Close</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+
+  // Load shared photos if enabled
+  if(u.sharePhotos&&db){
+    db.collection('community_users').doc(uid).collection('shared_photos')
+      .orderBy('date','desc').limit(9)
+      .get().then(snap=>{
+        const container=document.getElementById(`profile-photos-${uid}`);
+        if(!container)return;
+        if(snap.empty){container.innerHTML=`<div style="font-size:10px;color:var(--text5);padding:8px 0;grid-column:span 3">No shared photos yet.</div>`;return;}
+        container.innerHTML=snap.docs.map(d=>{
+          const p=d.data();
+          return`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg-stat);border:1px solid var(--stat-border)">
+            <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy">
+          </div>`;
+        }).join('');
+      }).catch(()=>{
+        const container=document.getElementById(`profile-photos-${uid}`);
+        if(container)container.innerHTML=`<div style="font-size:10px;color:var(--text5);padding:8px 0;grid-column:span 3">Could not load photos.</div>`;
+      });
+  }
+}
+
+function showUserProfile_me(){
+  // Convenience — open own profile (from status bar)
+  if(fbUID)showUserProfile(fbUID);
+}
 function showCommSettings(){
   const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='comm-settings-ov';
   const visible=char.communityVisible!==false;
-  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+  const shareStats=char.communityShareStats!==false;
+  const sharePhotos=char.communitySharePhotos===true;
+  el.innerHTML=`<div class="sheet" style="max-height:88vh;padding-bottom:28px">
     <div class="sheet-handle"></div>
     <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:16px">Community Settings</div>
+
     <div style="margin-bottom:14px">
       <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Avatar</div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -2676,33 +2801,75 @@ function showCommSettings(){
         <button onclick="showAvatarPicker()" class="btn-outline" style="flex:1;padding:9px">Change Avatar</button>
       </div>
     </div>
+
     <div style="margin-bottom:14px">
       <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Display Name</div>
       <div style="display:flex;gap:7px">
-        <input class="gold-inp" id="comm-name-edit" value="${char.communityDisplayName||''}" maxlength="24" style="margin:0;flex:1">
+        <input class="gold-inp" id="comm-name-edit" value="${char.communityDisplayName||''}" maxlength="24" style="margin:0;flex:1;font-size:13px">
         <button class="btn-outline" id="comm-name-save">Save</button>
       </div>
     </div>
-    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 12px;background:var(--bg-stat);border-radius:10px;margin-bottom:14px">
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Bio <span style="color:var(--text6);font-weight:400;letter-spacing:0;text-transform:none">— shown on your profile</span></div>
+      <textarea id="comm-bio-edit" placeholder="A little about your restoration journey, your methods, your goals..." style="min-height:70px;font-size:12px;margin-bottom:4px">${char.communityBio||''}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:9px;color:var(--text5)">Max 200 characters</div>
+        <button class="btn-outline" id="comm-bio-save" style="padding:5px 12px;font-size:11px">Save Bio</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:6px;font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px">Privacy</div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--bg-stat);border-radius:10px;margin-bottom:7px">
       <input type="checkbox" id="comm-vis-toggle" ${visible?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
       <div>
         <div style="font-size:12px;font-weight:600;color:var(--text2)">Show me as active</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:1px">When off, you browse without appearing in the active list</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">Appear in the Active Now list during sessions</div>
       </div>
     </label>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--bg-stat);border-radius:10px;margin-bottom:7px">
+      <input type="checkbox" id="comm-stats-toggle" ${shareStats?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">Share stats on profile</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">Show sessions, hours, and streak when others view your profile</div>
+      </div>
+    </label>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--bg-stat);border-radius:10px;margin-bottom:14px">
+      <input type="checkbox" id="comm-photos-toggle" ${sharePhotos?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">Share progress photos</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">Let others view photos you mark as shared in the Photos tab</div>
+      </div>
+    </label>
+
     <button class="btn-ghost" id="comm-settings-done" style="width:100%;margin-bottom:8px">Done</button>
-    <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list. Your posts expire naturally. You can rejoin anytime.','Leave',leaveComm)" style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Leave Community</button>
+    <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list. Your posts expire naturally after 14 days. You can rejoin anytime.','Leave',leaveComm)"
+      style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">
+      Leave Community
+    </button>
   </div>`;
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
   document.getElementById('comm-settings-done').onclick=()=>el.remove();
   document.getElementById('comm-name-save').onclick=()=>{
-    const n=document.getElementById('comm-name-edit').value.trim();
+    const n=document.getElementById('comm-name-edit')?.value.trim();
     if(!n)return;char.communityDisplayName=n;saveChar();syncPresence();
     showToast('Display name updated');el.remove();refreshCommUI();
   };
+  document.getElementById('comm-bio-save').onclick=()=>{
+    const b=(document.getElementById('comm-bio-edit')?.value||'').slice(0,200).trim();
+    char.communityBio=b;saveChar();syncPresence();
+    showToast('Bio saved');
+  };
   document.getElementById('comm-vis-toggle').onchange=e=>{
-    char.communityVisible=e.target.checked;saveChar();syncPresence();refreshCommUI();
+    char.communityVisible=e.target.checked;saveChar();syncPresence();
+  };
+  document.getElementById('comm-stats-toggle').onchange=e=>{
+    char.communityShareStats=e.target.checked;saveChar();syncPresence();
+  };
+  document.getElementById('comm-photos-toggle').onchange=e=>{
+    char.communitySharePhotos=e.target.checked;saveChar();syncPresence();
+    if(e.target.checked)showToast('Mark individual photos as shared in the Photos tab');
   };
 }
 
