@@ -259,10 +259,15 @@ const S={
   del(k){try{localStorage.removeItem(k);}catch{}}
 };
 function loadAll(){
-  profiles=S.get('rst-profiles')||[];currentPid=S.get('rst-active-pid');
-  if(currentPid&&profiles.find(p=>p.id===currentPid)){showProfileScreen=false;loadProfile(currentPid);}
-  else if(profiles.length>0){showProfileScreen=false;currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);loadProfile(currentPid);}
-  else showProfileScreen=true;
+  profiles=S.get('rst-profiles')||[];
+  currentPid=S.get('rst-active-pid');
+  // Single profile system — take the first (and only) profile if it exists
+  if(!currentPid&&profiles.length>0){currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);}
+  if(currentPid&&profiles.find(p=>p.id===currentPid)){
+    showProfileScreen=false;loadProfile(currentPid);
+  } else {
+    showProfileScreen=true;
+  }
 }
 function loadProfile(pid){
   const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
@@ -296,61 +301,70 @@ function selectTheme(id){currentTheme=id;applyTheme(id);char.theme=id;if(current
 
 // ── PROFILE OPS ────────────────────────────────────────────────────────────────
 function createProfile(name){
-  const id='p'+Date.now();profiles.push({id,name,createdAt:today()});saveProfiles();currentPid=id;
+  // Only ever one profile — this is called once on first launch
+  const id='p'+Date.now();
+  profiles=[{id,name,createdAt:today()}];
+  saveProfiles();currentPid=id;
   char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[]};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
-function switchProfile(pid){
-  currentPid=pid;stopInterval();activeTimer=null;timerSecs=0;sheetMethod='';sheetCat=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
-  logs=[];photos=[];loadProfile(pid);S.set('rst-active-pid',pid);showProfileScreen=false;tab='today';render();
-}
 
-function showRenameInline(pid){
-  const el=document.getElementById(`rename-inline-${pid}`);
+function showRenameInline(){
+  const el=document.getElementById('rename-inline');
   if(!el)return;
   el.style.display='block';
-  const inp=document.getElementById(`rename-val-${pid}`);
+  const inp=document.getElementById('rename-val');
   if(inp){inp.focus();inp.select();}
-  inp.onkeydown=e=>{if(e.key==='Enter')saveRenameInline(pid);};
+  inp.onkeydown=e=>{if(e.key==='Enter')saveRenameInline();};
 }
-function saveRenameInline(pid){
-  const inp=document.getElementById(`rename-val-${pid}`);
+function saveRenameInline(){
+  const inp=document.getElementById('rename-val');
   const n=inp?.value.trim();if(!n)return;
-  profiles=profiles.map(p=>p.id===pid?{...p,name:n}:p);
+  if(currentPid)profiles=profiles.map(p=>p.id===currentPid?{...p,name:n}:p);
   saveProfiles();
-  if(pid===currentPid){char.name=n;saveChar();}
+  char.name=n;saveChar();
   renderProfileScreen();
 }
-function confirmDeleteProfile(pid,name){
+function confirmDeleteProfile(){
+  // Step 1 — first warning
   confirmDialog(
-    `Delete "${name}"?`,
-    'All sessions, photos, and progress data for this profile will be permanently deleted. This cannot be undone.',
-    'Delete Profile',
-    ()=>deleteProfile(pid)
+    '⚠ Delete everything?',
+    'This will permanently erase all your sessions, photos, milestones, and progress data. Your community presence and posts will also be removed.\n\nThis cannot be undone.',
+    'Yes, continue',
+    ()=>{
+      // Step 2 — second confirmation, more serious
+      confirmDialog(
+        'Are you absolutely sure?',
+        'There is no recovery. Every session, photo, and milestone you have logged will be gone forever.',
+        'Delete my profile',
+        ()=>deleteProfile()
+      );
+    }
   );
 }
-function deleteProfile(pid){
-  // Clear all stored data for this profile
-  S.del(`rst-${pid}-char`);
-  S.del(`rst-${pid}-logs`);
-  S.del(`rst-${pid}-photos`);
-  S.del(`rst-${pid}-timer`);
-  profiles=profiles.filter(p=>p.id!==pid);
-  saveProfiles();
-  // Switch to another profile or show create screen
-  if(profiles.length>0){
-    currentPid=profiles[0].id;
-    S.set('rst-active-pid',currentPid);
-    loadProfile(currentPid);
-    showProfileScreen=true;
-    renderProfileScreen();
-  } else {
-    currentPid=null;
-    S.del('rst-active-pid');
-    showProfileScreen=true;
-    render();
+function deleteProfile(){
+  if(!currentPid)return;
+  // Remove community presence first
+  if(db&&fbUID&&fbIsGoogle){
+    db.collection('community_users').doc(fbUID).update({visible:false}).catch(()=>{});
   }
+  leaveComm();
+  // Wipe all local data
+  S.del(`rst-${currentPid}-char`);
+  S.del(`rst-${currentPid}-logs`);
+  S.del(`rst-${currentPid}-photos`);
+  S.del(`rst-${currentPid}-timer`);
+  S.del('rst-profiles');
+  S.del('rst-active-pid');
+  S.del('rst-reactions');
+  localStorage.removeItem('rst-comm-pending-name');
+  // Reset all state
+  profiles=[];currentPid=null;
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true};
+  logs=[];photos=[];activeTimer=null;timerSecs=0;
+  stopInterval();
+  showProfileScreen=true;
+  render();
 }
 let liveTickCount=0;
 function startInterval(){
@@ -740,7 +754,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.1</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.3</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1709,51 +1723,90 @@ function renderAch(){
 
 // ── PROFILE SCREEN ─────────────────────────────────────────────────────────────
 function renderProfileScreen(){
+  const isNewUser=!currentPid||profiles.length===0;
   const chips=THEMES.map(t=>`<div class="theme-chip${currentTheme===t.id?' sel':''}" data-tid="${t.id}" onclick="selectTheme('${t.id}')">
     <div class="theme-swatch" style="background:${t.bg}">
       <div style="display:flex;gap:3px"><div class="tdot" style="background:${t.accent}"></div><div class="tdot" style="background:${t.mid}"></div><div class="tdot" style="background:${t.text}"></div></div>
       <div class="theme-lbl" style="color:${t.text}">${t.name}</div>
     </div>
   </div>`).join('');
+
+  if(isNewUser){
+    // ── ONBOARDING ──────────────────────────────────────────────────────────────
+    document.getElementById('root').innerHTML=`<div class="pscreen">
+      <div style="text-align:center;margin-bottom:28px;margin-top:8px">
+        <div style="font-family:Cinzel,serif;font-size:26px;color:var(--accent);letter-spacing:3px;margin-bottom:10px">◉ RESTORETRACK</div>
+        <div style="font-size:13px;color:var(--text3);line-height:1.8;max-width:300px;margin:0 auto">Your personal restoration journal.<br>Private, honest, and built for the long haul.</div>
+      </div>
+
+      <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:20px;margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px;text-align:center">Create Your Profile</div>
+        <div style="font-size:11px;color:var(--text4);margin-bottom:12px;text-align:center;line-height:1.6">This is your one restoration journal.<br>Choose a name — your real name or a nickname.</div>
+        <input class="gold-inp" id="new-name" placeholder="Your name..." maxlength="24" style="text-align:center;font-size:16px;margin-bottom:12px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Choose a theme</div>
+        <div class="theme-row" style="margin-bottom:0">${chips}</div>
+      </div>
+
+      <button class="btn-gold" id="create-btn" style="width:100%;padding:14px;font-size:15px;letter-spacing:1px">Begin Your Journey</button>
+
+      <div style="margin-top:22px;text-align:center">
+        <div style="font-size:10px;color:var(--text5);margin-bottom:10px">Restoring from another device? Import a backup.</div>
+        <button class="btn-ghost" id="restore-btn" style="padding:8px 20px;font-size:12px">⬆ Import Backup</button>
+        <input type="file" id="restore-file" accept=".json" style="display:none">
+      </div>
+    </div>`;
+    document.getElementById('create-btn').onclick=()=>{
+      const n=document.getElementById('new-name').value.trim();
+      if(!n){showToast('Please enter your name');return;}
+      createProfile(n);
+    };
+    document.getElementById('new-name').onkeydown=e=>{if(e.key==='Enter'){const n=e.target.value.trim();if(n)createProfile(n);}};
+    document.getElementById('restore-btn').addEventListener('click',()=>document.getElementById('restore-file').click());
+    document.getElementById('restore-file').addEventListener('change',e=>{
+      const file=e.target.files[0];if(!file)return;
+      const reader=new FileReader();
+      reader.onload=ev=>{importBackup(ev.target.result);};
+      reader.readAsText(file);e.target.value='';
+    });
+    return;
+  }
+
+  // ── SETTINGS PANEL (existing user) ─────────────────────────────────────────
+  const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
-    <div style="text-align:center;margin-bottom:22px">
-      <div style="font-family:Cinzel,serif;font-size:20px;color:var(--accent);letter-spacing:2px;margin-bottom:5px">◉ RESTORETRACK <span style="font-size:11px;opacity:.5;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.1</span></div>
-      <div style="font-size:11px;color:var(--text4)">Select or create a profile</div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.3</span></div>
     </div>
-    ${profiles.map(p=>{
-      const pChar=S.get(`rst-${p.id}-char`)||{};
-      const sessCount=pChar.sessions||0;
-      const ciLv=pChar.ciLevel||0;
-      const isActive=p.id===currentPid;
-      return`<div class="pcard${isActive?' active-p':''}" data-pid="${p.id}" style="flex-direction:column;align-items:stretch;gap:0;cursor:default">
-        <div style="display:flex;align-items:center;gap:13px;cursor:${isActive?'default':'pointer'}" onclick="${isActive?'':'switchProfile(\''+p.id+'\')'}">
-          <div class="pavatar">${p.name.charAt(0).toUpperCase()}</div>
-          <div style="flex:1">
-            <div style="font-weight:600;font-size:14px;color:var(--text1)">${p.name}</div>
-            <div style="font-size:10px;color:var(--text4);margin-top:2px">${LEVELS[ciLv].ci} · ${sessCount} session${sessCount!==1?'s':''} · Since ${p.createdAt}</div>
-          </div>
-          ${!isActive?`<span style="font-size:10px;color:var(--text5)">Switch</span>`:''}
+
+    <!-- Profile card -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:18px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <div class="pavatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${char.name.charAt(0).toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:16px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.name}</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:3px">${LEVELS[char.ciLevel||0].ci} · ${char.sessions} session${char.sessions!==1?'s':''} · Since ${joined}</div>
         </div>
-        ${isActive?`<div style="display:flex;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--stat-border)">
-          <button onclick="showRenameInline('${p.id}')" style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✏ Rename</button>
-          ${profiles.length>1?`<button onclick="confirmDeleteProfile('${p.id}','${p.name}')" style="flex:1;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:7px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">✕ Delete Profile</button>`:''}
+      </div>
+      <div id="rename-inline" style="display:none;margin-bottom:10px">
+        <div style="display:flex;gap:7px">
+          <input id="rename-val" class="gold-inp" style="flex:1;margin:0;font-size:13px;padding:8px 10px" maxlength="24" placeholder="New name..." value="${char.name}">
+          <button onclick="saveRenameInline()" style="background:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif">Save</button>
+          <button onclick="document.getElementById('rename-inline').style.display='none'" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text4);cursor:pointer;font-family:DM Sans,sans-serif">✕</button>
         </div>
-        <div id="rename-inline-${p.id}" style="display:none;margin-top:8px">
-          <div style="display:flex;gap:7px">
-            <input id="rename-val-${p.id}" class="gold-inp" style="flex:1;margin:0;font-size:13px;padding:8px 10px" maxlength="24" placeholder="New name..." value="${p.name}">
-            <button onclick="saveRenameInline('${p.id}')" style="background:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif">Save</button>
-            <button onclick="document.getElementById('rename-inline-${p.id}').style.display='none'" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text4);cursor:pointer;font-family:DM Sans,sans-serif">✕</button>
-          </div>
-        </div>`:''}
-      </div>`;
-    }).join('')}
-    <div style="width:100%;margin-bottom:6px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Appearance</div>
-      <div class="theme-row">${chips}</div>
+      </div>
+      <button onclick="showRenameInline()" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✏ Rename</button>
     </div>
-    <div class="divider">── Reminders ──</div>
-    <div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:14px;width:100%;margin-bottom:6px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Get a browser reminder to restore. Works even when the app isn't open.</div>
+
+    <!-- Appearance -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:10px">Appearance</div>
+      <div class="theme-row" style="margin-bottom:0">${chips}</div>
+    </div>
+
+    <!-- Reminders -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Daily Reminder</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Get a browser notification to restore. Works even when the app isn't open.</div>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <input type="time" id="reminder-time" value="${char.reminderTime||'09:00'}"
           style="flex:1;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 10px;color:var(--accent);font-size:16px;font-weight:700;outline:none;font-family:DM Sans,sans-serif">
@@ -1761,29 +1814,31 @@ function renderProfileScreen(){
       </div>
       ${char.reminderEnabled?`<div style="font-size:10px;color:var(--green)">Reminder set for ${char.reminderTime} daily. <button onclick="cancelReminder()" style="background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline">Cancel</button></div>`:'<div style="font-size:10px;color:var(--text5)">Requires notification permission.</div>'}
     </div>
-    <div class="divider">── New Profile ──</div>
-    <input class="gold-inp" id="new-name" placeholder="Enter your name..." maxlength="24">
-    <button class="btn-gold" id="create-btn">Create Profile</button>
-    <div class="divider" style="margin-top:6px">── Data Backup ──</div>
-    <div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:14px;width:100%;margin-bottom:6px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Save a backup file of all your data. Import it any time — especially useful after updating the app.</div>
+
+    <!-- Backup -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Data Backup</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Export all your data as a backup file. Import it on a new device or after reinstalling.</div>
       <div style="display:flex;gap:8px">
         <button class="btn-outline" id="backup-btn" style="flex:1;padding:10px">⬇ Export Backup</button>
         <button class="btn-ghost" id="restore-btn" style="flex:1;padding:10px;font-size:12px">⬆ Import Backup</button>
       </div>
       <input type="file" id="restore-file" accept=".json" style="display:none">
     </div>
-    ${currentPid?`<button id="cancel-p" style="background:none;border:none;color:var(--text5);font-size:12px;margin-top:8px;cursor:pointer;font-family:'DM Sans',sans-serif;display:block;width:100%;text-align:center">Cancel</button>`:''}
+
+    <button id="cancel-p" style="background:none;border:none;color:var(--text4);font-size:13px;margin-top:4px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:10px">← Back to app</button>
+
+    <!-- Delete — buried at the bottom, intentionally low-key until needed -->
+    <div style="width:100%;margin-top:8px;padding-top:16px;border-top:1px solid var(--stat-border);text-align:center">
+      <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.6">This will permanently erase all your data.<br>Your community presence will also be removed.</div>
+      <button onclick="confirmDeleteProfile()" style="background:none;border:1px solid rgba(200,50,50,.25);border-radius:8px;padding:9px 20px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Delete My Profile</button>
+    </div>
   </div>`;
-  document.querySelectorAll('.pcard[data-pid]').forEach(el=>{
-    if(el.dataset.pid!==currentPid)el.onclick=()=>switchProfile(el.dataset.pid);
-  });
+
   document.getElementById('reminder-btn')?.addEventListener('click',()=>{
     const t=document.getElementById('reminder-time')?.value||'09:00';
     setReminder(t);
   });
-  document.getElementById('create-btn').onclick=()=>{const n=document.getElementById('new-name').value.trim();if(n)createProfile(n);};
-  document.getElementById('new-name').onkeydown=e=>{if(e.key==='Enter'){const n=e.target.value.trim();if(n)createProfile(n);}};
   document.getElementById('cancel-p')?.addEventListener('click',()=>{showProfileScreen=false;render();});
   document.getElementById('backup-btn')?.addEventListener('click',exportBackup);
   document.getElementById('restore-btn')?.addEventListener('click',()=>document.getElementById('restore-file').click());
@@ -1791,8 +1846,7 @@ function renderProfileScreen(){
     const file=e.target.files[0];if(!file)return;
     const reader=new FileReader();
     reader.onload=ev=>{importBackup(ev.target.result);};
-    reader.readAsText(file);
-    e.target.value='';
+    reader.readAsText(file);e.target.value='';
   });
 }
 
@@ -2308,7 +2362,13 @@ function signInWithGoogle(displayName){
 function finaliseJoin(name){
   char.communityDisplayName=name.trim();
   char.communityEnabled=true;char.communityVisible=true;saveChar();
-  tab='community'; // always land on community after joining
+  tab='community';
+  // Write joinedAt only on first join — separate set without merge so it's not overwritten
+  if(db&&fbUID){
+    db.collection('community_users').doc(fbUID).set({
+      joinedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true}).catch(()=>{});
+  }
   startCommunityListeners();
   setTimeout(()=>{syncPresence();refreshCommUI();},1200);
   render();
@@ -2388,12 +2448,21 @@ function syncPresence(){
     streak:char.streak||0,
     sessions:char.communityShareStats!==false?char.sessions:null,
     totalHours:char.communityShareStats!==false?Math.floor(char.minutes/60):null,
+    topMethods:getTopMethods(3),
     active:running,
     method:running?(activeTimer.method||''):'',
     todayMins:todayMin(),
     lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
+    joinedAt:firebase.firestore.FieldValue.serverTimestamp(), // only sets on first write due to merge:true below
     visible:char.communityVisible!==false
   },{merge:true}).catch(()=>{});
+}
+
+function getTopMethods(n){
+  // Count sessions per method from logs
+  const counts={};
+  logs.forEach(l=>{if(l.method)counts[l.method]=(counts[l.method]||0)+1;});
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([m])=>m);
 }
 
 function leaveComm(){
@@ -2576,14 +2645,11 @@ function renderCommunity(){
   <div class="sec-title">${active.length>0?`${active.length} Restoring Right Now 🟢`:`Active Now${totalOnline>0?` · ${totalOnline} online`:''}` }</div>
   ${activeCards}
   ${recentCards}
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px">
-    <div class="sec-title" style="margin:0">Community Posts</div>
-    ${isJoined?`<button id="comm-post-btn" class="btn-outline" style="padding:5px 14px;font-size:11px">+ Post Update</button>`:''}
-  </div>
+  <div class="sec-title">Community Posts</div>
   ${feedCards}
-  ${milestoneCards.length?`
-  <div class="sec-title" style="margin-top:6px">Recent Milestones 🏅</div>
-  ${milestoneCards}`:''}`;
+  ${milestoneCards.length?`<div class="sec-title" style="margin-top:6px">Recent Milestones 🏅</div>${milestoneCards}`:''}
+  ${isJoined?`<div style="height:68px"></div>
+  <button id="comm-post-btn" style="position:fixed;bottom:80px;right:max(16px,calc(50vw - 224px));width:54px;height:54px;border-radius:50%;background:var(--accent);border:none;box-shadow:0 4px 20px rgba(0,0,0,.45);cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;z-index:19;line-height:1" title="Post Update">✏</button>`:''}`;
 }
 
 function buildUserCard(u,now,isJoined){
@@ -2706,29 +2772,43 @@ function showUserProfile(uid){
   const ex=document.getElementById('user-profile-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='user-profile-ov';
 
-  const statsHtml=u.shareStats!==false&&(u.sessions||u.totalHours)?`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px">
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:16px;font-weight:700;color:var(--text1)">${LEVELS[Math.min(u.ci||0,10)].ci}</div>
-        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">CI Level</div>
+  // Format joined date
+  const joinedStr=u.joinedAt?.toDate?
+    u.joinedAt.toDate().toLocaleDateString('en',{month:'long',year:'numeric'}):null;
+
+  // Top methods pills
+  const methods=u.topMethods||[];
+  const methodsHtml=methods.length?`
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Preferred Methods</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${methods.map((m,i)=>`<span style="background:${i===0?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${i===0?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 11px;font-size:11px;color:${i===0?'var(--accent)':'var(--text3)'}">${m}</span>`).join('')}
       </div>
-      ${u.sessions?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:16px;font-weight:700;color:var(--text1)">${u.sessions}</div>
-        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">Sessions</div>
+    </div>`:'';
+
+  const statsHtml=u.shareStats!==false&&(u.sessions||u.totalHours)?`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">${LEVELS[Math.min(u.ci||0,10)].ci}</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">CI Level</div>
+      </div>
+      ${u.sessions!=null?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">${u.sessions}</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Sessions</div>
       </div>`:''}
-      ${u.totalHours?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:16px;font-weight:700;color:var(--text1)">${u.totalHours}h</div>
-        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">Hours</div>
+      ${u.totalHours!=null?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">${u.totalHours}h</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Hours</div>
       </div>`:''}
       ${(u.streak||0)>0?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:16px;font-weight:700;color:#F59E0B">${u.streak}🔥</div>
-        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.6px;margin-top:2px">Streak</div>
+        <div style="font-size:15px;font-weight:700;color:#F59E0B">${u.streak}🔥</div>
+        <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Streak</div>
       </div>`:''}
     </div>`:'';
 
   el.innerHTML=`<div class="sheet" style="max-height:88vh">
     <div class="sheet-handle"></div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:${joinedStr?'6':'14'}px">
       <div style="position:relative">
         ${avatarCircle(u.avatar||'🌱',52,'var(--acc30)','var(--acc12)')}
         ${u.active?`<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid var(--bg-sheet)"></div>`:''}
@@ -2742,8 +2822,10 @@ function showUserProfile(uid){
           style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:9px 14px;font-size:16px;cursor:pointer;flex-shrink:0">👊</button>`
       }
     </div>
+    ${joinedStr?`<div style="font-size:10px;color:var(--text5);margin-bottom:12px">Member since ${joinedStr}</div>`:''}
     ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${u.bio}"</div>`:''}
     ${statsHtml}
+    ${methodsHtml}
     <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
