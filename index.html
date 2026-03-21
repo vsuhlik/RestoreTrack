@@ -754,7 +754,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.6</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.7</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -776,6 +776,7 @@ function render(){
   else if(tab==='ach')c.innerHTML=renderAch();
   else if(tab==='community'){
     commTab='live'; // always open on Live tab
+    setLastSeen('live');
     c.innerHTML=renderCommunity();
     attachCommunityEvents();
     // Clear encouragement badge when user visits community tab
@@ -1776,7 +1777,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.6</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.7</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2279,7 +2280,20 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
 let commTab='live'; // inner community tab: live | posts | miles | members
-let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[]};
+let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{}};
+
+// ── NEW-POST BADGE TRACKING ─────────────────────────────────────────────────
+function getLastSeen(tabKey){return parseInt(localStorage.getItem(`rst-lastseen-${tabKey}`)||'0');}
+function setLastSeen(tabKey){localStorage.setItem(`rst-lastseen-${tabKey}`,Date.now());}
+function countNewPosts(type){
+  const cutoff=getLastSeen(type==='milestone'?'miles':'posts');
+  if(!cutoff)return 0;
+  return commState.posts.filter(p=>{
+    if(type==='milestone'?p.type!=='milestone':p.type==='milestone')return false;
+    const ms=p.ts?.toMillis?p.ts.toMillis():0;
+    return ms>cutoff;
+  }).length;
+}
 
 function initFirebase(){
   if(db)return; // already initialised
@@ -2475,22 +2489,22 @@ function leaveComm(){
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts)commState.unsubPosts();
   if(commState.unsubEncourage)commState.unsubEncourage();
-  commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null};
+  commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{}};
   db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
   const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
   render();
 }
 
-function commPost(text){
+function commPost(text,title){
   if(!db||!fbUID||!fbIsGoogle||!text.trim()){showToast('⚠ Sign in with Google to post');return;}
   db.collection('posts').add({
-    text:text.trim().slice(0,160),uid:fbUID,
+    title:title||'',text:text.trim().slice(0,200),uid:fbUID,
     name:char.communityDisplayName||'Anonymous',
     avatar:char.communityAvatar||'🌱',
     ci:char.ciLevel||0,
     ts:firebase.firestore.FieldValue.serverTimestamp(),
-    rf:0,rm:0,rh:0,type:'post'
-  }).then(()=>showToast('✓ Posted to community!')).catch(()=>showToast('⚠ Could not post'));
+    rf:0,rm:0,rh:0,replyCount:0,type:'post'
+  }).then(()=>showToast('✓ Posted!')).catch(()=>showToast('⚠ Could not post'));
 }
 
 let pendingMilestonePosts=[]; // queued if Firebase not ready when milestone earned
@@ -2554,6 +2568,60 @@ function commReact(postId,r){
 function deleteCommPost(postId){
   if(!db||!fbUID)return;
   db.collection('posts').doc(postId).delete().catch(()=>{});
+}
+
+function toggleReplies(postId){
+  if(commState.openReplies.has(postId)){
+    commState.openReplies.delete(postId);
+    refreshCommUI();
+  } else {
+    commState.openReplies.add(postId);
+    loadReplies(postId);
+  }
+}
+
+function loadReplies(postId){
+  if(!db)return;
+  db.collection('posts').doc(postId).collection('replies')
+    .orderBy('ts','asc').limit(50)
+    .get().then(snap=>{
+      commState.replies[postId]=snap.docs.map(d=>({id:d.id,...d.data()}));
+      refreshCommUI();
+    }).catch(()=>{commState.replies[postId]=[];refreshCommUI();});
+}
+
+function commReply(postId){
+  if(!fbIsGoogle){showToast('Join the community to reply');return;}
+  const inp=document.getElementById(`reply-inp-${postId}`);
+  const text=inp?.value.trim();if(!text)return;
+  inp.value='';inp.disabled=true;
+  // Write reply to subcollection and increment counter atomically
+  const replyRef=db.collection('posts').doc(postId).collection('replies').doc();
+  const batch=db.batch();
+  batch.set(replyRef,{
+    text:text.slice(0,200),uid:fbUID,
+    name:char.communityDisplayName||'Anonymous',
+    avatar:char.communityAvatar||'🌱',
+    ci:char.ciLevel||0,
+    ts:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  batch.update(db.collection('posts').doc(postId),{
+    replyCount:firebase.firestore.FieldValue.increment(1)
+  });
+  batch.commit().then(()=>{
+    // Add to local cache and re-render
+    if(!commState.replies[postId])commState.replies[postId]=[];
+    commState.replies[postId].push({
+      id:replyRef.id,text:text.slice(0,200),uid:fbUID,
+      name:char.communityDisplayName,avatar:char.communityAvatar||'🌱',
+      ci:char.ciLevel||0,ts:{toMillis:()=>Date.now()}
+    });
+    commState.posts=commState.posts.map(p=>
+      p.id===postId?{...p,replyCount:(p.replyCount||0)+1}:p
+    );
+    inp.disabled=false;
+    refreshCommUI();
+  }).catch(()=>{inp.disabled=false;showToast('⚠ Could not send reply');});
 }
 
 function commEncourage(uid){
@@ -2636,20 +2704,22 @@ function renderCommunity(){
     </div>`:'';
 
   // ── Inner tab bar ──
+  const newPosts=countNewPosts('post');
+  const newMiles=countNewPosts('milestone');
   const tabs=[
-    {id:'live',  label:'🟢 Live',    badge:active.length>0?active.length:null},
-    {id:'posts', label:'💬 Posts',   badge:regularPosts.length>0?regularPosts.length:null},
-    {id:'miles', label:'🏅 Miles',   badge:milestonePosts.length>0?milestonePosts.length:null},
-    {id:'members',label:'👥 Members',badge:commState.users.length>0?commState.users.length:null},
+    {id:'live',   label:'🟢 Live',    badge:active.length>0?active.length:null},
+    {id:'posts',  label:'💬 Posts',   badge:newPosts>0?newPosts:null},
+    {id:'miles',  label:'🏅 Miles',   badge:newMiles>0?newMiles:null},
+    {id:'members',label:'👥 Members', badge:null},
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
     ${tabs.map(t=>`
-      <button onclick="commTab='${t.id}';refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
+      <button onclick="commTab='${t.id}';setLastSeen('${t.id}');refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
         background:${commTab===t.id?'var(--bg-card)':'transparent'};
         color:${commTab===t.id?'var(--accent)':'var(--text4)'};
         box-shadow:${commTab===t.id?'0 1px 4px rgba(0,0,0,.2)':'none'}">
         ${t.label}
-        ${t.badge&&commTab!==t.id?`<span style="position:absolute;top:3px;right:3px;background:var(--accent);color:var(--bg);border-radius:10px;font-size:8px;padding:0 4px;font-weight:700;min-width:14px;text-align:center">${t.badge}</span>`:''}
+        ${t.badge&&commTab!==t.id?`<span style="position:absolute;top:3px;right:3px;background:#e74c3c;color:#fff;border-radius:10px;font-size:8px;padding:0 4px;font-weight:700;min-width:14px;text-align:center">${t.badge}</span>`:''}
       </button>`).join('')}
   </div>`;
 
@@ -2754,8 +2824,48 @@ function buildPostCard(p,now,reacted,isJoined){
   const ago=diff<3600000?Math.floor(diff/60000)+'m ago':diff<86400000?Math.floor(diff/3600000)+'h ago':Math.floor(diff/86400000)+'d ago';
   const isMe=p.uid===fbUID;
   const isMilestone=p.type==='milestone';
-  const initial=(p.name||'?')[0].toUpperCase();
+  const replyCount=p.replyCount||0;
+  const isOpen=commState.openReplies.has(p.id);
   const reactions=[{r:'fire',emoji:'🔥',field:'rf'},{r:'muscle',emoji:'💪',field:'rm'},{r:'heart',emoji:'❤️',field:'rh'}];
+
+  // Build reply thread section
+  let replySection='';
+  if(isOpen){
+    const rlist=commState.replies[p.id];
+    const replyItems=rlist===undefined
+      ?`<div style="font-size:11px;color:var(--text5);padding:8px 0">Loading replies...</div>`
+      :rlist.length===0
+        ?`<div style="font-size:11px;color:var(--text5);padding:8px 0">No replies yet — be first.</div>`
+        :rlist.map(r=>{
+            const rms=r.ts?.toMillis?r.ts.toMillis():now;
+            const rdiff=now-rms;
+            const rago=rdiff<3600000?Math.floor(rdiff/60000)+'m':rdiff<86400000?Math.floor(rdiff/3600000)+'h':Math.floor(rdiff/86400000)+'d';
+            return`<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--stat-border)">
+              ${avatarCircle(r.avatar||'🌱',28,'var(--acc18)','var(--acc6)')}
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:3px">
+                  <span style="font-weight:600;font-size:11px;color:var(--text1)">${r.name||'Restorer'}</span>
+                  <span style="font-family:Cinzel,serif;font-size:9px;color:var(--accent)">${LEVELS[Math.min(r.ci||0,10)].ci}</span>
+                  <span style="font-size:9px;color:var(--text5);margin-left:auto">${rago}</span>
+                </div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.55">${r.text||''}</div>
+              </div>
+            </div>`;
+          }).join('');
+
+    const replyInput=isJoined
+      ?`<div style="display:flex;gap:7px;align-items:center;padding-top:8px;border-top:1px solid var(--stat-border);margin-top:4px">
+          ${avatarCircle(char.communityAvatar||'🌱',28,'var(--acc18)','var(--acc6)')}
+          <input id="reply-inp-${p.id}" placeholder="Write a reply..." maxlength="200"
+            style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 12px;color:var(--text1);font-size:12px;outline:none;font-family:DM Sans,sans-serif"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();commReply('${p.id}');}">
+          <button onclick="commReply('${p.id}')" style="background:var(--accent);border:none;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">Send</button>
+        </div>`
+      :`<div style="font-size:10px;color:var(--text5);padding-top:8px;border-top:1px solid var(--stat-border);text-align:center">Join the community to reply</div>`;
+
+    replySection=`<div style="padding:0 2px;margin-top:2px">${replyItems}${replyInput}</div>`;
+  }
+
   return`<div style="background:var(--bg-card);border:1px solid ${isMilestone?'var(--card-border-gold)':'var(--card-border)'};border-radius:12px;padding:12px;margin-bottom:7px">
     <div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:9px">
       <div style="width:38px;height:38px;border-radius:50%;background:${isMilestone?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isMilestone?'var(--acc30)':'var(--stat-border)'};display:flex;align-items:center;justify-content:center;font-size:${isMilestone?'18':'20'}px;flex-shrink:0;line-height:1">${isMilestone?(p.mIcon||'🏅'):(p.avatar||'🌱')}</div>
@@ -2765,6 +2875,7 @@ function buildPostCard(p,now,reacted,isJoined){
           <span style="font-family:Cinzel,serif;font-size:9px;color:var(--accent)">${LEVELS[Math.min(p.ci||0,10)].ci}</span>
           <span style="font-size:9px;color:var(--text5);margin-left:auto">${ago}</span>
         </div>
+        ${p.title?`<div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:4px;line-height:1.4">${p.title}</div>`:''}
         ${isMilestone
           ?`<div style="font-size:12px;color:var(--text2)"><span style="color:var(--accent);font-weight:600">${p.mTitle||p.text}</span> unlocked 🎉</div>`
           :`<div style="font-size:12px;color:var(--text2);line-height:1.6">${p.text||''}</div>`}
@@ -2773,17 +2884,21 @@ function buildPostCard(p,now,reacted,isJoined){
     <div style="display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--stat-border);flex-wrap:wrap">
       ${reactions.map(({r,emoji,field})=>{
         const count=p[field]||0;
-        const myPick=isJoined?reacted[p.id]:null; // which reaction this user chose
-        const myR=myPick===r; // is THIS the one they picked?
-        const hasPick=!!myPick; // have they picked any reaction?
-        const dimmed=isJoined&&hasPick&&!myR; // they picked a different one
+        const myPick=isJoined?reacted[p.id]:null;
+        const myR=myPick===r;
+        const dimmed=isJoined&&!!myPick&&!myR;
         return`<button onclick="${isJoined?`commReact('${p.id}','${r}')`:`showToast('Join the community to react')`}"
           style="background:${myR?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${myR?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;color:${myR?'var(--accent)':isJoined?'var(--text4)':'var(--text5)'};display:inline-flex;align-items:center;gap:3px;font-family:DM Sans,sans-serif;opacity:${!isJoined?'.55':dimmed?'.4':'1'};transition:opacity .15s">
           ${emoji}<span style="font-size:11px;font-weight:${myR?700:400}">${count||''}</span>
         </button>`;
       }).join('')}
-      ${isMe?`<button onclick="confirmDialog('Delete post?','This will remove your post from the community feed.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif">✕ Delete</button>`:''}
+      <button onclick="toggleReplies('${p.id}')"
+        style="background:${isOpen?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isOpen?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;color:${isOpen?'var(--accent)':'var(--text4)'};display:inline-flex;align-items:center;gap:4px;font-family:DM Sans,sans-serif">
+        💬 <span>${replyCount>0?replyCount:''} ${isOpen?'Hide':'Reply'}</span>
+      </button>
+      ${isMe?`<button onclick="confirmDialog('Delete post?','This will remove your post and all its replies.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif">✕</button>`:''}
     </div>
+    ${replySection}
   </div>`;
 }
 
@@ -2805,14 +2920,16 @@ function attachCommunityEvents(){
 
 function showPostSheet(){
   const ex=document.getElementById('post-ov');if(ex)ex.remove();
+  if(!fbIsGoogle){showToast('Sign in with Google to post');return;}
   const el=document.createElement('div');el.className='overlay';el.id='post-ov';
   el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:12px">Post to Community</div>
-    <textarea id="post-text" placeholder="Share a win, observation, or some encouragement..." style="min-height:90px;font-size:13px;margin-bottom:4px"></textarea>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:12px">New Post</div>
+    <input id="post-title" class="gold-inp" placeholder="Topic title (optional)..." maxlength="60" style="font-size:13px;margin-bottom:8px">
+    <textarea id="post-text" placeholder="Share a win, a question, an observation..." style="min-height:90px;font-size:13px;margin-bottom:4px"></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:10px;color:var(--text5)">Be real — honesty is appreciated over hype.</div>
-      <div id="post-char" style="font-size:10px;color:var(--text5)">0 / 160</div>
+      <div id="post-char" style="font-size:10px;color:var(--text5)">0 / 200</div>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn-ghost" onclick="document.getElementById('post-ov').remove()" style="flex:0 0 76px">Cancel</button>
@@ -2824,11 +2941,12 @@ function showPostSheet(){
   ta.addEventListener('input',()=>{
     const n=ta.value.length;
     const cc=document.getElementById('post-char');
-    if(cc){cc.textContent=`${n} / 160`;cc.style.color=n>140?'#c0392b':'var(--text5)';}
+    if(cc){cc.textContent=`${n} / 200`;cc.style.color=n>180?'#c0392b':'var(--text5)';}
   });
   document.getElementById('post-submit').onclick=()=>{
     const text=ta.value.trim();if(!text)return;
-    commPost(text);el.remove();
+    const title=document.getElementById('post-title').value.trim();
+    commPost(text,title);el.remove();
   };
   ta.focus();
 }
