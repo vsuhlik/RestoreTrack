@@ -272,6 +272,7 @@ let logMode='timer',manualStart='',manualEnd='',manualStillActive=false;
 let manualStartDate='',manualEndDate='';
 let sheetCat=null,sheetMethod='',sheetNotes='';
 let currentCoachCTA=null;
+let coachExtended=[]; // loaded from coach_data.json on GitHub
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
@@ -982,6 +983,21 @@ const COACH_BRAIN={
   }
 };
 
+// ── COACH EXTENDED DATA ────────────────────────────────────────────────────────
+// Loads coach_data.json from GitHub — zero Firebase reads, zero cost.
+// Add new knowledge entries there without ever touching index.html.
+async function loadCoachData(){
+  try{
+    const res=await fetch('./coach_data.json');
+    if(!res.ok)return;
+    const data=await res.json();
+    if(Array.isArray(data))coachExtended=data;
+  }catch(e){
+    // Silently fail — app works fine with built-in brain only
+  }
+}
+loadCoachData();
+
 // ── COACH BRAIN MATCHER ────────────────────────────────────────────────────────
 function coachBrainMatch(question){
   const q=question.toLowerCase();
@@ -1001,18 +1017,28 @@ function coachBrainMatch(question){
     photos:photos||[]
   };
   // Score each topic by keyword matches
-  let bestTopic=null,bestScore=0;
+  let bestTopic=null,bestScore=0,bestExtEntry=null;
   for(const[topic,data] of Object.entries(COACH_BRAIN)){
     let score=0;
     for(const kw of data.keywords){
       if(q.includes(kw))score+=kw.split(' ').length; // multi-word keywords score higher
     }
-    if(score>bestScore){bestScore=score;bestTopic=topic;}
+    if(score>bestScore){bestScore=score;bestTopic=topic;bestExtEntry=null;}
   }
-  if(!bestTopic||bestScore===0){
+  // Also search extended knowledge base loaded from coach_data.json
+  for(const entry of coachExtended){
+    let score=0;
+    for(const kw of entry.keywords){
+      if(q.includes(kw))score+=kw.split(' ').length;
+    }
+    if(score>bestScore){bestScore=score;bestExtEntry=entry;bestTopic=null;}
+  }
+  if(bestScore===0){
     // No match — give a helpful fallback
     return`I'm not sure I have a perfect answer for that specific question, ${char.name}. Try asking about methods, CI levels, consistency, how restoration works, rest days, or ask for a progress check-in.\n\nYou can also send feedback via the profile menu — specific questions you ask that I can't answer well help me get smarter over time.`;
   }
+  // Return from extended JSON if it won, otherwise from built-in brain
+  if(bestExtEntry) return bestExtEntry.response;
   const data=COACH_BRAIN[bestTopic];
   return typeof data.response==='function'?data.response(u):data.response;
 }
