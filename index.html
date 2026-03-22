@@ -865,6 +865,158 @@ function ciRingSVG(){
 }
 
 // ── COACH MESSAGE ──────────────────────────────────────────────────────────────
+// ── COACH BRAIN ────────────────────────────────────────────────────────────────
+// A curated, growing knowledge library. Pattern-matched against user questions.
+// To expand: bring user questions to Claude, add new entries, push update.
+
+const COACH_BRAIN={
+
+  // ── TENSION & GROWTH SCIENCE ──────────────────────────────────────────────
+  tension:{
+    keywords:['tension','how does','work','science','tissue','grow','biology','mechanism','skin expansion','mitosis'],
+    response:(u)=>`Foreskin restoration works through mechanotransduction — your skin cells sense sustained tension and respond by dividing and producing new tissue. This is the same process behind skin expansion used in reconstructive surgery, and it's well-documented in biology.\n\nThe key word is sustained. Brief, intense pulling doesn't trigger the signal. What triggers it is hours of gentle, consistent tension across the day. Think of it less like a workout and more like orthodontics — the force is small, the time is long, and the result is permanent structural change.\n\nAt your current pace of ${u.avgDay>0?fmtMin(u.avgDay)+'/day':'getting started'}, you're ${u.avgDay>=60?'applying a meaningful tension signal — keep it up.':u.avgDay>0?'building toward the recommended range. Most restorers aim for 60–120+ minutes daily.':'not yet applying consistent tension. Even 30 minutes daily is a real start.'}`
+  },
+
+  howLong:{
+    keywords:['how long','timeline','years','months','when will','how much time','take','finish','complete','done','ci-10','fully restored'],
+    response:(u)=>`This is the question every restorer wants answered, and the honest answer is: nobody can tell you with certainty, including me.\n\nWhat we do know is that progression depends almost entirely on daily tension hours and your individual biology. Some people move from CI-0 to CI-5 in 2 years with consistent effort. Others take 5 years. Some move faster, some slower.\n\nWhat I can tell you is specific to you: you're currently at ${LEVELS[u.ci].ci}, you've logged ${u.sessions} sessions totalling ${Math.floor(u.minutes/60)} hours, and your 30-day average is ${fmtMin(u.avgDay)}/day. At that pace you're accumulating roughly ${Math.round(u.avgDay*30/60)} hours of tension per month.\n\nFocus on the process, not the destination. The restorers who finish are the ones who stopped asking "when" and started asking "how can I be more consistent."`
+  },
+
+  ciLevels:{
+    keywords:['ci level','ci-','ci0','ci1','ci2','ci3','ci4','ci5','ci6','ci7','ci8','ci9','ci10','what is ci','coverage index','halfway','progress','what level'],
+    response:(u)=>`The Coverage Index (CI) is the standard scale restorers use to measure progress, from CI-0 (starting point) to CI-10 (full restoration).\n\nYou're currently at ${LEVELS[u.ci].ci}. ${u.ci===0?'At CI-0, you\'re at the beginning — no measurable loose skin yet. The first sign of progress is usually slight wrinkling of shaft skin during erection.':u.ci<=3?'At your stage, the early visible signs are starting to appear — shaft skin loosening, slight rollover. This early phase can feel slow, but the groundwork is being laid.':u.ci<=5?'You\'re approaching or at the halfway point. At CI-5 most restorers begin experiencing functional benefits — reduced sensitivity in a good way, glans beginning to retain moisture.':u.ci<=7?'You\'re in the upper half. Glans coverage at rest is becoming consistent. Many restorers find motivation increases significantly at this stage because the results are undeniable.':'You\'re in the final stretch. The tissue is there — refinement and fullness is what remains.'}\n\nCI is self-assessed based on the standard descriptions. Update it in the Journey tab when you notice consistent progress.`
+  },
+
+  methods:{
+    keywords:['method','manual','device','tape','t-tape','tugger','tlc','dtr','retaining','inflation','which method','best method','what should i use','packing','ric','restore in comfort'],
+    response:(u)=>{
+      const used=(u.methods||[]).length;
+      return`There are five main restoration approaches, each with its own advantages:\n\n✋ Manual methods (MM1-MM5) require no equipment and can be done anywhere. Great for beginners and for applying tension in specific directions. The downside is you have to be actively doing them — no passive wear time.\n\n⚙ Devices (DTR, TLC Tugger, HyperRestore etc.) apply tension passively while you go about your day. Most restorers find devices give them their highest tension hours because wearing time is easy to accumulate.\n\n📐 Taping (T-Tape, cross tape) is one of the most popular methods — creates a custom tension setup using medical tape. T-Tape in particular is loved for long wear times and gentle consistent tension.\n\n💨 Inflation applies tension from the inside using air. Different tissue areas are targeted compared to external methods.\n\n🔒 Retaining holds coverage without active tension — good for dekeratinisation and protection between sessions.\n\nYou've used ${used} method${used!==1?'s':''} so far${used>0?': '+u.methods.slice(0,3).join(', '):''}. ${used<3?'Exploring different methods helps you find what works best for your anatomy and lifestyle.':'Good variety — different methods target different areas of the prepuce.'}`
+    }
+  },
+
+  consistency:{
+    keywords:['consistent','consistency','every day','daily','habit','routine','keep going','motivation','give up','quit','hard','difficult','struggle'],
+    response:(u)=>`Consistency is the entire game in restoration. It's not about any single session — it's about the cumulative signal over months and years.\n\nHere's what your data says: ${u.streak>14?`You have a ${u.streak}-day streak — that's genuine consistency and it's working.`:u.streak>0?`You have a ${u.streak}-day current streak. Building on this is exactly the right focus.`:'Your streak has broken recently. That\'s normal — what matters is getting back.'}\n\nThe restorers who see the most progress tend to do one thing differently: they make restoration part of an existing habit. Put your device on when you shower. Do MM1 while watching TV. Wear T-tape during your commute. Attaching restoration to something you already do daily removes the decision entirely.\n\nYour 30-day average is ${fmtMin(u.avgDay)}/day. ${u.avgDay>=90?'That\'s excellent. Keep that foundation solid.':u.avgDay>=45?'That\'s a solid base. Finding 20 more minutes somewhere in your day would make a real difference.':'Even small increases compound over months. What\'s one existing habit you could attach restoration to?'}`
+  },
+
+  plateau:{
+    keywords:['plateau','stuck','stall','no progress','not moving','same ci','months','not working','slow','nothing happening','frustrated'],
+    response:(u)=>`Plateaus are one of the most common and frustrating parts of restoration — and almost every restorer experiences them. Here's what's actually happening and what to do about it.\n\nTissue growth isn't linear. Your skin cells go through cycles of growth, consolidation, and rest. What looks like a plateau on the outside is often an internal consolidation phase — the new tissue is organising itself before the next visible growth phase.\n\nThe other common cause is tension adaptation. Your skin can adapt to a specific tension level and stop responding. The fix is variation — change your method, change the direction of tension, try a different device, or adjust the force level.\n\nAt ${LEVELS[u.ci].ci} with ${Math.floor(u.minutes/60)} hours logged, ${u.minutes<3000?'you\'re still in the early phases where patience is the main tool.':'you have significant hours invested. A plateau now likely means your tissue needs a different stimulus — try a method you haven\'t used recently.'}\n\nOne more thing: dekeratinisation is happening even when CI doesn't change. The glans is softening and becoming more sensitive beneath the surface. Progress is often invisible before it becomes visible.`
+  },
+
+  dekeratinisation:{
+    keywords:['dekeratinisation','dekeratinization','sensitive','sensitivity','glans','shiny','soft','moist','rough','dry','skin texture'],
+    response:(u)=>`Dekeratinisation is one of the most significant — and least discussed — benefits of restoration, and it starts happening long before your CI level moves significantly.\n\nThe glans naturally has a mucosal surface that needs protection from friction and air exposure. After circumcision, constant exposure causes the surface to harden and produce a keratinised layer — essentially a callus. This reduces sensitivity significantly.\n\nAs you restore coverage, the glans begins spending more time protected. The keratinised layer gradually sheds and the mucosal surface returns. This is why many restorers report significant sensitivity changes well before reaching their target CI level.\n\nAt ${LEVELS[u.ci].ci}, ${u.ci>=3?'you should be starting to notice some changes in glans texture and sensitivity, especially on days with good coverage.':'this process is beginning. Retaining (using a retainer to maintain coverage between sessions) accelerates dekeratinisation significantly even before your CI advances.'}\n\nSigns to look for: slightly shinier appearance, increased sensitivity, occasional slight moisture retention. These are all positive indicators.`
+  },
+
+  restDays:{
+    keywords:['rest day','rest','recovery','break','day off','overdo','sore','irritated','take a break','too much','hurts','pain','uncomfortable'],
+    response:(u)=>`Rest days are not a failure — they're a deliberate part of the process. Your skin needs recovery time to consolidate new tissue, and pushing through soreness or irritation is one of the most common mistakes restorers make.\n\n${(u.restDays||[]).length>0?`You've marked ${u.restDays.length} rest day${u.restDays.length!==1?'s':''} — good.`:'You haven\'t marked any rest days yet. Even with good consistency, planned rest days are worth considering.'}\n\nSigns you should take a rest day:\n• Any soreness, redness, or irritation in the skin\n• The skin feels fatigued or tighter than usual\n• You've had 7 or more consecutive days without a break\n• You feel mentally burned out on the routine\n\nSigns a rest day is not needed:\n• You simply don't feel like it (push through gently)\n• You missed yesterday (just resume today)\n\nOne or two rest days per week is healthy for most restorers and doesn't meaningfully slow progress. Overtraining absolutely does.`
+  },
+
+  beginners:{
+    keywords:['beginner','start','starting','new','first','where do i','how do i start','just started','just beginning','confused','what do i do','help','guide'],
+    response:(u)=>`Welcome to the journey. Here's what I'd recommend focusing on as you're getting started:\n\n1. Start with manual methods first. MM1 and MM2 require no equipment, help you understand your anatomy, and can be done anywhere. Do them while watching TV or reading.\n\n2. Set a realistic daily goal. 30–60 minutes to start. You can always increase it. The goal is building a sustainable habit, not maximum output on day one.\n\n3. Update your CI level in the Journey tab. Even if you're at CI-0, setting it gives you a baseline and makes progress visible over time.\n\n4. Take a baseline photo now. In 6 months you'll be glad you did. Progress is nearly invisible day to day but dramatic across months.\n\n5. Be patient with the science. Tissue growth takes months of consistent work before it becomes visible. Many people quit right before they'd start seeing results.\n\nYou've logged ${u.sessions} session${u.sessions!==1?'s':''} so far. ${u.sessions===0?'Your first session is the most important one — even 10 minutes.':u.sessions<10?'Good start. Focus on building the daily habit before optimising anything else.':'You\'re building a real foundation. Keep it going.'}`
+  },
+
+  progress:{
+    keywords:['progress','how am i doing','am i doing well','results','working','effective','am i on track','check in','update','feedback'],
+    response:(u)=>{
+      const hrs=Math.floor(u.minutes/60);
+      const avgDay=u.avgDay;
+      let assessment='';
+      if(u.sessions===0)assessment='You haven\'t logged any sessions yet. Your journey starts with your first log.';
+      else if(avgDay>=90)assessment=`Your ${fmtMin(avgDay)}/day average over the last 30 days is excellent. You're applying a strong, consistent tension signal.`;
+      else if(avgDay>=60)assessment=`Your ${fmtMin(avgDay)}/day average is solid — above the generally recommended minimum. You're doing well.`;
+      else if(avgDay>=30)assessment=`Your ${fmtMin(avgDay)}/day average is a decent base. Pushing toward 60+ minutes daily would meaningfully accelerate your results.`;
+      else if(avgDay>0)assessment=`Your ${fmtMin(avgDay)}/day average is below the recommended range. Small increases compound significantly over time.`;
+      else assessment='You haven\'t logged sessions in the past 30 days. Getting back on track is the priority.';
+      return`Here's your honest progress snapshot:\n\n📊 ${u.sessions} sessions · ${hrs} hours total · ${char.streak}-day streak\n🎯 ${fmtMin(avgDay)}/day average (last 30 days)\n◑ Currently ${LEVELS[u.ci].ci}\n\n${assessment}\n\n${u.ci>0&&u.minutes>0?`At your current pace you're accumulating roughly ${Math.round(avgDay*30/60)} hours of tension per month. ${avgDay>=60?'That\'s meaningful progress.':'Increasing your daily average is the single most impactful thing you can do.'}`:''}`;
+    }
+  },
+
+  motivation:{
+    keywords:['motivat','inspired','inspire','keep going','worth it','give up','quit','not worth','why','purpose','reason','point','does it work','real'],
+    response:(u)=>`Restoration works. That's not opinion — it's documented by thousands of restorers over decades and supported by the same tissue expansion science used in reconstructive medicine. The question isn't whether it works, it's whether you'll be consistent enough long enough.\n\nHere's something worth sitting with: the average restorer who reaches CI-8 or higher spent 4–7 years getting there. That sounds daunting. But those years pass regardless. The question is whether you spend them working toward something meaningful or not.\n\nYou've already put in ${Math.floor(u.minutes/60)} hours across ${u.sessions} sessions. That's real. That's tissue that exists now that didn't exist when you started. It doesn't disappear.\n\n${u.streak>7?`Your ${u.streak}-day streak shows you have the consistency to do this. Don't underestimate that.`:u.sessions>20?'You\'ve built real history here. That matters.':'Every session is a deposit into an account that only grows.'}\n\nThe restorers who finish are not the ones with the most free time or the best genetics. They're the ones who decided to stop deciding and just do it every day.`
+  },
+
+  inflation:{
+    keywords:['inflation','balloon','air','hyperrestore','priva','airforce','foreskinned air','inflate','inflat'],
+    response:(u)=>`Inflation methods use air pressure inside the foreskin to apply tension from the inside out. This targets the inner foreskin specifically, which is the more sensitive mucosal tissue that can't be as easily reached by external tension methods.\n\nDevices like HyperRestore's balloon method, the Airforce Direct Air, Priva Air, and DIY balloon methods all work on this principle. The skin is held forward and air is introduced to create sustained outward tension.\n\nInflation is particularly effective for: inner foreskin development, even circular tension distribution, and passive wear time since once inflated it maintains itself.\n\nThe main considerations: start with low pressure and work up gradually, never push to discomfort, and limit sessions initially to 30–60 minutes until you understand how your tissue responds. Overinflation is the main risk — more pressure does not mean faster results.\n\n${(u.methods||[]).some(m=>m.toLowerCase().includes('air')||m.toLowerCase().includes('balloon')||m.toLowerCase().includes('priva'))?'You\'ve tried inflation methods — good to see variety in your approach.':'You haven\'t tried inflation yet. It\'s worth exploring as a complement to your current methods, especially for inner foreskin development.'}`
+  },
+
+  retaining:{
+    keywords:['retain','retaining','retainer','cone','manhood','si retainer','stealth','coverage','protect','between sessions','dekeratini'],
+    response:(u)=>`Retaining is different from active restoration — it's not primarily about tissue growth, it's about maintaining coverage to allow dekeratinisation and protecting the glans from constant exposure.\n\nA retainer (cone, ManHood, SI Retainer, etc.) holds your existing skin forward without active tension. This means the glans spends time covered and protected even when you're not actively restoring.\n\nThe benefits: dekeratinisation accelerates significantly with consistent retaining, sensitivity improves, and there's psychological motivation from experiencing what fuller coverage feels like.\n\nRetaining is most effective at CI-3 and above when there's enough loose skin to actually maintain coverage. Below CI-3, retaining with a device can still help but the coverage is partial.\n\n${u.ci>=3?'At your current CI level, retaining between sessions is highly recommended. Even a few hours per day makes a meaningful difference to dekeratinisation.':'At your current stage, focus primarily on active restoration first. Retaining becomes increasingly beneficial as you gain more coverage.'}`
+  },
+
+  taping:{
+    keywords:['tape','t-tape','tegaderm','cross tape','taping','transpore','canister','dtrt'],
+    response:(u)=>`Taping is one of the most popular restoration methods for good reason — it's inexpensive, customisable, and allows long wear times throughout the day.\n\nT-Tape is the most widely used: medical tape (3M Transpore works well) applied to hold the foreskin forward with tension. The setup takes a few minutes but can then be worn for hours during normal activity.\n\nKey things to know:\n• The tape goes on clean, dry skin — oils or moisture reduce adhesion\n• Tension should be comfortable but noticeable — never painful\n• Start with 2–4 hour wear times and work up\n• Remove carefully (warm water helps) to avoid skin irritation\n• Shaving the base of the shaft helps with adhesion and removal\n• Some redness after removal is normal — raw irritation is not\n\n${(u.methods||[]).some(m=>m.toLowerCase().includes('tape'))?'You\'re already using taping methods — make sure your wear time is maximised. Many restorers get their best tension hours from tape.':'Taping might be worth trying. It has one of the highest wear-time potentials of any method and works well alongside device use.'}`
+  },
+
+  goals:{
+    keywords:['goal','daily goal','target','how much','how many minutes','how many hours','aim','recommended','enough'],
+    response:(u)=>`Your current daily goal is ${fmtMin(u.goal)}. ${u.avgDay>=u.goal?'You\'ve been meeting or exceeding it — consider whether it\'s time to set a higher target.':u.avgDay>=u.goal*0.7?'You\'re close to your goal most days. A small push to consistently hit it would compound significantly.':'You\'re currently averaging below your goal. Either adjust the goal to be more realistic, or identify what\'s preventing you from hitting it.'}\n\nFor reference, the general guidance in the restoration community:\n• 30 min/day — minimum to see any progress (slow)\n• 60 min/day — recommended baseline for consistent progress\n• 2–4 hrs/day — what faster progressors typically report\n• 6+ hrs/day — possible with tape or device during work/sleep\n\nMore is generally better, but consistency over time matters more than occasional very long sessions. A steady 90 minutes every day beats 8 hours once a week.\n\nYou can adjust your daily goal in the goal field on the Today tab.`
+  },
+
+  photos:{
+    keywords:['photo','picture','progress photo','document','compare','before after','photo journal','take photo'],
+    response:(u)=>`Progress photos are one of the most important and most neglected parts of restoration. Here's why they matter so much: restoration progress is nearly invisible on a day-to-day basis. You look the same today as yesterday. But compared to 6 months ago? The difference is often dramatic — and without photos, you'll never see it.\n\nYou currently have ${photos.length} photo${photos.length!==1?'s':''} logged. ${photos.length===0?'Take a baseline photo today. Even if you\'re at CI-0, a starting point is essential for tracking progress.':photos.length<5?'Good start. The most useful comparison is when you have photos across different CI levels and time periods.':'Good photo history. The side-by-side comparison feature in the Photos tab lets you compare any two photos directly.'}\n\nBest practices:\n• Same lighting, same position, same camera distance each time\n• Take photos both flaccid and erect to see CI changes accurately\n• Once a month is a good cadence — enough to see change without being obsessive\n• Note your CI level when adding a photo so you can track correlation`
+  },
+
+  sleep:{
+    keywords:['sleep','overnight','night','sleeping','nocturnal','while sleeping','bed'],
+    response:(u)=>`Restoring during sleep is possible and some restorers get significant hours this way, but it requires care.\n\nWhat works during sleep: taping (T-Tape specifically), some devices at low tension, retainers for dekeratinisation without active tension.\n\nWhat to be careful of: erections during sleep create significant tension — if you're wearing a device or tape, this tension is amplified and can cause discomfort or skin irritation. Start with retaining only (no active tension device) to see how your body responds overnight.\n\nMany experienced restorers do sleep with tape or a retainer and find it's their highest-yield tension time. The key is: if you wake up uncomfortable, that device isn't right for overnight use on you specifically.\n\nIf you're going to try overnight sessions: start with just a retainer for the first few nights, then try light tape tension, then a low-tension device. Build up gradually and listen to your body.`
+  },
+
+  manual:{
+    keywords:['manual method','mm1','mm2','mm3','mm4','mm5','manual stretching','hands','fingers','squeeze','pull'],
+    response:(u)=>`Manual methods are the foundation of restoration — no equipment needed, can be done anywhere, completely free.\n\nThe five main manual methods (MM1–MM5) each apply tension in different directions:\n\n• MM1 — two hands pulling skin toward the body and away simultaneously. Good for general outer foreskin growth.\n• MM2 — one hand holds skin, the other pulls. Easier to do one-handed.\n• MM3 — skin is pulled over the glans and held. Inner foreskin focus.\n• MM4 — manual inflation by trapping air. Budget version of inflation methods.\n• MM5 — skin bunched and pulled in specific directions. Good for targeting specific areas.\n\nManual methods are excellent for directed tension and can reach areas devices miss. The downside is they require active attention — you have to be doing them. For passive wear time, combine with taping or devices.\n\n${(u.methods||[]).some(m=>m.toLowerCase().includes('mm')||m.toLowerCase().includes('manual'))?'You\'re already using manual methods — make sure you\'re varying between them to target different tissue areas.':'Manual methods are worth incorporating even if you primarily use devices. The directed tension they provide is unique.'}`
+  },
+
+  welcome:{
+    keywords:['hello','hi','hey','what can you','who are you','what do you do','help me','coach'],
+    response:(u)=>`Hey ${char.name}! I'm your Coach — I'm here to help you understand restoration, make sense of your progress, and answer questions along the way.\n\nYou can ask me anything about restoration — methods, CI levels, how tissue growth works, what to expect at your stage, how to stay consistent, or just for a check-in on how you're doing.\n\nYou're currently at ${LEVELS[u.ci].ci} with ${u.sessions} sessions and ${Math.floor(u.minutes/60)} hours logged. ${u.sessions>0?'You\'ve got real history here — let\'s make sure you\'re making the most of it.':'Ready to get started? Ask me anything.'}\n\nWhat would you like to know?`
+  }
+};
+
+// ── COACH BRAIN MATCHER ────────────────────────────────────────────────────────
+function coachBrainMatch(question){
+  const q=question.toLowerCase();
+  // Build user context object
+  const td=today();
+  const last30=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=30);
+  const avgDay=last30.length?Math.round(last30.reduce((a,l)=>a+l.dur,0)/30):0;
+  const u={
+    ci:char.ciLevel||0,
+    sessions:char.sessions||0,
+    minutes:char.minutes||0,
+    streak:char.streak||0,
+    avgDay,
+    goal:char.dailyGoalMin||120,
+    methods:char.methods||[],
+    restDays:char.restDays||[],
+    photos:photos||[]
+  };
+  // Score each topic by keyword matches
+  let bestTopic=null,bestScore=0;
+  for(const[topic,data] of Object.entries(COACH_BRAIN)){
+    let score=0;
+    for(const kw of data.keywords){
+      if(q.includes(kw))score+=kw.split(' ').length; // multi-word keywords score higher
+    }
+    if(score>bestScore){bestScore=score;bestTopic=topic;}
+  }
+  if(!bestTopic||bestScore===0){
+    // No match — give a helpful fallback
+    return`I'm not sure I have a perfect answer for that specific question, ${char.name}. Try asking about methods, CI levels, consistency, how restoration works, rest days, or ask for a progress check-in.\n\nYou can also send feedback via the profile menu — specific questions you ask that I can't answer well help me get smarter over time.`;
+  }
+  const data=COACH_BRAIN[bestTopic];
+  return typeof data.response==='function'?data.response(u):data.response;
+}
+
 function coachMessage(){
   const td=today();
   const ci=char.ciLevel||0;
@@ -970,7 +1122,7 @@ function render(){
       <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden">
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1">
           <span style="font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:2px;line-height:1">RESTORETRACK</span>
-          <span id="v-tap" onclick="adminTap()" style="font-size:8px;color:var(--text6);font-family:'DM Sans',sans-serif;cursor:default;user-select:none;letter-spacing:.5px">v4.3</span>
+          <span id="v-tap" onclick="adminTap()" style="font-size:8px;color:var(--text6);font-family:'DM Sans',sans-serif;cursor:default;user-select:none;letter-spacing:.5px">v4.4</span>
         </div>
         <div style="width:1px;height:22px;background:var(--stat-border);flex-shrink:0;margin:0 2px"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1287,9 +1439,12 @@ function renderToday(){
     <div style="display:flex;gap:10px;align-items:flex-start">
       <div class="coach-icon">${msg.icon}</div>
       <div style="flex:1">
-        <div class="coach-label">Your Coach</div>
+        <div class="coach-label">Coach</div>
         <div class="coach-msg">${msg.msg}</div>
-        ${msg.cta?`<div class="coach-cta" id="coach-cta">${msg.cta==='log'?'+ Log Session':msg.cta==='photos'?'📸 Add Photo':'→ Update CI'}</div>`:''}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap">
+          ${msg.cta?`<div class="coach-cta" id="coach-cta">${msg.cta==='log'?IC.plus(11)+' Log Session':msg.cta==='photos'?'📸 Add Photo':'→ Update CI'}</div>`:''}
+          <div class="coach-cta" id="coach-talk-btn" style="background:var(--acc18);border-color:var(--acc45)">💬 Ask Coach</div>
+        </div>
       </div>
     </div>
   </div>
@@ -2194,7 +2349,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.3</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.4</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2234,6 +2389,15 @@ function renderProfileScreen(){
       ${char.reminderEnabled?`<div style="font-size:10px;color:var(--green)">Reminder set for ${char.reminderTime} daily. <button onclick="cancelReminder()" style="background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline">Cancel</button></div>`:'<div style="font-size:10px;color:var(--text5)">Requires notification permission.</div>'}
     </div>
 
+    <!-- Feedback -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Feedback & Bug Reports</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Spotted a bug? Have a suggestion? Want to see something new? I read every message personally.</div>
+      <button id="feedback-btn" class="btn-ghost" style="width:100%;padding:10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px">
+        ✉ Send Feedback
+      </button>
+    </div>
+
     <!-- Backup -->
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Data Backup</div>
@@ -2254,6 +2418,12 @@ function renderProfileScreen(){
     </div>
   </div>`;
 
+  document.getElementById('feedback-btn')?.addEventListener('click',()=>{
+    const version='v4.4';
+    const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
+    const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
+    window.location.href=`mailto:restoretrack@gmail.com.app?subject=${subject}&body=${body}`;
+  });
   document.getElementById('reminder-btn')?.addEventListener('click',()=>{
     const t=document.getElementById('reminder-time')?.value||'09:00';
     setReminder(t);
@@ -2613,6 +2783,7 @@ function attachEvents(){
   document.getElementById('export-btn')?.addEventListener('click',exportCSV);
   document.getElementById('update-ci-btn')?.addEventListener('click',()=>{showCISheet=true;render();});
   document.getElementById('update-ci-btn2')?.addEventListener('click',()=>{showCISheet=true;render();});
+  document.getElementById('coach-talk-btn')?.addEventListener('click',()=>showCoachSheet());
   document.getElementById('coach-cta')?.addEventListener('click',()=>{
     if(currentCoachCTA==='log'){showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();}
     else if(currentCoachCTA==='photos'){tab='photos';render();}
@@ -2804,12 +2975,8 @@ function checkNameAvailable(name){
 }
 
 function finaliseJoin(){
-  // Community name IS the profile name — no separate display name
   const name=char.name.trim();
   if(!name||!db||!fbUID)return;
-
-  // First: check bans collection — this is separate from community_users
-  // and survives profile deletion, so banned users can't rejoin by deleting their profile
   db.collection('bans').doc(fbUID).get().then(banDoc=>{
     if(banDoc.exists&&banDoc.data().banned){
       showToast('⚠ Your account has been suspended from the community.');
@@ -2820,15 +2987,13 @@ function finaliseJoin(){
       tab='community';render();
       return;
     }
-    // Not banned — proceed with normal join flow
-    joinProceed();
-  }).catch(()=>joinProceed()); // on network error, proceed optimistically
+    joinProceed(name);
+  }).catch(()=>joinProceed(name));
+}
 
-  function joinProceed(){
-  // Check if this Google account already has a community profile
+function joinProceed(name){
   db.collection('community_users').doc(fbUID).get().then(doc=>{
     if(doc.exists&&doc.data().name){
-      // Returning user — restore their community identity from Firestore
       const existing=doc.data();
       char.communityDisplayName=existing.name;
       char.communityEnabled=true;char.communityVisible=char.communityVisible!==false;
@@ -2837,7 +3002,6 @@ function finaliseJoin(){
       setTimeout(()=>{syncPresence();refreshCommUI();},1200);
       render();
     } else {
-      // New user — check profile name availability
       checkNameAvailable(name).then(available=>{
         if(!available){
           showToast(`⚠ The name "${name}" is already taken in the community.\nRename your profile and try again.`);
@@ -2846,7 +3010,6 @@ function finaliseJoin(){
           tab='community';render();
           return;
         }
-        // Name is free — commit
         char.communityDisplayName=name;
         char.communityEnabled=true;char.communityVisible=true;saveChar();
         tab='community';
@@ -2859,7 +3022,6 @@ function finaliseJoin(){
       });
     }
   }).catch(()=>{
-    // Network error — proceed optimistically
     char.communityDisplayName=name;
     char.communityEnabled=true;char.communityVisible=true;saveChar();
     tab='community';
@@ -2867,7 +3029,6 @@ function finaliseJoin(){
     setTimeout(()=>{syncPresence();refreshCommUI();},1200);
     render();
   });
-  } // end joinProceed
 }
 
 function startCommunityListeners(){
@@ -3189,7 +3350,7 @@ function renderCommunity(){
         <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:6px">◈ Join the Community</div>
         <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:10px">You can browse freely without signing in. To post, react, and appear as active — connect with Google. Your community name will be <strong style="color:var(--accent)">${htmlEsc(char.name)}</strong>, matching your profile.</div>
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.36h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.46h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Join as ${htmlEsc(char.name)}
         </button>
       </div>`
@@ -3646,7 +3807,110 @@ function selectAvatar(emoji){
   refreshCommUI();
 }
 
-// ── ADMIN ─────────────────────────────────────────────────────────────────────
+// ── COACH SHEET ────────────────────────────────────────────────────────────────
+let coachHistory=[]; // session conversation history
+
+const COACH_SUGGESTIONS=[
+  {label:'How am I doing?',      q:'How am I doing with my progress?'},
+  {label:'How does it work?',    q:'How does foreskin restoration actually work scientifically?'},
+  {label:'Should I rest today?', q:'Should I take a rest day?'},
+  {label:'I\'m on a plateau',    q:'I feel like I\'m on a plateau and not making progress'},
+  {label:'Best method for me?',  q:'What method should I be using at my stage?'},
+  {label:'How long will it take?',q:'How long will restoration take for me?'},
+  {label:'About retaining',      q:'Tell me about retaining and dekeratinisation'},
+  {label:'About taping',         q:'Tell me about taping methods'},
+];
+
+function showCoachSheet(){
+  const ex=document.getElementById('coach-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='coach-ov';
+
+  const historyHtml=coachHistory.map(h=>`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <div style="background:var(--acc12);border:1px solid var(--acc30);border-radius:14px 14px 4px 14px;padding:8px 12px;font-size:12px;color:var(--accent);max-width:80%;line-height:1.5">${htmlEsc(h.q)}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div style="font-size:18px;flex-shrink:0">🧠</div>
+        <div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:4px 14px 14px 14px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-line;flex:1">${htmlEsc(h.a)}</div>
+      </div>
+    </div>`).join('');
+
+  const suggestionsHtml=COACH_SUGGESTIONS.map(s=>
+    `<button onclick="coachAsk('${s.q.replace(/'/g,"\\'")}')"
+      style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .15s"
+      onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
+      onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text3)'"
+    >${s.label}</button>`
+  ).join('');
+
+  el.innerHTML=`<div class="sheet" style="max-height:90vh;display:flex;flex-direction:column;padding-bottom:0">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-shrink:0">
+      <div style="font-size:24px">🧠</div>
+      <div>
+        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Coach</div>
+        <div style="font-size:10px;color:var(--text5)">Ask me anything about your restoration</div>
+      </div>
+    </div>
+
+    <div id="coach-chat" style="flex:1;overflow-y:auto;min-height:80px;margin-bottom:12px">
+      ${coachHistory.length?historyHtml:`<div style="text-align:center;padding:20px 0;color:var(--text5);font-size:12px;line-height:1.8">
+        <div style="font-size:28px;margin-bottom:8px">💬</div>
+        Ask me anything — or tap a suggestion below.
+      </div>`}
+    </div>
+
+    <div style="flex-shrink:0">
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${suggestionsHtml}</div>
+      <div style="display:flex;gap:7px;padding-bottom:20px">
+        <input id="coach-inp" placeholder="Type your question..." maxlength="200"
+          style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:22px;padding:10px 16px;color:var(--text1);font-size:13px;outline:none;font-family:'DM Sans',sans-serif"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();coachSend();}">
+        <button onclick="coachSend()"
+          style="background:var(--accent);border:none;border-radius:22px;width:42px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--bg)">
+          ${IC.play(14)}
+        </button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+  // Scroll chat to bottom
+  setTimeout(()=>{const c=document.getElementById('coach-chat');if(c)c.scrollTop=c.scrollHeight;},50);
+  document.getElementById('coach-inp')?.focus();
+}
+
+function coachSend(){
+  const inp=document.getElementById('coach-inp');
+  const q=inp?.value.trim();
+  if(!q)return;
+  inp.value='';
+  coachAsk(q);
+}
+
+function coachAsk(question){
+  // Generate answer from brain
+  const answer=coachBrainMatch(question);
+  // Add to session history
+  coachHistory.push({q:question,a:answer});
+  if(coachHistory.length>10)coachHistory.shift(); // keep last 10 exchanges
+  // Capture question for owner review (Firestore, minimal cost — owner reads weekly)
+  captureCoachQuestion(question);
+  // Reopen sheet with new history
+  showCoachSheet();
+}
+
+function captureCoachQuestion(question){
+  // Write to Firestore for owner review — no PII, just the question + basic context
+  if(!db||!question.trim())return;
+  db.collection('coach_questions').add({
+    q:question.trim().slice(0,200),
+    ci:char.ciLevel||0,
+    sessions:char.sessions||0,
+    ts:firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(()=>{}); // silent fail — non-critical
+}
 // Admin UID — replace with your Firebase UID (find it in browser console: fbUID)
 const ADMIN_UID='ucBxGcyLCTMxyYDKgqOnDmlq2j52';
 
@@ -3673,13 +3937,17 @@ function showAdminPanel(){
 
     <div style="display:flex;gap:5px;margin-bottom:14px;background:var(--bg-stat);border-radius:10px;padding:4px">
       <button id="admin-tab-reports" onclick="adminSwitchTab('reports')"
-        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
+        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;
         background:${_adminTab==='reports'?'var(--bg-card)':'transparent'};
-        color:${_adminTab==='reports'?'#e74c3c':'var(--text4)'}">${IC.flag(13)} Reports</button>
+        color:${_adminTab==='reports'?'#e74c3c':'var(--text4)'}">${IC.flag(12)} Reports</button>
       <button id="admin-tab-users" onclick="adminSwitchTab('users')"
-        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
+        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;
         background:${_adminTab==='users'?'var(--bg-card)':'transparent'};
         color:${_adminTab==='users'?'var(--accent)':'var(--text4)'}">👥 Users</button>
+      <button id="admin-tab-coach" onclick="adminSwitchTab('coach')"
+        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;
+        background:${_adminTab==='coach'?'var(--bg-card)':'transparent'};
+        color:${_adminTab==='coach'?'var(--accent)':'var(--text4)'}">🧠 Coach</button>
     </div>
 
     <div id="admin-content"></div>
@@ -3692,11 +3960,12 @@ function showAdminPanel(){
 
 function adminSwitchTab(tab){
   _adminTab=tab;
-  // Update button styles
   const rBtn=document.getElementById('admin-tab-reports');
   const uBtn=document.getElementById('admin-tab-users');
+  const cBtn=document.getElementById('admin-tab-coach');
   if(rBtn){rBtn.style.background=tab==='reports'?'var(--bg-card)':'transparent';rBtn.style.color=tab==='reports'?'#e74c3c':'var(--text4)';}
   if(uBtn){uBtn.style.background=tab==='users'?'var(--bg-card)':'transparent';uBtn.style.color=tab==='users'?'var(--accent)':'var(--text4)';}
+  if(cBtn){cBtn.style.background=tab==='coach'?'var(--bg-card)':'transparent';cBtn.style.color=tab==='coach'?'var(--accent)':'var(--text4)';}
   adminLoadTab();
 }
 
@@ -3748,7 +4017,7 @@ function adminLoadTab(){
       }).catch(e=>{
         if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load reports.<br><span style="font-size:10px;color:var(--text5)">Error: ${e.code||e.message}</span></div>`;
       });
-  } else {
+  } else if(_adminTab==='users') {
     // Users tab — search community members and ban directly
     content.innerHTML=`
       <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Search Members</div>
@@ -3756,6 +4025,37 @@ function adminLoadTab(){
         <input id="admin-search-inp" class="gold-inp" placeholder="Search by display name..." style="margin:0;flex:1;font-size:12px" oninput="adminSearchUsers()">
       </div>
       <div id="admin-user-results"><div style="font-size:11px;color:var(--text4)">Type to search members…</div></div>`;
+  } else if(_adminTab==='coach') {
+    // Coach questions — what users are asking, gaps to fill
+    content.innerHTML='<div style="font-size:11px;color:var(--text4)">Loading coach questions...</div>';
+    db.collection('coach_questions').orderBy('ts','desc').limit(50)
+      .get().then(snap=>{
+        if(!document.getElementById('admin-content'))return;
+        if(snap.empty){
+          content.innerHTML=`<div style="font-size:11px;color:var(--green)">✓ No questions captured yet — users haven't asked Coach anything.</div>`;
+          return;
+        }
+        // Group by question text to find most common
+        const qCounts={};
+        snap.docs.forEach(d=>{
+          const q=d.data().q||'';
+          qCounts[q]=(qCounts[q]||0)+1;
+        });
+        const sorted=Object.entries(qCounts).sort((a,b)=>b[1]-a[1]);
+        content.innerHTML=`
+          <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Coach Questions (${snap.size} total · ${sorted.length} unique)</div>
+          <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.5">These are questions users asked Coach that you can bring to Claude to expand the brain. Most frequent first.</div>
+          ${sorted.map(([q,count])=>`
+            <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px">
+              <div style="font-size:11px;color:var(--text2);flex:1;line-height:1.5">${htmlEsc(q)}</div>
+              ${count>1?`<span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:1px 7px;font-size:9px;color:var(--accent);flex-shrink:0;white-space:nowrap">×${count}</span>`:''}
+            </div>`).join('')}
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--stat-border)">
+            <button onclick="adminClearCoachQuestions()" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:6px 14px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Clear all questions</button>
+          </div>`;
+      }).catch(e=>{
+        if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load — update Firestore rules to allow admin reads on coach_questions.<br><span style="font-size:10px;color:var(--text5)">${e.code||e.message}</span></div>`;
+      });
   }
 }
 
@@ -3854,6 +4154,18 @@ function adminUnbanUID(uid){
 
 // Legacy — kept for any direct console calls
 function adminBanUser(){adminBanUID(document.getElementById('admin-ban-uid')?.value.trim(),null);}
+
+function adminClearCoachQuestions(){
+  if(!db)return;
+  confirmDialog('Clear all coach questions?','This will delete the captured question log. Do this after reviewing and updating the Coach brain.','Clear All',()=>{
+    db.collection('coach_questions').get().then(snap=>{
+      const batch=db.batch();
+      snap.docs.forEach(d=>batch.delete(d.ref));
+      return batch.commit();
+    }).then(()=>{showToast('✓ Coach questions cleared');adminLoadTab();})
+      .catch(()=>showToast('⚠ Could not clear'));
+  });
+}
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
 loadAll();render();scheduleReminder();
