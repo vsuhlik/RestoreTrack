@@ -1868,6 +1868,9 @@ function renderPhotos(){
   <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none">
   <input type="file" id="photo-file-library" accept="image/*" multiple style="display:none">
   <div class="sec-title">Photo Timeline</div>
+  <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--text4);line-height:1.7">
+    🔒 <strong style="color:var(--text3)">Your photos are stored only on this device.</strong> They are never uploaded, synced, or shared anywhere. Only you can see them — even we can't access them.
+  </div>
   ${eraHtml}`;
 }
 
@@ -2431,7 +2434,7 @@ function renderProfileScreen(){
     document.getElementById('root').innerHTML=`<div class="pscreen">
       <div style="text-align:center;margin-bottom:24px;margin-top:8px">
         <div style="font-family:Cinzel,serif;font-size:28px;color:var(--accent);letter-spacing:3px;margin-bottom:12px">◉ RESTORETRACK</div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.9;max-width:300px;margin:0 auto">The most complete foreskin restoration tracker ever built.<br><span style="color:var(--text5);font-size:11px">Free. Private. No account required.</span></div>
+        <div style="font-size:13px;color:var(--text3);line-height:1.9;max-width:300px;margin:0 auto">A restoration tracker made by a restorer, for restorers.<br><span style="color:var(--text5);font-size:11px">Free. Private. No account required.</span></div>
       </div>
 
       <div style="width:100%;background:var(--bg-stat);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -3483,7 +3486,7 @@ function renderCommunity(){
   const topBar=!isJoined
     ?`<div style="background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:10px">
         <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:6px">◈ Join the Community</div>
-        <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:10px">You can browse freely without signing in. To post, react, and appear as active — connect with Google. Your community name will be <strong style="color:var(--accent)">${htmlEsc(char.name)}</strong>, matching your profile.</div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:10px">You can browse freely without signing in. To post, react, and appear as active — connect with Google. You can leave and rejoin the community at any time.</div>
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
           <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.66h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Join as ${htmlEsc(char.name)}
