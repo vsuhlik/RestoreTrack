@@ -853,7 +853,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.4</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.5</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -874,8 +874,10 @@ function render(){
   else if(tab==='reports')c.innerHTML=renderReports();
   else if(tab==='ach')c.innerHTML=renderAch();
   else if(tab==='community'){
-    commTab='live';
-    setLastSeen('live');
+    // Restore persisted inner tab, default live
+    commTab=localStorage.getItem('rst-comm-tab')||'live';
+    setLastSeen(commTab);
+    if(commTab==='posts')fetchPosts(true);
     // Restart users listener if it was stopped when we left
     if(commState.ready&&!commState.unsubUsers)startCommunityListeners();
     c.innerHTML=renderCommunity();
@@ -1960,7 +1962,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.4</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.5</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2464,7 +2466,7 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 }
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
-let commTab='live'; // inner community tab: live | posts | members
+let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
 let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{}};
 
 // ── NEW-POST BADGE TRACKING ─────────────────────────────────────────────────
@@ -2557,19 +2559,54 @@ function signInWithGoogle(displayName){
   });
 }
 
+// Normalize a display name for uniqueness comparison:
+// lowercase, strip punctuation and extra spaces
+function normalizeName(n){
+  return(n||'').toLowerCase().replace(/[^a-z0-9]/g,'').trim();
+}
+
+// Check if a display name is available — returns promise resolving to true/false
+function checkNameAvailable(name){
+  if(!db)return Promise.resolve(true);
+  const normalized=normalizeName(name);
+  if(!normalized)return Promise.resolve(false);
+  return db.collection('community_users')
+    .where('nameLower','==',normalized)
+    .limit(2)
+    .get()
+    .then(snap=>{
+      // Available if no results, or the only result is the current user
+      const others=snap.docs.filter(d=>d.id!==fbUID);
+      return others.length===0;
+    })
+    .catch(()=>true); // on error, allow — don't block the user
+}
+
 function finaliseJoin(name){
-  char.communityDisplayName=name.trim();
-  char.communityEnabled=true;char.communityVisible=true;saveChar();
-  tab='community';
-  // Write joinedAt only on first join — separate set without merge so it's not overwritten
-  if(db&&fbUID){
-    db.collection('community_users').doc(fbUID).set({
-      joinedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true}).catch(()=>{});
-  }
-  startCommunityListeners();
-  setTimeout(()=>{syncPresence();refreshCommUI();},1200);
-  render();
+  const trimmed=name.trim();
+  if(!trimmed)return;
+  // Check name is available before committing
+  checkNameAvailable(trimmed).then(available=>{
+    if(!available){
+      showToast('⚠ That name is already taken — please choose another');
+      // Clear pending name so they can try again
+      localStorage.removeItem('rst-comm-pending-name');
+      char.communityEnabled=false;saveChar();
+      tab='community';render();
+      return;
+    }
+    char.communityDisplayName=trimmed;
+    char.communityEnabled=true;char.communityVisible=true;saveChar();
+    tab='community';
+    if(db&&fbUID){
+      db.collection('community_users').doc(fbUID).set({
+        joinedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true}).catch(()=>{});
+    }
+    startCommunityListeners();
+    setTimeout(()=>{syncPresence();refreshCommUI();},1200);
+    render();
+  });
 }
 
 function startCommunityListeners(){
@@ -2661,6 +2698,7 @@ function syncPresence(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
   db.collection('community_users').doc(fbUID).set({
     name:char.communityDisplayName,
+    nameLower:normalizeName(char.communityDisplayName),
     avatar:char.communityAvatar||'🌱',
     bio:char.communityBio||'',
     shareStats:char.communityShareStats!==false,
@@ -2753,6 +2791,23 @@ function commReact(postId,r){
 function deleteCommPost(postId){
   if(!db||!fbUID)return;
   db.collection('posts').doc(postId).delete().catch(()=>{});
+}
+
+function reportPost(postId){
+  if(!db||!fbUID){showToast('Sign in to report posts');return;}
+  confirmDialog(
+    'Report this post?',
+    'This will flag the post for review. Use this for harmful, abusive, or inappropriate content only.',
+    'Report',
+    ()=>{
+      db.collection('reports').add({
+        postId,reportedBy:fbUID,
+        ts:firebase.firestore.FieldValue.serverTimestamp(),
+        resolved:false
+      }).then(()=>showToast('✓ Post reported — thank you'))
+        .catch(()=>showToast('⚠ Could not send report'));
+    }
+  );
 }
 
 function toggleReplies(postId){
@@ -2860,7 +2915,7 @@ function renderCommunity(){
         <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px">Sign in with Google to appear as active, post updates, and react. Your Google identity stays private — you choose your display name.</div>
         <input class="gold-inp" id="comm-name-inp" placeholder="Choose a display name..." maxlength="24" value="${char.name||''}" style="margin-bottom:8px;font-size:13px">
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.47h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.44C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.57h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.54C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continue with Google
         </button>
       </div>`
@@ -2896,7 +2951,7 @@ function renderCommunity(){
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
     ${tabs.map(t=>`
-      <button onclick="commTab='${t.id}';setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
+      <button onclick="commTab='${t.id}';localStorage.setItem('rst-comm-tab','${t.id}');setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
         background:${commTab===t.id?'var(--bg-card)':'transparent'};
         color:${commTab===t.id?'var(--accent)':'var(--text4)'};
         box-shadow:${commTab===t.id?'0 1px 4px rgba(0,0,0,.2)':'none'}">
@@ -3075,7 +3130,10 @@ function buildPostCard(p,now,reacted,isJoined){
         style="background:${isOpen?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isOpen?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;color:${isOpen?'var(--accent)':'var(--text4)'};display:inline-flex;align-items:center;gap:4px;font-family:DM Sans,sans-serif">
         💬 <span>${replyCount>0?replyCount:''} ${isOpen?'Hide':'Reply'}</span>
       </button>
-      ${isMe?`<button onclick="confirmDialog('Delete post?','This will remove your post and all its replies.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif">✕</button>`:''}
+      ${isMe
+        ?`<button onclick="confirmDialog('Delete post?','This will remove your post and all its replies.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif">✕</button>`
+        :`<button onclick="reportPost('${p.id}')" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif" title="Report this post">⚑ Report</button>`
+      }
     </div>
     ${replySection}
   </div>`;
@@ -3275,8 +3333,15 @@ function showCommSettings(){
   document.getElementById('comm-settings-done').onclick=()=>el.remove();
   document.getElementById('comm-name-save').onclick=()=>{
     const n=document.getElementById('comm-name-edit')?.value.trim();
-    if(!n)return;char.communityDisplayName=n;saveChar();syncPresence();
-    showToast('Display name updated');el.remove();refreshCommUI();
+    if(!n)return;
+    if(n===char.communityDisplayName){showToast('That is already your name');return;}
+    checkNameAvailable(n).then(available=>{
+      if(!available){showToast('⚠ That name is already taken — try another');return;}
+      char.communityDisplayName=n;saveChar();syncPresence();
+      showToast('✓ Display name updated');
+      document.getElementById('comm-settings-ov')?.remove();
+      refreshCommUI();
+    });
   };
   document.getElementById('comm-bio-save').onclick=()=>{
     const b=(document.getElementById('comm-bio-edit')?.value||'').slice(0,200).trim();
