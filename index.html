@@ -94,7 +94,7 @@ textarea:focus{border-color:var(--acc30)}
 .bar{border-radius:3px 3px 0 0;width:100%;background:var(--acc18);min-height:2px;transition:height .5s ease}
 .bar.today{background:linear-gradient(180deg,var(--accent),var(--acc45))}
 .bar-lbl{font-size:9px;color:var(--text4);text-align:center}
-.bar-val{font-size:8px;color:var(--text5);text-align:center;min-height:10px}
+.bar-val{font-size:8px;color:var(--text5);text-align:center;min-height:10px;max-height:12px;overflow:hidden;line-height:1.2}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:4px 0}
 .cal-dot{aspect-ratio:1;border-radius:3px;background:var(--bg-stat)}
 .cal-dot.on{background:var(--acc45)}
@@ -829,38 +829,93 @@ function coachMessage(){
   const td=today();
   const ci=char.ciLevel||0;
   const daysSinceLast=char.lastDate?Math.round((new Date(td)-new Date(char.lastDate))/86400000):-1;
-  const sessThisWeek=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=7).length;
   const tMin=todayMin();
   const goal=char.dailyGoalMin||120;
   const hoursTotal=char.minutes/60;
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
 
+  // Analyse weekly patterns
+  const last30=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=30);
+  const last7=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=7);
+  const prev7=logs.filter(l=>{const d=(new Date()-new Date(l.date+'T12:00:00'))/86400000;return d>7&&d<=14;});
+  const last7Mins=last7.reduce((a,l)=>a+l.dur,0);
+  const prev7Mins=prev7.reduce((a,l)=>a+l.dur,0);
+  const avgDailyMins=last30.length?Math.round(last30.reduce((a,l)=>a+l.dur,0)/30):0;
+
+  // Day-of-week consistency analysis
+  const dowCounts=[0,0,0,0,0,0,0];
+  last30.forEach(l=>{const dow=new Date(l.date+'T12:00:00').getDay();dowCounts[dow]++;});
+  const todayDow=new Date().getDay();
+  const dowNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const bestDow=dowCounts.indexOf(Math.max(...dowCounts));
+  const weakestDow=dowCounts.indexOf(Math.min(...dowCounts));
+
+  // Time at current CI level
+  const ciHistory=char.ciHistory||[];
+  const lastCIChange=ciHistory.filter(h=>h.ci===ci).pop();
+  const daysAtCI=lastCIChange?Math.round((new Date()-new Date(lastCIChange.date+'T12:00:00'))/86400000):null;
+
+  // ── Priority messages — most actionable first ──
   if(char.sessions===0)
-    return{icon:'👋',msg:`Welcome, ${char.name}! Start your first session to begin tracking your restoration journey. Even 15 minutes is a great first step.`,cta:'log'};
+    return{icon:'👋',msg:`Welcome, ${char.name}. Your restoration journey starts with a single session. Even 15 minutes applies the tension signal your body needs. Tap Start Session below.`,cta:'log'};
+
   if(isRunning)
-    return{icon:'⏱',msg:`Session in progress — ${fmtHMS(timerSecs)}. Stay relaxed; consistent, comfortable tension is more effective than pushing harder.`,cta:null};
+    return{icon:'⏱',msg:`Session in progress — ${fmtHMS(timerSecs)}. Relax and let consistent, comfortable tension do the work. Pushing harder doesn't speed things up — patience does.`,cta:null};
+
+  // Missed days — urgent
   if(daysSinceLast>=5)
-    return{icon:'📅',msg:`It's been ${daysSinceLast} days since your last session. Restoration responds to regular, consistent tension — getting back on track today matters.`,cta:'log'};
+    return{icon:'📅',msg:`It's been ${daysSinceLast} days since your last session. Restoration tissue responds to regular signals — a gap this long means starting to rebuild momentum. Even 20 minutes today counts.`,cta:'log'};
+
   if(daysSinceLast>=3)
-    return{icon:'⏰',msg:`${daysSinceLast} days since your last session. Even 15–20 minutes today keeps the momentum going.`,cta:'log'};
+    return{icon:'⏰',msg:`${daysSinceLast} days since your last session. Your ${char.streak>0?char.streak+'-day streak is at risk':'consistency is slipping'} — 15–20 minutes today keeps the momentum going.`,cta:'log'};
+
+  // Tonight's streak at risk (after 8pm, no session today)
+  const hour=new Date().getHours();
+  if(hour>=20&&tMin===0&&char.streak>2)
+    return{icon:'🔥',msg:`Your ${char.streak}-day streak is at risk — you haven't logged today yet and it's getting late. Even a short session protects it.`,cta:'log'};
+
+  // Goal hit
   if(tMin>=goal){
-    const s=char.streak;
-    return{icon:'🎯',msg:`Daily goal hit — ${fmtMin(tMin)} logged today.${s>=3?` ${s}-day streak 🔥`:''} Your body is receiving the consistent tension signal it needs.`,cta:null};
+    const trend=last7Mins>prev7Mins?`↑ ${Math.round((last7Mins-prev7Mins)/60*10)/10}h more than last week`:'';
+    return{icon:'🎯',msg:`Daily goal hit — ${fmtMin(tMin)} logged today.${char.streak>=3?` ${char.streak}-day streak 🔥`:''} ${trend?trend+'.':''} Consistent tension is the only mechanism that drives growth — you're doing it right.`,cta:null};
   }
+
+  // Weekly trend insight
+  if(char.sessions>=10&&prev7Mins>0){
+    const diff=last7Mins-prev7Mins;
+    if(diff<-60)
+      return{icon:'📉',msg:`You've logged ${fmtMin(Math.abs(diff))} less this week than last week. Restoration responds to consistent volume — a dip like this is worth noticing. What's getting in the way?`,cta:'log'};
+    if(diff>60&&last7.length>=4)
+      return{icon:'📈',msg:`You've logged ${fmtMin(diff)} more this week than last — solid improvement. Your average is ${fmtMin(avgDailyMins)}/day over the past month. Keep building on this.`,cta:null};
+  }
+
+  // Day-of-week weakness
+  if(char.sessions>=14&&dowCounts[todayDow]===0&&bestDow!==todayDow)
+    return{icon:'📆',msg:`${dowNames[todayDow]} is your least active day — you've never logged on a ${dowNames[todayDow]} in the last 30 days. ${dowNames[bestDow]} is your most consistent. Every day matters for tissue response.`,cta:'log'};
+
+  // CI level insight
+  if(daysAtCI&&daysAtCI>60&&ci<10)
+    return{icon:'◑',msg:`You've been at ${LEVELS[ci].ci} for ${daysAtCI} days. CI progression is driven purely by cumulative tension hours — there's no shortcut. Your current pace of ${fmtMin(avgDailyMins)}/day is${avgDailyMins>=60?' solid.':(avgDailyMins>=30?' okay, but more is better.':' below the recommended daily amount.')}`,cta:null};
+
+  // First photo nudge
   if(photos.length===0&&char.sessions>=3)
-    return{icon:'📸',msg:`You've logged ${char.sessions} sessions — add a baseline photo now. Progress can be hard to notice day-to-day, but photos months apart tell the real story.`,cta:'photos'};
-  if(ci===0&&hoursTotal>=8)
-    return{icon:'📊',msg:`You've logged over ${Math.round(hoursTotal)} hours. Head to the Journey tab to set your current CI level — tracking where you are is key to seeing where you're going.`,cta:'journey'};
-  if(sessThisWeek<=1&&daysSinceLast>=0)
-    return{icon:'💡',msg:`Aim for at least 20–30 minutes daily if possible — shorter daily sessions generally outperform occasional long ones for tissue response.`,cta:'log'};
-  // Default rotating messages (honest, no fake timelines)
+    return{icon:'📸',msg:`You've logged ${char.sessions} sessions — now is the time to add a baseline photo. Progress is nearly invisible day to day, but comparing photos months apart is the most motivating thing you can do.`,cta:'photos'};
+
+  // CI not set
+  if(ci===0&&hoursTotal>=5)
+    return{icon:'◑',msg:`You've logged ${Math.round(hoursTotal)} hours but haven't set a CI level. Head to Journey and set your starting point — it helps track real progress over time.`,cta:'journey'};
+
+  // Avg daily insight
+  if(char.sessions>=7)
+    return{icon:'📊',msg:`Your 30-day average is ${fmtMin(avgDailyMins)}/day.${avgDailyMins>=goal?` You're consistently hitting your ${fmtMin(goal)} goal — excellent.`:avgDailyMins>=60?` You're getting regular sessions in — pushing toward ${fmtMin(goal)} daily would accelerate results.`:` Aim for ${fmtMin(goal)} daily — shorter daily sessions consistently outperform occasional long ones.`}`,cta:avgDailyMins<goal?'log':null};
+
+  // Fallback rotation
   const day=new Date().getDate();
   const msgs=[
-    {icon:'📈',msg:`${Math.round(hoursTotal)} hours of restoration time logged. Every hour is consistent tension applied — that's the only driver of growth.`},
-    {icon:'🔬',msg:`You've tried ${char.methods.length} method${char.methods.length===1?'':'s'}. Mixing manual and device methods can help apply tension across different areas of the prepuce over time.`},
-    {icon:'🌱',msg:`Currently at ${LEVELS[ci].ci}. ${ci<10?`Advancement between CI levels typically takes months of consistent effort.`:`You've completed the full restoration journey.`}`},
-    {icon:'💡',msg:`If your skin ever feels sore or fatigued, a rest day is always the right call. Recovery is part of the process.`},
-    {icon:'⏳',msg:`${char.streak>0?`${char.streak}-day streak.`:'Keep building your streak.'} Restoration is one of the slowest tissue changes the body makes — patience and consistency are your only tools.`},
+    {icon:'🌱',msg:`${Math.round(hoursTotal)} hours logged so far. Every hour of consistent tension is a real signal to your body — there is no other mechanism for growth. Keep showing up.`},
+    {icon:'💡',msg:`If your skin feels sore, tight, or irritated — rest. Recovery is part of the process, not a failure. A rest day used well is better than a session that causes setbacks.`},
+    {icon:'⏳',msg:`Restoration is measured in months and years, not days. You're at ${LEVELS[ci].ci}. The progress is real even when it's invisible — consistent tension is the only variable in your control.`},
+    {icon:'🔬',msg:`You've used ${(char.methods||[]).length} method${(char.methods||[]).length===1?'':'s'}. Different methods apply tension to different areas of the prepuce. Varying your approach can help development over time.`},
   ];
   return msgs[day%msgs.length];
 }
@@ -873,7 +928,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.6</span>
+        <span id="v-tap" onclick="adminTap()" style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:default;user-select:none">v3.7</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -918,7 +973,7 @@ function render(){
 }
 function renderNav(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
-  return[{id:'today',icon:'◉',lbl:'Today'},{id:'journey',icon:'◑',lbl:'Journey'},{id:'photos',icon:'📸',lbl:'Photos'},{id:'reports',icon:'▦',lbl:'Reports'},{id:'ach',icon:'★',lbl:'Miles'},{id:'community',icon:'◈',lbl:'Community'}]
+  return[{id:'today',icon:'◉',lbl:'Today'},{id:'journey',icon:'◑',lbl:'Journey'},{id:'photos',icon:'📸',lbl:'Photos'},{id:'reports',icon:'▦',lbl:'Reports'},{id:'ach',icon:'★',lbl:'Badges'},{id:'community',icon:'◈',lbl:'Community'}]
     .map(t=>`<button class="nav-btn${tab===t.id?' active':''}" data-tab="${t.id}">
       <span class="nav-icon" style="position:relative;display:inline-block">${t.icon}${running&&t.id==='today'?`<span style="position:absolute;top:-1px;right:-3px;width:6px;height:6px;border-radius:50%;background:var(--green);border:1px solid var(--bg-nav)"></span>`:''}</span>${t.lbl}
     </button>`).join('');
@@ -1206,10 +1261,22 @@ function renderToday(){
       <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go'}</span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--stat-border)">
-      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--text1)" data-live="today-min">${fmtMin(tMin)}</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Today</div></div>
-      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--text1)">${fmtMin(monthMin)}</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Month</div></div>
-      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--text1)">${fmtMin(yearMin)}</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Year</div></div>
-      <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#F59E0B">${char.streak}🔥</div><div style="font-size:9px;color:var(--text4);margin-top:2px">Streak</div></div>
+      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
+        <div style="font-size:16px;font-weight:800;color:${tMin>0?'var(--accent)':'var(--text3)'};line-height:1" data-live="today-min">${fmtMin(tMin)}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Today</div>
+      </div>
+      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
+        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtMin(monthMin)}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Month</div>
+      </div>
+      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
+        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtMin(yearMin)}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Year</div>
+      </div>
+      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
+        <div style="font-size:16px;font-weight:800;color:${char.streak>0?'#F59E0B':'var(--text3)'};line-height:1">${char.streak>0?char.streak+'🔥':'—'}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Streak</div>
+      </div>
     </div>
   </div>
   ${timerBlock}
@@ -1246,22 +1313,71 @@ function renderJourney(){
   const curr=LEVELS[ci];
   const next=ci<10?LEVELS[ci+1]:null;
 
-  // Compact reference — one line each, soft/hard split
-  const refGuide=LEVELS.map((l,i)=>{
-    const active=i===ci;
-    return`<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--stat-border);${i===LEVELS.length-1?'border-bottom:none':''}">
-      <div style="font-family:Cinzel,serif;font-size:10px;font-weight:700;color:${active?'var(--accent)':'var(--text4)'};width:34px;flex-shrink:0;padding-top:1px">${l.ci}</div>
-      <div style="font-size:10px;color:${active?'var(--text2)':'var(--text4)'};line-height:1.65;flex:1">${ciDesc(l)}</div>
-      ${active?`<div style="font-size:8px;color:var(--accent);flex-shrink:0;padding-top:2px">◀</div>`:''}
-    </div>`;
-  }).join('');
-
-  // Cumulative hours — shown instead of redundant stat tiles
+  // Cumulative hours line
   const totalHrs=(char.minutes/60);
   const hrLabel=totalHrs<1?`${char.minutes} minutes`:totalHrs<24?`${totalHrs.toFixed(1)} hours`:`${Math.floor(totalHrs/24)} days, ${Math.round(totalHrs%24)} hours`;
   const cumulativeLine=char.minutes>0?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 14px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
-    You've dedicated <strong style="color:var(--accent)">${hrLabel}</strong> to restoration${char.streak>1?` — currently on a <strong style="color:#F59E0B">${char.streak}-day streak</strong>`:''}.${char.sessions>0?` ${char.sessions} session${char.sessions!==1?'s':''} logged.`:''}
+    You've dedicated <strong style="color:var(--accent)">${hrLabel}</strong> to restoration${char.streak>1?` — currently on a <strong style="color:#F59E0B">${char.streak}-day streak</strong>`:''}.
   </div>`:'';
+
+  // CI bracket stats — how long at each level
+  function bracketStats(levelIdx){
+    if(!ciHistory.length)return null;
+    // Find when this level started (most recent entry for this level)
+    const entries=ciHistory.filter(h=>h.ci===levelIdx);
+    if(!entries.length&&levelIdx!==0)return null;
+    // Determine date range for this CI level
+    let startDate,endDate;
+    if(levelIdx===0){
+      // CI-0 is from start until first CI change
+      startDate=profiles[0]?.createdAt||null;
+      const firstChange=ciHistory[0];
+      endDate=firstChange&&firstChange.ci>0?firstChange.date:null;
+    } else {
+      const entry=entries[entries.length-1];
+      startDate=entry?.date||null;
+      // End is when they moved to next level
+      const nextChange=ciHistory.find(h=>h.ci>levelIdx&&h.date>=startDate);
+      endDate=levelIdx===ci?null:nextChange?.date||null;
+    }
+    if(!startDate)return null;
+    const start=new Date(startDate+'T12:00:00');
+    const end=endDate?new Date(endDate+'T12:00:00'):new Date();
+    const days=Math.round((end-start)/86400000);
+    // Sessions logged during this period
+    const sessInRange=logs.filter(l=>{
+      const d=new Date(l.date+'T12:00:00');
+      return d>=start&&d<=end;
+    });
+    return{days,sessions:sessInRange.length,hours:Math.floor(sessInRange.reduce((a,l)=>a+l.dur,0)/60)};
+  }
+
+  // CI accordion reference — tap to expand
+  const refGuide=LEVELS.map((l,i)=>{
+    const isActive=i===ci;
+    const stats=bracketStats(i);
+    const statsLine=stats&&(stats.sessions>0||stats.days>0)?`
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+        ${stats.days>0?`<span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:12px;padding:2px 8px;font-size:9px;color:var(--text4)">📅 ${stats.days}d at this level</span>`:''}
+        ${stats.sessions>0?`<span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:12px;padding:2px 8px;font-size:9px;color:var(--text4)">◉ ${stats.sessions} sessions</span>`:''}
+        ${stats.hours>0?`<span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:12px;padding:2px 8px;font-size:9px;color:var(--text4)">⏱ ${stats.hours}h logged</span>`:''}
+      </div>`:'';
+    return`<div style="border-bottom:1px solid var(--stat-border);${i===LEVELS.length-1?'border-bottom:none':''}">
+      <button onclick="(function(){var d=document.getElementById('ci-ref-${i}');var open=d.style.display!=='none';document.querySelectorAll('.ci-ref-body').forEach(x=>x.style.display='none');d.style.display=open?'none':'block';})()"
+        style="width:100%;display:flex;align-items:center;gap:8px;padding:9px 0;background:none;border:none;cursor:pointer;text-align:left;font-family:DM Sans,sans-serif">
+        <div style="font-family:Cinzel,serif;font-size:11px;font-weight:700;color:${isActive?'var(--accent)':'var(--text4)'};width:36px;flex-shrink:0">${l.ci}</div>
+        <div style="flex:1;font-size:11px;color:${isActive?'var(--text2)':'var(--text4)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${i===0?'Starting point':l.soft?l.soft.slice(0,45)+(l.soft.length>45?'…':''):''}
+        </div>
+        ${isActive?`<span style="font-size:9px;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:2px 7px;color:var(--accent);flex-shrink:0">YOU ◀</span>`:''}
+        <span style="font-size:10px;color:var(--text5);flex-shrink:0">▾</span>
+      </button>
+      <div id="ci-ref-${i}" class="ci-ref-body" style="display:${isActive?'block':'none'};padding:0 0 10px 44px">
+        <div style="font-size:11px;color:var(--text2);line-height:1.7">${ciDesc(l)}</div>
+        ${statsLine}
+      </div>
+    </div>`;
+  }).join('');
 
   return`
   <div class="card card-gold" style="padding:18px 14px 16px">
@@ -1288,14 +1404,10 @@ function renderJourney(){
     </div>`:'<div style="border-top:1px solid var(--stat-border);padding-top:10px;text-align:center;font-size:11px;color:var(--accent)">🏆 Journey Complete</div>'}
   </div>
 
-  <div class="sg4" style="margin-top:0">
-    <div class="stat"><div class="sv">${char.sessions}</div><div class="sl">Sessions</div></div>
-  </div>
-
   ${cumulativeLine}
 
   <div class="sec-title">CI Reference</div>
-  <div class="card" style="padding:8px 12px">${refGuide}</div>`;
+  <div class="card" style="padding:4px 12px">${refGuide}</div>`;
 }
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
@@ -1729,7 +1841,7 @@ function renderReports(){
     return logged+(d===td?liveMins:0); // add live time to today's bar
   });
   const maxM=Math.max(...wMins,1);
-  const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*88)),isT=wDays[i]===today();
+  const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*76)),isT=wDays[i]===today();
     return`<div class="bar-col"><div class="bar-val">${m>0?fmtMin(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
   }).join('');
   // Method breakdown — only methods actually used, by name
@@ -1780,15 +1892,40 @@ function renderReports(){
   }).join('');
   const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
   const monthTotal=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0)+liveMins;
-  const histHtml=logs.length?logs.slice(0,40).map(l=>{const cat=catFor(l.cat);return`
-    <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;padding:10px;margin-bottom:7px">
-      <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.method}</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:1px">${l.date} · ${fmtMin(l.dur)}${l.notes?' · '+l.notes.slice(0,45):''}</div>
-      </div>
-      <button class="del-btn" data-id="${l.id}" style="flex-shrink:0">✕</button>
-    </div>`}).join(''):`<div class="empty">No sessions logged yet.</div>`;
+  // Session History — grouped by method, expandable
+  const histByMethod={};
+  logs.slice(0,200).forEach(l=>{
+    if(!histByMethod[l.method])histByMethod[l.method]={cat:l.cat,sessions:[]};
+    histByMethod[l.method].sessions.push(l);
+  });
+  const histHtml=Object.keys(histByMethod).length
+    ?Object.entries(histByMethod).map(([method,{cat:catId,sessions:sess}])=>{
+      const cat=catFor(catId);
+      const totalMins=sess.reduce((a,l)=>a+l.dur,0);
+      const latest=sess[0];
+      const uid=`hist-${method.replace(/[^a-z0-9]/gi,'_')}`;
+      const rows=sess.map(l=>`
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-top:1px solid var(--stat-border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:var(--text2)">${l.date} · ${fmtMin(l.dur)}</div>
+            ${l.notes?`<div style="font-size:10px;color:var(--text4);margin-top:2px;font-style:italic">${htmlEsc(l.notes)}</div>`:''}
+          </div>
+          <button class="del-btn" data-id="${l.id}" style="flex-shrink:0;margin-left:8px">✕</button>
+        </div>`).join('');
+      return`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;margin-bottom:7px;overflow:hidden">
+        <button onclick="(function(){var d=document.getElementById('${uid}');d.style.display=d.style.display==='none'?'block':'none';})()"
+          style="width:100%;display:flex;gap:10px;align-items:center;padding:10px;background:none;border:none;cursor:pointer;text-align:left;font-family:DM Sans,sans-serif">
+          <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text1)">${method}</div>
+            <div style="font-size:10px;color:var(--text4);margin-top:1px">${sess.length} session${sess.length!==1?'s':''} · ${fmtMin(totalMins)} total · Last: ${latest.date}</div>
+          </div>
+          <span style="font-size:10px;color:var(--text5);flex-shrink:0">▾</span>
+        </button>
+        <div id="${uid}" style="display:none;padding:0 10px 8px">${rows}</div>
+      </div>`;
+    }).join('')
+    :`<div class="empty">No sessions logged yet.</div>`;
 
   // ── CI PROGRESSION CHART ──
 
@@ -1899,22 +2036,47 @@ function showDayDetail(dateStr){
 }
 function renderAch(){
   const unlocked=char.achievements.length;
-  const sorted=[...ACHS].sort((a,b)=>{
-    const ua=char.achievements.includes(a.id),ub=char.achievements.includes(b.id);
-    if(ua&&!ub)return -1;if(!ua&&ub)return 1;return 0;
-  });
-  const cards=sorted.map(a=>{const u=char.achievements.includes(a.id);
-    return`<div class="ach-card ${u?'unlocked':'locked'}">
-      <div style="font-size:24px;margin-bottom:5px">${a.icon}</div>
-      <div style="font-size:11px;font-weight:600;color:${u?'var(--accent)':'var(--text2)'}">${a.title}</div>
-      <div style="font-size:9px;color:${u?'var(--text4)':'var(--text3)'};margin-top:2px">${a.desc}</div>
-    </div>`;}).join('');
-  return`<div class="page-title">Milestones</div>
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-    <div style="font-size:11px;color:var(--text4)">${unlocked} of ${ACHS.length} unlocked</div>
-    <div style="flex:1;height:5px;background:var(--bg-stat);border-radius:3px;overflow:hidden"><div style="height:100%;background:var(--accent);width:${Math.round(unlocked/ACHS.length*100)}%;border-radius:3px;transition:width .6s"></div></div>
+  const pct=Math.round(unlocked/ACHS.length*100);
+
+  const groups=[
+    {label:'🌱 First Steps',    ids:['first','rest1','photo1']},
+    {label:'◉ Sessions',        ids:['s10','s25','s50','s100','s200','s365','s500']},
+    {label:'⏱ Time',            ids:['h1','h10','h25','h50','h100','h250','h500','h1000']},
+    {label:'🔥 Streaks',        ids:['str3','str7','str14','str30','str60','str90','str180','str365']},
+    {label:'🎯 Daily Goal',     ids:['goal5','goal30','goal100','goal365']},
+    {label:'🧪 Methods',        ids:['meth3','meth5']},
+    {label:'📸 Photos',         ids:['photo5','photo10']},
+    {label:'◑ CI Progress',     ids:['ci1','ci2','ci3','ci4','ci5','ci6','ci7','ci8','ci9','ci10']},
+  ];
+
+  const groupHtml=groups.map(g=>{
+    const groupAchs=ACHS.filter(a=>g.ids.includes(a.id));
+    const groupUnlocked=groupAchs.filter(a=>char.achievements.includes(a.id)).length;
+    const cards=groupAchs.map(a=>{
+      const u=char.achievements.includes(a.id);
+      return`<div style="background:${u?'var(--acc6)':'var(--bg-stat)'};border:1px solid ${u?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 8px;text-align:center;opacity:${u?1:.45}">
+        <div style="font-size:22px;margin-bottom:4px">${a.icon}</div>
+        <div style="font-size:10px;font-weight:700;color:${u?'var(--accent)':'var(--text3)'};line-height:1.3">${a.title}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:3px;line-height:1.4">${a.desc}</div>
+      </div>`;
+    }).join('');
+    return`<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+        <div style="font-size:11px;font-weight:700;color:var(--text2)">${g.label}</div>
+        <div style="font-size:9px;color:var(--text5)">${groupUnlocked}/${groupAchs.length}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${cards}</div>
+    </div>`;
+  }).join('');
+
+  return`<div class="page-title">Badges</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <div style="flex:1;height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden">
+      <div style="height:100%;background:linear-gradient(90deg,var(--acc18),var(--accent));width:${pct}%;border-radius:4px;transition:width .6s"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text4);flex-shrink:0">${unlocked} / ${ACHS.length}</div>
   </div>
-  <div class="ach-grid">${cards}</div>`;
+  ${groupHtml}`;
 }
 
 // ── PROFILE SCREEN ─────────────────────────────────────────────────────────────
@@ -1982,7 +2144,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.6</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.7</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2651,7 +2813,13 @@ function startCommunityListeners(){
     .where('lastSeen','>',userCutoff)
     .orderBy('lastSeen','desc').limit(60)
     .onSnapshot(snap=>{
-      commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false);
+      commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false&&!u.banned);
+      // Check if current user is banned
+      const myDoc=snap.docs.find(d=>d.id===fbUID);
+      if(myDoc?.data()?.banned){
+        commState.authError='Your account has been suspended.';
+        commState.loading=false;refreshCommUI();return;
+      }
       commState.loading=false;refreshCommUI();
     },e=>{
       commState.authError='Could not load community. Check Firestore rules are published.';
@@ -3399,6 +3567,97 @@ function selectAvatar(emoji){
   const preview=document.querySelector('#comm-settings-ov [data-avatar-preview]');
   if(preview)preview.textContent=emoji;
   refreshCommUI();
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+// Admin UID — set this to YOUR Firebase UID after first joining community
+// Find it by opening browser console and typing: fbUID
+const ADMIN_UID='REPLACE_WITH_YOUR_FIREBASE_UID';
+
+let _adminTaps=0,_adminTimer=null;
+function adminTap(){
+  _adminTaps++;
+  clearTimeout(_adminTimer);
+  _adminTimer=setTimeout(()=>{_adminTaps=0;},1500);
+  if(_adminTaps>=5){_adminTaps=0;showAdminPanel();}
+}
+
+function showAdminPanel(){
+  if(!db){showToast('Not connected to Firebase');return;}
+  // JS-side check — real security is enforced by Firestore rules
+  if(ADMIN_UID!=='REPLACE_WITH_YOUR_FIREBASE_UID'&&fbUID!==ADMIN_UID){
+    showToast('Not authorised');return;
+  }  const ex=document.getElementById('admin-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='admin-ov';
+  el.innerHTML=`<div class="sheet" style="max-height:90vh">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:#e74c3c;margin-bottom:16px">⚙ Admin Panel</div>
+    <div id="admin-reports-list"><div style="font-size:11px;color:var(--text4)">Loading reports...</div></div>
+    <div style="margin-top:14px;border-top:1px solid var(--stat-border);padding-top:14px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Ban User by UID</div>
+      <div style="display:flex;gap:7px">
+        <input id="admin-ban-uid" class="gold-inp" placeholder="Firebase UID..." style="margin:0;flex:1;font-size:12px">
+        <button onclick="adminBanUser()" class="btn-outline" style="border-color:rgba(200,50,50,.4);color:#a03232">Ban</button>
+      </div>
+    </div>
+    <button class="btn-ghost" onclick="document.getElementById('admin-ov').remove()" style="width:100%;margin-top:14px">Close</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+  // Load reports
+  db.collection('reports').where('resolved','==',false).orderBy('ts','desc').limit(20)
+    .get().then(snap=>{
+      const list=document.getElementById('admin-reports-list');
+      if(!list)return;
+      if(snap.empty){list.innerHTML='<div style="font-size:11px;color:var(--text4)">✓ No open reports</div>';return;}
+      list.innerHTML=`<div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Open Reports (${snap.size})</div>`+
+        snap.docs.map(d=>{
+          const r=d.data();
+          const ts=r.ts?.toDate?r.ts.toDate().toLocaleDateString():'?';
+          return`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 10px;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Post: <code style="font-size:10px;color:var(--accent)">${r.postId}</code></div>
+            <div style="font-size:10px;color:var(--text4)">Reported by: ${r.reportedBy} · ${ts}</div>
+            <div style="display:flex;gap:6px;margin-top:7px">
+              <button onclick="adminDeletePost('${r.postId}','${d.id}')" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:4px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Delete Post</button>
+              <button onclick="adminResolve('${d.id}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Dismiss</button>
+            </div>
+          </div>`;
+        }).join('');
+    }).catch(()=>{
+      const list=document.getElementById('admin-reports-list');
+      if(list)list.innerHTML='<div style="font-size:11px;color:var(--text4)">Could not load reports — check Firestore rules.</div>';
+    });
+}
+
+function adminDeletePost(postId,reportId){
+  if(!db)return;
+  db.collection('posts').doc(postId).delete().then(()=>{
+    adminResolve(reportId);
+    showToast('✓ Post deleted');
+  }).catch(()=>showToast('⚠ Could not delete post'));
+}
+
+function adminResolve(reportId){
+  if(!db)return;
+  db.collection('reports').doc(reportId).update({resolved:true}).catch(()=>{});
+  document.getElementById('admin-ov')?.remove();
+  showToast('✓ Report resolved');
+}
+
+function adminBanUser(){
+  const uid=document.getElementById('admin-ban-uid')?.value.trim();
+  if(!uid){showToast('Enter a UID');return;}
+  if(!db)return;
+  confirmDialog(
+    'Ban this user?',
+    `UID: ${uid}\n\nThis will prevent them from posting or appearing in the community.`,
+    'Ban User',
+    ()=>{
+      db.collection('community_users').doc(uid).set({banned:true},{merge:true})
+        .then(()=>{showToast('✓ User banned');document.getElementById('admin-ov')?.remove();})
+        .catch(()=>showToast('⚠ Could not ban user'));
+    }
+  );
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
