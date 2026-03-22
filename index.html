@@ -2422,7 +2422,7 @@ function renderProfileScreen(){
     const version='v4.4';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
-    window.location.href=`mailto:restoretrack@gmail.com.app?subject=${subject}&body=${body}`;
+    window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
   });
   document.getElementById('reminder-btn')?.addEventListener('click',()=>{
     const t=document.getElementById('reminder-time')?.value||'09:00';
