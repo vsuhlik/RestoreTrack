@@ -378,7 +378,11 @@ function loadProfile(pid){
   const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
   const t=S.get(`rst-${pid}-timer`);
-  if(t&&t.startedAt){activeTimer=t;timerSecs=Math.floor((Date.now()-t.startedAt)/1000)+(t.elapsedOnPause||0);sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';startInterval();}
+  if(t){
+    activeTimer=t;sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';
+    if(t.startedAt){timerSecs=Math.floor((Date.now()-t.startedAt)/1000)+(t.elapsedOnPause||0);startInterval();}
+    else{timerSecs=t.elapsedOnPause||0;} // paused — restore frozen time, no interval
+  }
   // Silently backfill any badges earned but not yet recorded
   // (handles CI jumps, bulk past sessions, new badges added in updates)
   recalcAchievements();
@@ -527,7 +531,9 @@ function beginSession(){
 }
 function stopSession(){
   if(!activeTimer)return;stopInterval();
-  const elapsed=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
+  const elapsed=activeTimer.startedAt
+    ?Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0)
+    :(activeTimer.elapsedOnPause||timerSecs);
   timerSecs=elapsed;activeTimer={...activeTimer,startedAt:null,elapsedOnPause:elapsed};
   saveTimer(activeTimer);
   if(navigator.vibrate)navigator.vibrate([40,30,40]);
@@ -552,6 +558,16 @@ function resumeSession(){
   if(!activeTimer)return;
   activeTimer={...activeTimer,startedAt:Date.now(),elapsedOnPause:timerSecs};
   saveTimer(activeTimer);startInterval();showStopSheet=false;render();
+}
+function pauseSession(){
+  if(!activeTimer||!activeTimer.startedAt)return;
+  stopInterval();
+  timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
+  activeTimer={...activeTimer,startedAt:null,elapsedOnPause:timerSecs};
+  saveTimer(activeTimer);
+  if(navigator.vibrate)navigator.vibrate(30);
+  syncPresence();
+  render();
 }
 function commitSession(notes){
   const finalMins=Math.max(1,Math.round(timerSecs/60));
@@ -1151,7 +1167,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v4.6</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v4.7</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1413,7 +1429,10 @@ function renderToday(){
       <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method}</div></div>
       <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtHMS(timerSecs)}</div>
     </div>
-    <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop Session</button>
+    <div style="display:flex;gap:7px">
+      <button id="pause-btn" style="flex:1;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:10px;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin:0;display:flex;align-items:center;justify-content:center;gap:6px">${IC.pause(14)} Pause</button>
+      <button id="stop-btn" class="btn-red" style="flex:1;margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop</button>
+    </div>
   </div>`:isPaused?`<div class="card" style="border-color:var(--acc30);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:16px">⏸</span>
@@ -2553,7 +2572,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v4.6';
+    const version='v4.7';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -2913,6 +2932,7 @@ function attachEvents(){
   document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;render();});
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
   document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
+  document.getElementById('pause-btn')?.addEventListener('click',pauseSession);
   document.getElementById('goal-inp')?.addEventListener('change',e=>{char.dailyGoalMin=Math.max(5,Math.min(1440,+e.target.value||120));saveChar();render();});
   document.getElementById('export-btn')?.addEventListener('click',exportCSV);
   document.getElementById('update-ci-btn')?.addEventListener('click',()=>{showCISheet=true;render();});
