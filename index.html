@@ -257,7 +257,7 @@ const THEMES=[
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let profiles=[],currentPid=null,currentTheme='shadow';
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
-  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
+  dailyGoalMin:360,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
   communityBio:'',communityShareStats:true};
 let logs=[],photos=[];
@@ -354,7 +354,7 @@ function loadAll(){
   }
 }
 function loadProfile(pid){
-  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
+  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:360,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
   char={...defaults};logs=[];photos=[];
   const c=S.get(`rst-${pid}-char`);if(c)char={...char,...c};
   if(!char.customMethods)char.customMethods=[];
@@ -398,7 +398,7 @@ function createProfile(name){
   const id='p'+Date.now();
   profiles=[{id,name,createdAt:today()}];
   saveProfiles();currentPid=id;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[]};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:360,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[]};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -472,7 +472,7 @@ function deleteProfile(){
   localStorage.removeItem('rst-comm-pending');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:360,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
   stopInterval();
   showProfileScreen=true;
@@ -498,7 +498,7 @@ function startInterval(){
 function refreshLiveStats(){
   // Update goal bar and today stats inline if on Today tab
   const tMin=todayMin();
-  const goal=char.dailyGoalMin||120;
+  const goal=char.dailyGoalMin||360;
   const goalPct=Math.min(100,Math.round((tMin/goal)*100));
   // Goal bar fill
   const fill=document.querySelector('.goal-fill');
@@ -1014,7 +1014,7 @@ function coachBrainMatch(question){
     minutes:char.minutes||0,
     streak:char.streak||0,
     avgDay,
-    goal:char.dailyGoalMin||120,
+    goal:char.dailyGoalMin||360,
     methods:char.methods||[],
     restDays:char.restDays||[],
     photos:photos||[]
@@ -1051,7 +1051,7 @@ function coachMessage(){
   const ci=char.ciLevel||0;
   const daysSinceLast=char.lastDate?Math.round((new Date(td)-new Date(char.lastDate))/86400000):-1;
   const tMin=todayMin();
-  const goal=char.dailyGoalMin||120;
+  const goal=char.dailyGoalMin||360;
   const hoursTotal=char.minutes/60;
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
 
@@ -1152,7 +1152,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v4.6</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.0</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1268,7 +1268,7 @@ function buildWeeklySummary(){
   const totalMins=prevWeekLogs.reduce((a,l)=>a+l.dur,0);
   const activeDays=new Set(prevWeekLogs.map(l=>l.date)).size;
   const goalDays=prevWeekDates.filter(d=>
-    logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120)
+    logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||360)
   ).length;
 
   // Best day
@@ -1399,7 +1399,7 @@ function buildNextMilestone(){
 
 // ── TODAY ──────────────────────────────────────────────────────────────────────
 function renderToday(){
-  const td=today(),tMin=todayMin(),goal=char.dailyGoalMin||120;
+  const td=today(),tMin=todayMin(),goal=char.dailyGoalMin||360;
   const goalPct=Math.min(100,Math.round((tMin/goal)*100));
   const monthMin=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0);
   const yearMin=logs.filter(l=>l.date.slice(0,4)===td.slice(0,4)).reduce((a,l)=>a+l.dur,0);
@@ -2196,7 +2196,7 @@ function renderReports(){
   }
   const activeDays=new Set(logs.map(l=>l.date));
   const goalDaysSet=new Set();
-  calDays.filter(Boolean).forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
+  calDays.filter(Boolean).forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||360))goalDaysSet.add(d);});
   const restDaySet=new Set(char.restDays||[]);
   const calDots=calDays.map(d=>{
     if(d===null)return`<div></div>`;
@@ -2304,7 +2304,7 @@ function showDayDetail(dateStr){
   const isRest=(char.restDays||[]).includes(dateStr);
   const isToday=dateStr===today();
   const totalMins=dayLogs.reduce((a,l)=>a+l.dur,0)+(isToday?liveTimerTodayMins():0);
-  const goal=char.dailyGoalMin||120;
+  const goal=char.dailyGoalMin||360;
   const goalMet=totalMins>=goal;
 
   // Format date nicely
@@ -2484,7 +2484,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.6</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.0</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2557,7 +2557,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v4.6';
+    const version='v1.0';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -2917,7 +2917,7 @@ function attachEvents(){
   document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;render();});
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
   document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
-  document.getElementById('goal-inp')?.addEventListener('change',e=>{char.dailyGoalMin=Math.max(5,Math.min(1440,+e.target.value||120));saveChar();render();});
+  document.getElementById('goal-inp')?.addEventListener('change',e=>{char.dailyGoalMin=Math.max(5,Math.min(1440,+e.target.value||360));saveChar();render();});
   document.getElementById('export-btn')?.addEventListener('click',exportCSV);
   document.getElementById('update-ci-btn')?.addEventListener('click',()=>{showCISheet=true;render();});
   document.getElementById('update-ci-btn2')?.addEventListener('click',()=>{showCISheet=true;render();});
