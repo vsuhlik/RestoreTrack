@@ -102,11 +102,6 @@ textarea:focus{border-color:var(--acc30)}
 .cal-dot.rest{background:rgba(100,120,200,.4);border:1px solid rgba(100,120,200,.5)}
 .cal-dot.goal{background:rgba(34,168,90,.55)}
 .cal-dot.now{border:1.5px solid var(--accent)}
-/* ACHIEVEMENTS */
-.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.ach-card{border-radius:10px;padding:12px 9px;text-align:center}
-.ach-card.unlocked{background:var(--acc6);border:1px solid var(--acc30)}
-.ach-card.locked{background:var(--bg-stat);border:1px solid var(--stat-border);opacity:.4}
 /* NAV */
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-nav);border-top:1px solid var(--nav-border);display:flex;max-width:480px;margin:0 auto;z-index:20}
 .nav-btn{flex:1;padding:8px 0 7px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text5);transition:color .2s}
@@ -381,7 +376,7 @@ function loadProfile(pid){
   if(t){
     activeTimer=t;sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';
     if(t.startedAt){timerSecs=Math.floor((Date.now()-t.startedAt)/1000)+(t.elapsedOnPause||0);startInterval();}
-    else{timerSecs=t.elapsedOnPause||0;} // paused — restore frozen time, no interval
+    else{timerSecs=t.elapsedOnPause||0;} // stopped mid-save — restore frozen time, no interval
   }
   // Silently backfill any badges earned but not yet recorded
   // (handles CI jumps, bulk past sessions, new badges added in updates)
@@ -558,16 +553,6 @@ function resumeSession(){
   if(!activeTimer)return;
   activeTimer={...activeTimer,startedAt:Date.now(),elapsedOnPause:timerSecs};
   saveTimer(activeTimer);startInterval();showStopSheet=false;render();
-}
-function pauseSession(){
-  if(!activeTimer||!activeTimer.startedAt)return;
-  stopInterval();
-  timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
-  activeTimer={...activeTimer,startedAt:null,elapsedOnPause:timerSecs};
-  saveTimer(activeTimer);
-  if(navigator.vibrate)navigator.vibrate(30);
-  syncPresence();
-  render();
 }
 function commitSession(notes){
   const finalMins=Math.max(1,Math.round(timerSecs/60));
@@ -1167,7 +1152,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v4.7</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v4.6</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1429,10 +1414,7 @@ function renderToday(){
       <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method}</div></div>
       <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtHMS(timerSecs)}</div>
     </div>
-    <div style="display:flex;gap:7px">
-      <button id="pause-btn" style="flex:1;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:10px;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin:0;display:flex;align-items:center;justify-content:center;gap:6px">${IC.pause(14)} Pause</button>
-      <button id="stop-btn" class="btn-red" style="flex:1;margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop</button>
-    </div>
+    <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop Session</button>
   </div>`:isPaused?`<div class="card" style="border-color:var(--acc30);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:16px">⏸</span>
@@ -2572,7 +2554,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v4.7';
+    const version='v4.6';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -2932,7 +2914,6 @@ function attachEvents(){
   document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;render();});
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
   document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
-  document.getElementById('pause-btn')?.addEventListener('click',pauseSession);
   document.getElementById('goal-inp')?.addEventListener('change',e=>{char.dailyGoalMin=Math.max(5,Math.min(1440,+e.target.value||120));saveChar();render();});
   document.getElementById('export-btn')?.addEventListener('click',exportCSV);
   document.getElementById('update-ci-btn')?.addEventListener('click',()=>{showCISheet=true;render();});
@@ -3853,10 +3834,6 @@ function showUserProfile(uid){
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
 }
 
-function showUserProfile_me(){
-  // Convenience — open own profile (from status bar)
-  if(fbUID)showUserProfile(fbUID);
-}
 function showCommSettings(){
   const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='comm-settings-ov';
@@ -4305,9 +4282,6 @@ function adminUnbanUID(uid){
       .catch(()=>showToast('⚠ Could not unban'));
   });
 }
-
-// Legacy — kept for any direct console calls
-function adminBanUser(){adminBanUID(document.getElementById('admin-ban-uid')?.value.trim(),null);}
 
 function adminClearCoachQuestions(){
   if(!db)return;
