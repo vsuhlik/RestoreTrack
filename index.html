@@ -354,6 +354,9 @@ function loadProfile(pid){
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
   const t=S.get(`rst-${pid}-timer`);
   if(t&&t.startedAt){activeTimer=t;timerSecs=Math.floor((Date.now()-t.startedAt)/1000)+(t.elapsedOnPause||0);sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';startInterval();}
+  // Silently backfill any badges earned but not yet recorded
+  // (handles CI jumps, bulk past sessions, new badges added in updates)
+  recalcAchievements();
 }
 function saveChar(){if(!currentPid)return;S.set(`rst-${currentPid}-char`,char);}
 function saveLogs(){if(!currentPid)return;S.set(`rst-${currentPid}-logs`,logs);}
@@ -576,7 +579,21 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
   else showToast(`${fmtMin(totalMins)} logged · Session #${char.sessions}`);
 }
 
-// ── REST DAY ────────────────────────────────────────────────────────────────────
+// ── ACHIEVEMENT RECALC ────────────────────────────────────────────────────────
+// Runs on every load — silently awards any badges the user qualifies for
+// but doesn't have yet. Handles: CI jumps, bulk past sessions, new badges
+// added in app updates, any scenario where incremental checks were missed.
+function recalcAchievements(){
+  if(!char||!logs)return;
+  let changed=false;
+  for(const a of ACHS){
+    if(!char.achievements.includes(a.id)&&a.check(char,photos)){
+      char.achievements=[...char.achievements,a.id];
+      changed=true;
+    }
+  }
+  if(changed)saveChar();
+}
 function markRestDay(){
   const td=today();
   const restDays=char.restDays||[];
@@ -928,7 +945,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span id="v-tap" onclick="adminTap()" style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:default;user-select:none">v3.7</span>
+        <span id="v-tap" onclick="adminTap()" style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:default;user-select:none">v3.8</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -2144,7 +2161,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.7</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.8</span></div>
     </div>
 
     <!-- Profile card -->
