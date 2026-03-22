@@ -29,7 +29,8 @@
 body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;font-size:14px;transition:background .3s}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:2px}
 .app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:70px}
-.hdr{background:var(--bg-hdr);border-bottom:1px solid var(--hdr-border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.hdr{background:var(--bg-hdr);border-bottom:1px solid var(--hdr-border);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.session-strip{background:var(--green-bg);border-bottom:1px solid var(--green-border);padding:6px 14px;display:flex;align-items:center;gap:8px;position:sticky;top:45px;z-index:19;cursor:pointer}
 .ci-pill{background:var(--acc12);border:1px solid var(--pill-border,var(--acc30));border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'Cinzel',serif;white-space:nowrap}
 .profile-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .profile-btn:hover{border-color:var(--acc30);color:var(--accent)}
@@ -261,7 +262,7 @@ const THEMES=[
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let profiles=[],currentPid=null,currentTheme='shadow';
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
-  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],
+  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
   communityBio:'',communityShareStats:true};
 let logs=[],photos=[];
@@ -272,7 +273,6 @@ let logMode='timer',manualStart='',manualEnd='',manualStillActive=false;
 let manualStartDate='',manualEndDate='';
 let sheetCat=null,sheetMethod='',sheetNotes='';
 let currentCoachCTA=null;
-let coachExtended=[]; // loaded from coach_data.json on GitHub
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
@@ -366,6 +366,7 @@ function loadProfile(pid){
   if(char.ciLevel===undefined)char.ciLevel=0;
   if(!char.ciHistory)char.ciHistory=[];
   if(!char.restDays)char.restDays=[];
+  if(char.ciGoal===undefined)char.ciGoal=10;
   if(char.communityEnabled===undefined)char.communityEnabled=false;
   if(char.communityVisible===undefined)char.communityVisible=true;
   // communityDisplayName is always derived from char.name — kept in sync automatically
@@ -984,6 +985,7 @@ const COACH_BRAIN={
 };
 
 // ── COACH EXTENDED DATA ────────────────────────────────────────────────────────
+let coachExtended=[]; // loaded from coach_data.json on GitHub
 // Loads coach_data.json from GitHub — zero Firebase reads, zero cost.
 // Add new knowledge entries there without ever touching index.html.
 async function loadCoachData(){
@@ -1145,20 +1147,31 @@ function render(){
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
-      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden">
-        <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1">
-          <span style="font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:2px;line-height:1">RESTORETRACK</span>
-          <span id="v-tap" onclick="adminTap()" style="font-size:8px;color:var(--text6);font-family:'DM Sans',sans-serif;cursor:default;user-select:none;letter-spacing:.5px">v4.4</span>
+      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
+          <span id="v-tap" onclick="adminTap()"
+            style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v4.6</span>
         </div>
-        <div style="width:1px;height:22px;background:var(--stat-border);flex-shrink:0;margin:0 2px"></div>
+        <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
-        ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
-          <div class="live-dot"></div>
-          <span style="font-size:10px;font-weight:600;color:var(--green);white-space:nowrap" id="mc-run-time">${fmtHMS(timerSecs)}</span>
-        </div>`:''}
       </div>
-      <button class="profile-btn" id="pbtn" style="flex-shrink:0;margin-left:8px;display:flex;align-items:center;gap:5px">${IC.user(13)} ${char.name} ▾</button>
+      <button class="profile-btn" id="pbtn"
+        style="flex-shrink:0;margin-left:8px;display:flex;align-items:center;gap:5px;max-width:170px;overflow:hidden">
+        ${IC.user(13)}
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${char.name}</span>
+        <span style="flex-shrink:0">▾</span>
+      </button>
     </div>
+    ${isRunning?`<div class="session-strip" onclick="tab='today';render()">
+      <div class="live-dot" style="flex-shrink:0"></div>
+      <span style="font-size:11px;font-weight:600;color:var(--green);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${activeTimer.method||'Session'}</span>
+      <span style="font-size:12px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:.3px" id="mc-run-time">${fmtHMS(timerSecs)}</span>
+      <button id="stop-strip-btn" onclick="event.stopPropagation();stopSession()"
+        style="background:rgba(34,168,90,.15);border:1px solid var(--green-border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--green)">
+        ${IC.stop(13)}
+      </button>
+    </div>`:''}
     <div class="content" id="content"></div>
     <div class="nav">${renderNav()}</div>
   </div>`;
@@ -1610,6 +1623,74 @@ function renderJourney(){
     </div>`;
   }).join('');
 
+  // ── CI Goal ──
+  const ciGoal=char.ciGoal||10;
+  const goalLevels=Math.max(0,ciGoal-ci);
+  const goalPct=ciGoal>0?Math.min(100,Math.round((ci/ciGoal)*100)):100;
+  const goalCard=`
+    <div class="card" style="padding:14px;margin-bottom:9px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);margin-bottom:4px">Restoration Goal</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-family:Cinzel,serif;font-size:18px;font-weight:900;color:var(--text3)">${LEVELS[ci].ci}</span>
+            <span style="font-size:12px;color:var(--text5)">→</span>
+            <span style="font-family:Cinzel,serif;font-size:18px;font-weight:900;color:var(--accent)">${LEVELS[Math.min(ciGoal,10)].ci}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:var(--accent);font-family:Cinzel,serif">${goalPct}%</div>
+          <div style="font-size:9px;color:var(--text5)">${goalLevels>0?goalLevels+' level'+(goalLevels!==1?'s':'')+' to go':'Goal reached! 🎉'}</div>
+        </div>
+      </div>
+      <div style="height:8px;background:var(--bg-stat);border-radius:4px;overflow:hidden;margin-bottom:10px">
+        <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acc18),var(--accent));width:${goalPct}%;transition:width .6s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text4);margin-bottom:8px">Set your target CI level:</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${LEVELS.slice(1).map((l,i)=>{const g=i+1;return`<button onclick="char.ciGoal=${g};saveChar();tab='journey';render()"
+          style="background:${ciGoal===g?'var(--accent)':'var(--bg-stat)'};border:1px solid ${ciGoal===g?'var(--accent)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:10px;font-weight:600;color:${ciGoal===g?'var(--bg)':'var(--text4)'};cursor:pointer;font-family:Cinzel,serif;${g<=ci?'opacity:.5;':''}">${l.ci}</button>`;}).join('')}
+      </div>
+    </div>`;
+
+  // ── Journey Timeline ──
+  const joinDate=profiles[0]?.createdAt||today();
+  const joinMs=new Date(joinDate+'T12:00:00').getTime();
+  const monthsRestoring=Math.floor((Date.now()-joinMs)/2592000000);
+  const daysRestoring=Math.floor((Date.now()-joinMs)/86400000);
+
+  // Build timeline from ciHistory
+  const timelineEntries=[];
+  if(ciHistory.length>0){
+    // Starting entry
+    timelineEntries.push({ci:0,date:joinDate,label:'Started at CI-0',icon:'🌱'});
+    ciHistory.forEach(h=>{
+      const lvl=LEVELS[Math.min(h.ci,10)];
+      timelineEntries.push({ci:h.ci,date:h.date,label:`Reached ${lvl.ci}`,icon:h.ci>=10?'🏆':h.ci>=5?'⭐':h.ci>=3?'✨':'🌿'});
+    });
+  }
+
+  const timelineHtml=timelineEntries.length>=2?`
+    <div class="sec-title">Your Journey</div>
+    <div class="card" style="padding:12px">
+      <div style="font-size:11px;color:var(--text4);margin-bottom:12px">
+        Restoring for <strong style="color:var(--text2)">${monthsRestoring>0?monthsRestoring+' month'+(monthsRestoring!==1?'s':''):daysRestoring+' day'+(daysRestoring!==1?'s':'')}</strong>
+        · <strong style="color:var(--text2)">${char.sessions}</strong> sessions
+        · <strong style="color:var(--text2)">${Math.floor(char.minutes/60)}</strong> hours
+      </div>
+      ${timelineEntries.map((e,i)=>`
+        <div style="display:flex;gap:10px;align-items:flex-start;${i<timelineEntries.length-1?'margin-bottom:4px':''}">
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+            <div style="width:28px;height:28px;border-radius:50%;background:${e.ci===ci?'var(--accent)':e.ci===0?'var(--bg-stat)':'var(--acc12)'};border:${e.ci===ci?'2px solid var(--accent)':'1px solid var(--acc30)'};display:flex;align-items:center;justify-content:center;font-size:12px">${e.icon}</div>
+            ${i<timelineEntries.length-1?`<div style="width:1px;flex:1;min-height:14px;background:var(--stat-border);margin:3px 0"></div>`:''}
+          </div>
+          <div style="flex:1;padding-top:4px;${i<timelineEntries.length-1?'padding-bottom:8px':''}">
+            <div style="font-size:12px;font-weight:600;color:${e.ci===ci?'var(--accent)':'var(--text2)'}">${e.label}</div>
+            <div style="font-size:10px;color:var(--text5);margin-top:2px">${e.date}</div>
+          </div>
+        </div>`).join('')}
+    </div>`:'';
+
   return`
   <div class="card card-gold" style="padding:18px 14px 16px">
     <div class="ci-ring-wrap" style="margin-bottom:10px">${ciRingSVG()}</div>
@@ -1635,7 +1716,9 @@ function renderJourney(){
     </div>`:'<div style="border-top:1px solid var(--stat-border);padding-top:10px;text-align:center;font-size:11px;color:var(--accent)">🏆 Journey Complete</div>'}
   </div>
 
+  ${goalCard}
   ${cumulativeLine}
+  ${timelineHtml}
 
   <div class="sec-title">CI Reference</div>
   <div class="card" style="padding:4px 12px">${refGuide}</div>`;
@@ -2265,38 +2348,60 @@ function showDayDetail(dateStr){
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
 }
+let expandedBadgeGroups=new Set(['first']); // first-steps open by default
+function toggleBadgeGroup(id){
+  if(expandedBadgeGroups.has(id))expandedBadgeGroups.delete(id);
+  else expandedBadgeGroups.add(id);
+  // Re-render just the badges tab content
+  const c=document.getElementById('content');
+  if(c&&tab==='ach')c.innerHTML=renderAch();
+}
+
 function renderAch(){
   const unlocked=char.achievements.length;
   const pct=Math.round(unlocked/ACHS.length*100);
 
   const groups=[
-    {label:'🌱 First Steps',    ids:['first','rest1','photo1']},
-    {label:'◉ Sessions',        ids:['s10','s25','s50','s100','s200','s365','s500']},
-    {label:'⏱ Time',            ids:['h1','h10','h25','h50','h100','h250','h500','h1000']},
-    {label:'🔥 Streaks',        ids:['str3','str7','str14','str30','str60','str90','str180','str365']},
-    {label:'🎯 Daily Goal',     ids:['goal5','goal30','goal100','goal365']},
-    {label:'🧪 Methods',        ids:['meth3','meth5']},
-    {label:'📸 Photos',         ids:['photo5','photo10']},
-    {label:'◑ CI Progress',     ids:['ci1','ci2','ci3','ci4','ci5','ci6','ci7','ci8','ci9','ci10']},
+    {id:'first',  label:'🌱 First Steps',   ids:['first','rest1','photo1']},
+    {id:'sess',   label:'◉ Sessions',        ids:['s10','s25','s50','s100','s200','s365','s500']},
+    {id:'time',   label:'⏱ Time',            ids:['h1','h10','h25','h50','h100','h250','h500','h1000']},
+    {id:'streak', label:'🔥 Streaks',        ids:['str3','str7','str14','str30','str60','str90','str180','str365']},
+    {id:'goal',   label:'🎯 Daily Goal',     ids:['goal5','goal30','goal100','goal365']},
+    {id:'method', label:'🧪 Methods',        ids:['meth3','meth5']},
+    {id:'photo',  label:'📸 Photos',         ids:['photo5','photo10']},
+    {id:'ci',     label:'◑ CI Progress',     ids:['ci1','ci2','ci3','ci4','ci5','ci6','ci7','ci8','ci9','ci10']},
   ];
 
   const groupHtml=groups.map(g=>{
     const groupAchs=ACHS.filter(a=>g.ids.includes(a.id));
     const groupUnlocked=groupAchs.filter(a=>char.achievements.includes(a.id)).length;
+    const isOpen=expandedBadgeGroups.has(g.id);
+    const groupPct=Math.round(groupUnlocked/groupAchs.length*100);
+
     const cards=groupAchs.map(a=>{
       const u=char.achievements.includes(a.id);
-      return`<div style="background:${u?'var(--acc6)':'var(--bg-stat)'};border:1px solid ${u?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 8px;text-align:center;opacity:${u?1:.45}">
+      return`<div style="background:${u?'var(--acc6)':'var(--bg-stat)'};border:1px solid ${u?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 8px;text-align:center;opacity:${u?1:.4}">
         <div style="font-size:22px;margin-bottom:4px">${a.icon}</div>
         <div style="font-size:10px;font-weight:700;color:${u?'var(--accent)':'var(--text3)'};line-height:1.3">${a.title}</div>
         <div style="font-size:8px;color:var(--text5);margin-top:3px;line-height:1.4">${a.desc}</div>
       </div>`;
     }).join('');
-    return`<div style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
-        <div style="font-size:11px;font-weight:700;color:var(--text2)">${g.label}</div>
-        <div style="font-size:9px;color:var(--text5)">${groupUnlocked}/${groupAchs.length}</div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${cards}</div>
+
+    return`<div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;margin-bottom:8px;overflow:hidden">
+      <button onclick="toggleBadgeGroup('${g.id}')"
+        style="width:100%;display:flex;align-items:center;gap:10px;padding:12px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--text1)">${g.label}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <div style="flex:1;height:4px;background:var(--bg-stat);border-radius:2px;overflow:hidden">
+              <div style="height:100%;background:${groupUnlocked===groupAchs.length?'var(--green)':'var(--accent)'};width:${groupPct}%;border-radius:2px;transition:width .5s"></div>
+            </div>
+            <span style="font-size:10px;color:${groupUnlocked===groupAchs.length?'var(--green)':'var(--text4)'};flex-shrink:0;font-weight:600">${groupUnlocked}/${groupAchs.length}</span>
+          </div>
+        </div>
+        <span style="font-size:12px;color:var(--text4);flex-shrink:0;transform:rotate(${isOpen?'180':'0'}deg);transition:transform .2s">▾</span>
+      </button>
+      ${isOpen?`<div style="padding:0 12px 12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${cards}</div>`:''}
     </div>`;
   }).join('');
 
@@ -2342,7 +2447,7 @@ function renderProfileScreen(){
       <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:20px;margin-bottom:16px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:12px;text-align:center">Create Your Profile</div>
         <div style="font-size:11px;color:var(--text4);margin-bottom:12px;text-align:center;line-height:1.6">One profile, one journey. Choose a name — your real name or a nickname.</div>
-        <input class="gold-inp" id="new-name" placeholder="Your name..." maxlength="24" style="text-align:center;font-size:16px;margin-bottom:12px">
+        <input class="gold-inp" id="new-name" placeholder="Your name..." maxlength="20" style="text-align:center;font-size:16px;margin-bottom:12px">
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Choose a theme</div>
         <div class="theme-row" style="margin-bottom:0">${chips}</div>
       </div>
@@ -2350,7 +2455,7 @@ function renderProfileScreen(){
       <button class="btn-gold" id="create-btn" style="width:100%;padding:14px;font-size:15px;letter-spacing:1px">Begin Your Journey</button>
 
       <div style="margin-top:18px;text-align:center">
-        <div style="font-size:10px;color:var(--text5);margin-bottom:10px">Restoring from another device? Import a backup.</div>
+        <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.7">Restoring from another device or browser?<br>Each browser and the Home Screen app store data separately — use a backup to transfer.</div>
         <button class="btn-ghost" id="restore-btn" style="padding:8px 20px;font-size:12px">⬆ Import Backup</button>
         <input type="file" id="restore-file" accept=".json" style="display:none">
       </div>
@@ -2375,7 +2480,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.4</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.6</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2389,7 +2494,7 @@ function renderProfileScreen(){
       </div>
       <div id="rename-inline" style="display:none;margin-bottom:10px">
         <div style="display:flex;gap:7px">
-          <input id="rename-val" class="gold-inp" style="flex:1;margin:0;font-size:13px;padding:8px 10px" maxlength="24" placeholder="New name..." value="${char.name}">
+          <input id="rename-val" class="gold-inp" style="flex:1;margin:0;font-size:13px;padding:8px 10px" maxlength="20" placeholder="New name..." value="${char.name}">
           <button onclick="saveRenameInline()" style="background:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif">Save</button>
           <button onclick="document.getElementById('rename-inline').style.display='none'" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text4);cursor:pointer;font-family:DM Sans,sans-serif">✕</button>
         </div>
@@ -2428,6 +2533,9 @@ function renderProfileScreen(){
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Data Backup</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup of all your data — sessions, photos, settings, and progress. Use this to switch devices or reinstall. This is not the same as the CSV export in Reports.</div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
+        💡 <strong style="color:var(--text3)">Using multiple browsers or the Home Screen app?</strong> Each one stores data separately. Export a backup in one and import it in the other to transfer your profile.
+      </div>
       <div style="display:flex;gap:8px">
         <button class="btn-outline" id="backup-btn" style="flex:1;padding:10px">⬇ Export Backup</button>
         <button class="btn-ghost" id="restore-btn" style="flex:1;padding:10px;font-size:12px">⬆ Import Backup</button>
@@ -2445,7 +2553,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v4.4';
+    const version='v4.6';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -3376,7 +3484,7 @@ function renderCommunity(){
         <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:6px">◈ Join the Community</div>
         <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:10px">You can browse freely without signing in. To post, react, and appear as active — connect with Google. Your community name will be <strong style="color:var(--accent)">${htmlEsc(char.name)}</strong>, matching your profile.</div>
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.46h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.66h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Join as ${htmlEsc(char.name)}
         </button>
       </div>`
