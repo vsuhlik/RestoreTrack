@@ -1,1 +1,42 @@
+name: Minify and Deploy
 
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'index.html'
+      - 'coach_data.json'
+
+jobs:
+  minify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install minifier
+        run: npm install -g html-minifier-terser
+
+      - name: Minify index.html
+        run: |
+          html-minifier-terser index.html \
+            --collapse-whitespace \
+            --remove-comments \
+            --minify-css true \
+            --minify-js '{"mangle":true,"compress":{"drop_console":false}}' \
+            --output index.html
+
+      - name: Commit minified file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "chore: minify index.html [skip ci]"
+          git push
