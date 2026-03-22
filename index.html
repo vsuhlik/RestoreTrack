@@ -945,7 +945,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span id="v-tap" onclick="adminTap()" style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:default;user-select:none">v3.8</span>
+        <span id="v-tap" onclick="adminTap()" style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:default;user-select:none">v4.0</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -2161,7 +2161,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.8</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.0</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3587,11 +3587,12 @@ function selectAvatar(emoji){
 }
 
 // ── ADMIN ─────────────────────────────────────────────────────────────────────
-// Admin UID — set this to YOUR Firebase UID after first joining community
-// Find it by opening browser console and typing: fbUID
+// Admin UID — replace with your Firebase UID (find it in browser console: fbUID)
 const ADMIN_UID='ucBxGcyLCTMxyYDKgqOnDmlq2j52';
 
 let _adminTaps=0,_adminTimer=null;
+let _adminTab='reports'; // reports | users
+
 function adminTap(){
   _adminTaps++;
   clearTimeout(_adminTimer);
@@ -3601,81 +3602,186 @@ function adminTap(){
 
 function showAdminPanel(){
   if(!db){showToast('Not connected to Firebase');return;}
-  // JS-side check — real security is enforced by Firestore rules
   if(ADMIN_UID!=='REPLACE_WITH_YOUR_FIREBASE_UID'&&fbUID!==ADMIN_UID){
     showToast('Not authorised');return;
-  }  const ex=document.getElementById('admin-ov');if(ex)ex.remove();
+  }
+  const ex=document.getElementById('admin-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='admin-ov';
-  el.innerHTML=`<div class="sheet" style="max-height:90vh">
+  el.innerHTML=`<div class="sheet" style="max-height:92vh;overflow-y:auto">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:#e74c3c;margin-bottom:16px">⚙ Admin Panel</div>
-    <div id="admin-reports-list"><div style="font-size:11px;color:var(--text4)">Loading reports...</div></div>
-    <div style="margin-top:14px;border-top:1px solid var(--stat-border);padding-top:14px">
-      <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Ban User by UID</div>
-      <div style="display:flex;gap:7px">
-        <input id="admin-ban-uid" class="gold-inp" placeholder="Firebase UID..." style="margin:0;flex:1;font-size:12px">
-        <button onclick="adminBanUser()" class="btn-outline" style="border-color:rgba(200,50,50,.4);color:#a03232">Ban</button>
-      </div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:#e74c3c;margin-bottom:14px">⚙ Admin Panel</div>
+
+    <div style="display:flex;gap:5px;margin-bottom:14px;background:var(--bg-stat);border-radius:10px;padding:4px">
+      <button id="admin-tab-reports" onclick="adminSwitchTab('reports')"
+        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
+        background:${_adminTab==='reports'?'var(--bg-card)':'transparent'};
+        color:${_adminTab==='reports'?'#e74c3c':'var(--text4)'}">⚑ Reports</button>
+      <button id="admin-tab-users" onclick="adminSwitchTab('users')"
+        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
+        background:${_adminTab==='users'?'var(--bg-card)':'transparent'};
+        color:${_adminTab==='users'?'var(--accent)':'var(--text4)'}">👥 Users</button>
     </div>
+
+    <div id="admin-content"></div>
     <button class="btn-ghost" onclick="document.getElementById('admin-ov').remove()" style="width:100%;margin-top:14px">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
-  // Load reports
-  db.collection('reports').where('resolved','==',false).orderBy('ts','desc').limit(20)
-    .get().then(snap=>{
-      const list=document.getElementById('admin-reports-list');
-      if(!list)return;
-      if(snap.empty){list.innerHTML='<div style="font-size:11px;color:var(--text4)">✓ No open reports</div>';return;}
-      list.innerHTML=`<div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Open Reports (${snap.size})</div>`+
-        snap.docs.map(d=>{
+  adminLoadTab();
+}
+
+function adminSwitchTab(tab){
+  _adminTab=tab;
+  // Update button styles
+  const rBtn=document.getElementById('admin-tab-reports');
+  const uBtn=document.getElementById('admin-tab-users');
+  if(rBtn){rBtn.style.background=tab==='reports'?'var(--bg-card)':'transparent';rBtn.style.color=tab==='reports'?'#e74c3c':'var(--text4)';}
+  if(uBtn){uBtn.style.background=tab==='users'?'var(--bg-card)':'transparent';uBtn.style.color=tab==='users'?'var(--accent)':'var(--text4)';}
+  adminLoadTab();
+}
+
+function adminLoadTab(){
+  const content=document.getElementById('admin-content');
+  if(!content)return;
+  if(_adminTab==='reports'){
+    content.innerHTML='<div style="font-size:11px;color:var(--text4)">Loading reports...</div>';
+    db.collection('reports').where('resolved','==',false).limit(20)
+      .get().then(snap=>{
+        if(!document.getElementById('admin-content'))return;
+        const sorted=snap.docs.sort((a,b)=>(b.data().ts?.toMillis?.()??0)-(a.data().ts?.toMillis?.()??0));
+        if(snap.empty){
+          content.innerHTML='<div style="font-size:11px;color:var(--green)">✓ No open reports — community is clean.</div>';
+          return;
+        }
+        // Fetch the actual post content for each report
+        const fetches=sorted.map(d=>{
           const r=d.data();
-          const ts=r.ts?.toDate?r.ts.toDate().toLocaleDateString():'?';
-          return`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 10px;margin-bottom:6px">
-            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Post: <code style="font-size:10px;color:var(--accent)">${r.postId}</code></div>
-            <div style="font-size:10px;color:var(--text4)">Reported by: ${r.reportedBy} · ${ts}</div>
-            <div style="display:flex;gap:6px;margin-top:7px">
-              <button onclick="adminDeletePost('${r.postId}','${d.id}')" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:4px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Delete Post</button>
-              <button onclick="adminResolve('${d.id}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Dismiss</button>
-            </div>
-          </div>`;
-        }).join('');
-    }).catch(()=>{
-      const list=document.getElementById('admin-reports-list');
-      if(list)list.innerHTML='<div style="font-size:11px;color:var(--text4)">Could not load reports — check Firestore rules.</div>';
-    });
+          return db.collection('posts').doc(r.postId).get()
+            .then(pDoc=>({report:d,post:pDoc.exists?pDoc.data():null}))
+            .catch(()=>({report:d,post:null}));
+        });
+        Promise.all(fetches).then(results=>{
+          if(!document.getElementById('admin-content'))return;
+          content.innerHTML=`<div style="font-size:10px;color:var(--text4);margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px">Open Reports (${snap.size})</div>`+
+            results.map(({report:d,post})=>{
+              const r=d.data();
+              const ts=r.ts?.toDate?r.ts.toDate().toLocaleDateString():'?';
+              const postPreview=post
+                ?`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:8px;margin:6px 0;font-size:11px;color:var(--text2);line-height:1.5">
+                    ${post.title?`<div style="font-weight:700;margin-bottom:3px">${htmlEsc(post.title)}</div>`:''}
+                    <div>${htmlEsc(post.text||'')}</div>
+                    <div style="font-size:9px;color:var(--text5);margin-top:4px">by ${htmlEsc(post.name||'?')} · UID: ${post.uid||'?'}</div>
+                  </div>`
+                :`<div style="font-size:10px;color:var(--text5);margin:4px 0">Post already deleted</div>`;
+              return`<div style="background:var(--bg-stat);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px;margin-bottom:8px">
+                <div style="font-size:10px;color:var(--text4);margin-bottom:2px">Reported ${ts} by <code style="font-size:9px">${r.reportedBy?.slice(0,12)}…</code></div>
+                ${postPreview}
+                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+                  ${post?`
+                  <button onclick="adminDeletePost('${r.postId}','${d.id}')" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:5px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">🗑 Delete Post</button>
+                  <button onclick="adminBanUID('${post.uid||''}','${d.id}')" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:5px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban User</button>`:''}
+                  <button onclick="adminResolve('${d.id}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:5px 10px;font-size:10px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✓ Dismiss</button>
+                </div>
+              </div>`;
+            }).join('');
+        });
+      }).catch(e=>{
+        if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load reports.<br><span style="font-size:10px;color:var(--text5)">Error: ${e.code||e.message}</span></div>`;
+      });
+  } else {
+    // Users tab — search community members and ban directly
+    content.innerHTML=`
+      <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Search Members</div>
+      <div style="display:flex;gap:7px;margin-bottom:10px">
+        <input id="admin-search-inp" class="gold-inp" placeholder="Search by display name..." style="margin:0;flex:1;font-size:12px" oninput="adminSearchUsers()">
+      </div>
+      <div id="admin-user-results"><div style="font-size:11px;color:var(--text4)">Type to search members…</div></div>`;
+  }
+}
+
+function adminSearchUsers(){
+  const q=(document.getElementById('admin-search-inp')?.value||'').toLowerCase().trim();
+  const results=document.getElementById('admin-user-results');
+  if(!results)return;
+  if(!q){results.innerHTML='<div style="font-size:11px;color:var(--text4)">Type to search members…</div>';return;}
+  // Search loaded community users (already in memory)
+  const matches=commState.users.filter(u=>(u.name||'').toLowerCase().includes(q)||(u.nameLower||'').includes(q));
+  if(!matches.length){
+    // Also try Firestore if not in memory (user may not be in 7-day window)
+    results.innerHTML='<div style="font-size:11px;color:var(--text4)">Searching…</div>';
+    db.collection('community_users').orderBy('nameLower').startAt(q).endAt(q+'\uf8ff').limit(10)
+      .get().then(snap=>{
+        if(!document.getElementById('admin-user-results'))return;
+        if(snap.empty){document.getElementById('admin-user-results').innerHTML='<div style="font-size:11px;color:var(--text4)">No members found</div>';return;}
+        document.getElementById('admin-user-results').innerHTML=snap.docs.map(d=>adminUserCard(d.id,d.data())).join('');
+      }).catch(()=>{document.getElementById('admin-user-results').innerHTML='<div style="font-size:11px;color:var(--text4)">Search failed</div>';});
+    return;
+  }
+  results.innerHTML=matches.map(u=>adminUserCard(u.uid,u)).join('');
+}
+
+function adminUserCard(uid,u){
+  const banned=u.banned===true;
+  return`<div style="background:var(--bg-stat);border:1px solid ${banned?'rgba(200,50,50,.3)':'var(--stat-border)'};border-radius:8px;padding:10px;margin-bottom:7px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="font-size:22px">${u.avatar||'🌱'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--text1)">${htmlEsc(u.name||'?')} ${banned?'<span style="font-size:9px;color:#e74c3c;background:rgba(200,50,50,.1);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:1px 6px">BANNED</span>':''}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[Math.min(u.ci||0,10)].ci} · ${u.sessions||0} sessions · UID: <code style="font-size:9px">${uid.slice(0,12)}…</code></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px">
+      ${!banned
+        ?`<button onclick="adminBanUID('${uid}',null)" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:5px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban</button>`
+        :`<button onclick="adminUnbanUID('${uid}')" style="background:rgba(34,168,90,.06);border:1px solid rgba(34,168,90,.25);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--green);cursor:pointer;font-family:DM Sans,sans-serif">✓ Unban</button>`
+      }
+    </div>
+  </div>`;
 }
 
 function adminDeletePost(postId,reportId){
   if(!db)return;
   db.collection('posts').doc(postId).delete().then(()=>{
-    adminResolve(reportId);
-    showToast('✓ Post deleted');
+    if(reportId)adminResolve(reportId);
+    else{showToast('✓ Post deleted');adminLoadTab();}
   }).catch(()=>showToast('⚠ Could not delete post'));
 }
 
 function adminResolve(reportId){
   if(!db)return;
   db.collection('reports').doc(reportId).update({resolved:true}).catch(()=>{});
-  document.getElementById('admin-ov')?.remove();
   showToast('✓ Report resolved');
+  adminLoadTab();
 }
 
-function adminBanUser(){
-  const uid=document.getElementById('admin-ban-uid')?.value.trim();
-  if(!uid){showToast('Enter a UID');return;}
-  if(!db)return;
+function adminBanUID(uid,reportId){
+  if(!uid||!db){showToast('No UID');return;}
   confirmDialog(
     'Ban this user?',
-    `UID: ${uid}\n\nThis will prevent them from posting or appearing in the community.`,
+    'They will be removed from the community and cannot post, react, or appear as active.',
     'Ban User',
     ()=>{
       db.collection('community_users').doc(uid).set({banned:true},{merge:true})
-        .then(()=>{showToast('✓ User banned');document.getElementById('admin-ov')?.remove();})
-        .catch(()=>showToast('⚠ Could not ban user'));
+        .then(()=>{
+          showToast('✓ User banned');
+          if(reportId)db.collection('reports').doc(reportId).update({resolved:true}).catch(()=>{});
+          adminLoadTab();
+        }).catch(()=>showToast('⚠ Could not ban user — check Firestore rules'));
     }
   );
 }
+
+function adminUnbanUID(uid){
+  if(!uid||!db)return;
+  confirmDialog('Unban this user?','They will be able to participate in the community again.','Unban',()=>{
+    db.collection('community_users').doc(uid).update({banned:false})
+      .then(()=>{showToast('✓ User unbanned');adminLoadTab();})
+      .catch(()=>showToast('⚠ Could not unban'));
+  });
+}
+
+// Legacy — kept for any direct console calls
+function adminBanUser(){adminBanUID(document.getElementById('admin-ban-uid')?.value.trim(),null);}
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
 loadAll();render();scheduleReminder();
