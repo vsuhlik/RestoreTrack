@@ -178,36 +178,65 @@ const CATS=[
   {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
 ];
 const ACHS=[
-  // Session count
-  {id:'first',icon:'🌱',title:'First Session',desc:'Log your very first session',check:c=>c.sessions>=1},
-  {id:'s10',icon:'📝',title:'10 Sessions',desc:'Log 10 sessions',check:c=>c.sessions>=10},
-  {id:'s50',icon:'💪',title:'50 Sessions',desc:'Log 50 sessions',check:c=>c.sessions>=50},
-  {id:'s100',icon:'🏅',title:'100 Sessions',desc:'Log 100 sessions',check:c=>c.sessions>=100},
-  {id:'s365',icon:'📅',title:'365 Sessions',desc:'Log 365 sessions — a full year of effort',check:c=>c.sessions>=365},
-  // Time
-  {id:'h10',icon:'⏱',title:'10 Hours',desc:'Accumulate 10 total hours',check:c=>c.minutes>=600},
-  {id:'h50',icon:'⌛',title:'50 Hours',desc:'Accumulate 50 total hours',check:c=>c.minutes>=3000},
-  {id:'h100',icon:'💯',title:'100 Hours',desc:'Accumulate 100 total hours',check:c=>c.minutes>=6000},
-  {id:'h250',icon:'🔥',title:'250 Hours',desc:'Accumulate 250 total hours',check:c=>c.minutes>=15000},
-  {id:'h500',icon:'⚡',title:'500 Hours',desc:'Accumulate 500 total hours — serious dedication',check:c=>c.minutes>=30000},
-  // Streaks
-  {id:'str3',icon:'3️⃣',title:'3-Day Streak',desc:'Restore 3 days in a row',check:c=>c.streak>=3},
-  {id:'str7',icon:'7️⃣',title:'Week Streak',desc:'Restore 7 days in a row',check:c=>c.streak>=7},
-  {id:'str30',icon:'👑',title:'Month Streak',desc:'Restore 30 days in a row',check:c=>c.streak>=30},
-  {id:'str90',icon:'🌟',title:'90-Day Streak',desc:'Restore 90 days in a row',check:c=>c.streak>=90},
-  // Goal days
-  {id:'goal5',icon:'🎯',title:'Goal Getter',desc:'Hit your daily goal 5 times',check:c=>c.goalDays>=5},
-  {id:'goal30',icon:'💎',title:'Goal Month',desc:'Hit your daily goal 30 times',check:c=>c.goalDays>=30},
-  {id:'goal100',icon:'🏆',title:'100 Goal Days',desc:'Hit your daily goal 100 times',check:c=>c.goalDays>=100},
-  // CI progress
-  {id:'ci1',icon:'✨',title:'CI-1',desc:'Reach CI-1',check:c=>(c.ciLevel||0)>=1},
-  {id:'ci3',icon:'🌿',title:'CI-3',desc:'Reach CI-3',check:c=>(c.ciLevel||0)>=3},
-  {id:'ci5',icon:'⭐',title:'CI-5 — Halfway',desc:'Reach CI-5',check:c=>(c.ciLevel||0)>=5},
-  {id:'ci7',icon:'🔮',title:'CI-7',desc:'Reach CI-7',check:c=>(c.ciLevel||0)>=7},
-  {id:'ci10',icon:'🏆',title:'Fully Restored',desc:'Reach CI-10 — journey complete',check:c=>(c.ciLevel||0)>=10},
-  // Photos
-  {id:'photo1',icon:'📸',title:'First Photo',desc:'Add your first progress photo',check:(_,photos)=>photos&&photos.length>=1},
-  {id:'photo5',icon:'🖼',title:'Photo Journal',desc:'Add 5 progress photos',check:(_,photos)=>photos&&photos.length>=5},
+  // ── First steps
+  {id:'first',   icon:'🌱',title:'First Session',      desc:'Log your very first session',                    check:c=>c.sessions>=1},
+  {id:'rest1',   icon:'🛌',title:'First Rest Day',     desc:'Mark your first intentional rest day',           check:c=>(c.restDays||[]).length>=1},
+  {id:'photo1',  icon:'📸',title:'First Photo',        desc:'Add your first progress photo',                  check:(_,p)=>p&&p.length>=1},
+
+  // ── Session milestones
+  {id:'s10',     icon:'📝',title:'10 Sessions',        desc:'Log 10 sessions',                                check:c=>c.sessions>=10},
+  {id:'s25',     icon:'🔄',title:'25 Sessions',        desc:'Log 25 sessions — building the habit',           check:c=>c.sessions>=25},
+  {id:'s50',     icon:'💪',title:'50 Sessions',        desc:'Log 50 sessions',                                check:c=>c.sessions>=50},
+  {id:'s100',    icon:'🏅',title:'100 Sessions',       desc:'Log 100 sessions',                               check:c=>c.sessions>=100},
+  {id:'s200',    icon:'🎖️',title:'200 Sessions',       desc:'Log 200 sessions',                               check:c=>c.sessions>=200},
+  {id:'s365',    icon:'📅',title:'365 Sessions',       desc:'A full year of effort',                          check:c=>c.sessions>=365},
+  {id:'s500',    icon:'🌟',title:'500 Sessions',       desc:'500 sessions — extraordinary commitment',        check:c=>c.sessions>=500},
+
+  // ── Time milestones
+  {id:'h1',      icon:'⏱',title:'1 Hour',             desc:'Accumulate your first hour of restoration time', check:c=>c.minutes>=60},
+  {id:'h10',     icon:'⌛',title:'10 Hours',           desc:'Accumulate 10 total hours',                      check:c=>c.minutes>=600},
+  {id:'h25',     icon:'🕐',title:'25 Hours',           desc:'25 hours — tissue is responding',                check:c=>c.minutes>=1500},
+  {id:'h50',     icon:'💡',title:'50 Hours',           desc:'Accumulate 50 total hours',                      check:c=>c.minutes>=3000},
+  {id:'h100',    icon:'💯',title:'100 Hours',          desc:'100 hours of dedicated restoration',             check:c=>c.minutes>=6000},
+  {id:'h250',    icon:'🔥',title:'250 Hours',          desc:'250 hours — serious dedication',                 check:c=>c.minutes>=15000},
+  {id:'h500',    icon:'⚡',title:'500 Hours',          desc:'500 hours logged',                               check:c=>c.minutes>=30000},
+  {id:'h1000',   icon:'👑',title:'1,000 Hours',        desc:'1,000 hours — among the most dedicated restorers in existence', check:c=>c.minutes>=60000},
+
+  // ── Streak milestones
+  {id:'str3',    icon:'3️⃣',title:'3-Day Streak',      desc:'Restore 3 days in a row',                        check:c=>c.streak>=3},
+  {id:'str7',    icon:'7️⃣',title:'Week Streak',        desc:'Restore 7 days in a row',                        check:c=>c.streak>=7},
+  {id:'str14',   icon:'✌️',title:'2-Week Streak',      desc:'14 days in a row',                               check:c=>c.streak>=14},
+  {id:'str30',   icon:'🌙',title:'Month Streak',       desc:'30 days in a row',                               check:c=>c.streak>=30},
+  {id:'str60',   icon:'⭐',title:'60-Day Streak',      desc:'Two months of daily consistency',                check:c=>c.streak>=60},
+  {id:'str90',   icon:'🌟',title:'90-Day Streak',      desc:'90 days in a row',                               check:c=>c.streak>=90},
+  {id:'str180',  icon:'🏆',title:'180-Day Streak',     desc:'Half a year of daily restoration',               check:c=>c.streak>=180},
+  {id:'str365',  icon:'💎',title:'Year Streak',        desc:'365 consecutive days — legendary',               check:c=>c.streak>=365},
+
+  // ── Daily goal milestones
+  {id:'goal5',   icon:'🎯',title:'Goal Getter',        desc:'Hit your daily goal 5 times',                    check:c=>c.goalDays>=5},
+  {id:'goal30',  icon:'🏹',title:'Goal Month',         desc:'Hit your daily goal 30 times',                   check:c=>c.goalDays>=30},
+  {id:'goal100', icon:'🥇',title:'100 Goal Days',      desc:'Hit your daily goal 100 times',                  check:c=>c.goalDays>=100},
+  {id:'goal365', icon:'🔮',title:'365 Goal Days',      desc:'Hit your daily goal 365 times',                  check:c=>c.goalDays>=365},
+
+  // ── Method exploration
+  {id:'meth3',   icon:'🧪',title:'Method Explorer',   desc:'Try 3 different restoration methods',            check:c=>(c.methods||[]).length>=3},
+  {id:'meth5',   icon:'🗺️',title:'Method Master',     desc:'Try 5 different restoration methods',            check:c=>(c.methods||[]).length>=5},
+
+  // ── Photo milestones
+  {id:'photo5',  icon:'🖼️',title:'Photo Journal',     desc:'Add 5 progress photos',                          check:(_,p)=>p&&p.length>=5},
+  {id:'photo10', icon:'📷',title:'Dedicated Documenter',desc:'Add 10 progress photos',                       check:(_,p)=>p&&p.length>=10},
+
+  // ── CI progress — all 11 levels
+  {id:'ci1',     icon:'🌿',title:'CI-1 Reached',       desc:'First measurable skin coverage — the journey begins', check:c=>(c.ciLevel||0)>=1},
+  {id:'ci2',     icon:'🌱',title:'CI-2 Reached',       desc:'Dekeratinisation beginning — real progress',    check:c=>(c.ciLevel||0)>=2},
+  {id:'ci3',     icon:'✨',title:'CI-3 Reached',       desc:'Rollover appearing — tissue is growing',         check:c=>(c.ciLevel||0)>=3},
+  {id:'ci4',     icon:'🌊',title:'CI-4 Reached',       desc:'Inner foreskin restoring — significant milestone', check:c=>(c.ciLevel||0)>=4},
+  {id:'ci5',     icon:'⭐',title:'CI-5 — Halfway',     desc:'Halfway home. Most restoration benefits are felt here', check:c=>(c.ciLevel||0)>=5},
+  {id:'ci6',     icon:'💫',title:'CI-6 Reached',       desc:'Full glans coverage at rest — profound change',  check:c=>(c.ciLevel||0)>=6},
+  {id:'ci7',     icon:'🔮',title:'CI-7 Reached',       desc:'Rollover beyond the glans — deep restoration',   check:c=>(c.ciLevel||0)>=7},
+  {id:'ci8',     icon:'🌟',title:'CI-8 Reached',       desc:'Tight coverage over the glans — near complete',  check:c=>(c.ciLevel||0)>=8},
+  {id:'ci9',     icon:'👑',title:'CI-9 Reached',       desc:'Natural overhang at rest — final stretch',       check:c=>(c.ciLevel||0)>=9},
+  {id:'ci10',    icon:'🏆',title:'Fully Restored',     desc:'CI-10 — the journey is complete',                check:c=>(c.ciLevel||0)>=10},
 ];
 const THEMES=[
   {id:'shadow', name:'Shadow', bg:'#0D0B14',accent:'#C9A84C',text:'#E2DDD0',mid:'#3d2a00'},
@@ -445,6 +474,21 @@ function stopSession(){
   timerSecs=elapsed;activeTimer={...activeTimer,startedAt:null,elapsedOnPause:elapsed};
   saveTimer(activeTimer);
   if(navigator.vibrate)navigator.vibrate([40,30,40]);
+  // Warn if under 2 minutes — likely accidental
+  if(timerSecs<120){
+    shortSessionDialog(
+      timerSecs,
+      ()=>{showStopSheet=true;render();}, // save anyway
+      ()=>{                                 // discard
+        stopInterval();activeTimer=null;timerSecs=0;
+        sheetMethod='';sheetCat=null;sheetNotes='';
+        saveTimer(null);syncPresence();render();
+        showToast('Session discarded');
+      },
+      ()=>{resumeSession();}               // resume
+    );
+    return;
+  }
   showStopSheet=true;render();
 }
 function resumeSession(){
@@ -568,6 +612,25 @@ function confirmDialog(title,msg,confirmLabel,onConfirm){
   document.getElementById('confirm-ok').onclick=()=>{el.remove();onConfirm();};
   // Also close on backdrop tap
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
+function shortSessionDialog(elapsed,onSave,onDiscard,onResume){
+  const ex=document.getElementById('confirm-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='confirm-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-size:28px;text-align:center;margin-bottom:10px">⏱</div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--text1);text-align:center;margin-bottom:8px">Session under 2 minutes</div>
+    <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6;margin-bottom:20px">Only ${fmtHMS(elapsed)} logged. This might have been accidental — what would you like to do?</div>
+    <div style="display:flex;flex-direction:column;gap:7px">
+      <button id="ssd-resume" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:12px;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">▶ Resume Session</button>
+      <button id="ssd-save" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px;color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Save it anyway</button>
+      <button id="ssd-discard" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:12px;color:#a03232;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Discard session</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('ssd-resume').onclick=()=>{el.remove();onResume();};
+  document.getElementById('ssd-save').onclick=()=>{el.remove();onSave();};
+  document.getElementById('ssd-discard').onclick=()=>{el.remove();onDiscard();};
 }
 function openPhotoViewer(photo,eraPhotos){
   // eraPhotos = array of photos in this era for swipe navigation
@@ -781,7 +844,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.2</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.3</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1874,7 +1937,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.2</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.3</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2509,7 +2572,7 @@ function startCommunityListeners(){
     });
 
   // ── Manual fetch: posts loaded on demand, not streamed
-  fetchPosts();
+  fetchPosts(true);
 
   // ── Real-time: encouragements (only our own — tiny read cost)
   const encCutoff=firebase.firestore.Timestamp.now();
@@ -2544,10 +2607,20 @@ function startCommunityListeners(){
 
 }
 
-function fetchPosts(){
+let lastPostFetch=0; // timestamp of last fetch — rate limiting
+function fetchPosts(force=false){
   if(!db)return;
+  const now=Date.now();
+  const cooldown=30000; // 30 seconds between fetches
+  if(!force&&now-lastPostFetch<cooldown){
+    const remaining=Math.ceil((cooldown-(now-lastPostFetch))/1000);
+    showToast(`Please wait ${remaining}s before refreshing again`);
+    return;
+  }
+  lastPostFetch=now;
   commState.postsLoading=true;
-  const cutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-14*86400000));
+  refreshCommUI();
+  const cutoff=firebase.firestore.Timestamp.fromDate(new Date(now-14*86400000));
   db.collection('posts')
     .where('ts','>',cutoff).orderBy('ts','desc').limit(40)
     .get().then(snap=>{
@@ -2767,7 +2840,7 @@ function renderCommunity(){
         <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px">Sign in with Google to appear as active, post updates, and react. Your Google identity stays private — you choose your display name.</div>
         <input class="gold-inp" id="comm-name-inp" placeholder="Choose a display name..." maxlength="24" value="${char.name||''}" style="margin-bottom:8px;font-size:13px">
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.27h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.24C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.37h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.34C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continue with Google
         </button>
       </div>`
@@ -2803,7 +2876,7 @@ function renderCommunity(){
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
     ${tabs.map(t=>`
-      <button onclick="commTab='${t.id}';setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts();':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
+      <button onclick="commTab='${t.id}';setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
         background:${commTab===t.id?'var(--bg-card)':'transparent'};
         color:${commTab===t.id?'var(--accent)':'var(--text4)'};
         box-shadow:${commTab===t.id?'0 1px 4px rgba(0,0,0,.2)':'none'}">
