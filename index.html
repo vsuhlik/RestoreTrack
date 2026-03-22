@@ -240,6 +240,23 @@ let currentCoachCTA=null;
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
 const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${r}m`:`${h}h`};
+function timeAgo(ms){
+  const diff=Date.now()-ms;
+  if(diff<60000)return'Just now';
+  if(diff<3600000){const m=Math.floor(diff/60000);return m+'m ago';}
+  if(diff<86400000){const h=Math.floor(diff/3600000);return h+'h ago';}
+  if(diff<604800000){const d=Math.floor(diff/86400000);return d+'d ago';}
+  const wk=Math.floor(diff/604800000);return wk+'w ago';
+}
+function timeAgoShort(ms){
+  // Compact version for tight spaces (reply timestamps etc)
+  const diff=Date.now()-ms;
+  if(diff<60000)return'now';
+  if(diff<3600000)return Math.floor(diff/60000)+'m';
+  if(diff<86400000)return Math.floor(diff/3600000)+'h';
+  if(diff<604800000)return Math.floor(diff/86400000)+'d';
+  return Math.floor(diff/604800000)+'w';
+}
 const today=()=>new Date().toISOString().split('T')[0];
 const todayLogs=()=>logs.filter(l=>l.date===today());
 
@@ -764,7 +781,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.8</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.9</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -785,15 +802,20 @@ function render(){
   else if(tab==='reports')c.innerHTML=renderReports();
   else if(tab==='ach')c.innerHTML=renderAch();
   else if(tab==='community'){
-    commTab='live'; // always open on Live tab
+    commTab='live';
     setLastSeen('live');
+    // Restart users listener if it was stopped when we left
+    if(commState.ready&&!commState.unsubUsers)startCommunityListeners();
     c.innerHTML=renderCommunity();
     attachCommunityEvents();
-    // Clear encouragement badge when user visits community tab
     commState.newEncouragements=[];
     const badge=document.querySelector('.enc-badge');
     if(badge)badge.remove();
     if(!commState.ready)initFirebase();
+  } else {
+    // Leaving community tab — stop users listener to save reads
+    // Encouragement listener stays active (minimal cost, needs to work everywhere)
+    if(commState.unsubUsers){commState.unsubUsers();commState.unsubUsers=null;}
   }
   attachEvents();
   if(showSessionSheet)mountSheet();
@@ -1787,7 +1809,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.8</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.9</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2405,9 +2427,13 @@ function finaliseJoin(name){
 function startCommunityListeners(){
   if(!db||!fbUID)return;
   if(commState.unsubUsers)commState.unsubUsers();
-  if(commState.unsubPosts)commState.unsubPosts();
+  if(commState.unsubPosts){commState.unsubPosts();commState.unsubPosts=null;}
   if(commState.unsubEncourage)commState.unsubEncourage();
+
+  // ── Real-time: active users only (last 7 days — keeps read count low)
+  const userCutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-7*86400000));
   commState.unsubUsers=db.collection('community_users')
+    .where('lastSeen','>',userCutoff)
     .orderBy('lastSeen','desc').limit(60)
     .onSnapshot(snap=>{
       commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false);
@@ -2416,14 +2442,11 @@ function startCommunityListeners(){
       commState.authError='Could not load community. Check Firestore rules are published.';
       commState.loading=false;refreshCommUI();
     });
-  const cutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-14*86400000));
-  commState.unsubPosts=db.collection('posts')
-    .where('ts','>',cutoff).orderBy('ts','desc').limit(40)
-    .onSnapshot(snap=>{
-      commState.posts=snap.docs.map(d=>({id:d.id,...d.data()}));
-      refreshCommUI();
-    },()=>{});
-  // Listen for incoming encouragements
+
+  // ── Manual fetch: posts loaded on demand, not streamed
+  fetchPosts();
+
+  // ── Real-time: encouragements (only our own — tiny read cost)
   const encCutoff=firebase.firestore.Timestamp.now();
   commState.unsubEncourage=db.collection('community_users').doc(fbUID)
     .collection('encouragements')
@@ -2435,12 +2458,9 @@ function startCommunityListeners(){
           const d=change.doc.data();
           const from=d.fromName||'Someone';
           const avatar=d.fromAvatar||'👊';
-          // Add to persistent notification list
           commState.newEncouragements.unshift({from,avatar,ts:Date.now()});
           if(commState.newEncouragements.length>5)commState.newEncouragements.pop();
-          // Show toast regardless of which tab they're on
           showToast(`${avatar} ${from} encouraged you!`);
-          // Refresh nav badge
           const navComm=document.querySelector('[data-tab="community"] .nav-icon');
           if(navComm&&tab!=='community'){
             if(!navComm.querySelector('.enc-badge')){
@@ -2450,14 +2470,26 @@ function startCommunityListeners(){
               navComm.appendChild(badge);
             }
           }
-          // If on community tab, refresh it to show the notification card
           if(tab==='community')refreshCommUI();
         }
       });
     },()=>{});
+
   if(char.communityEnabled&&char.communityDisplayName)syncPresence();
-  // Flush any milestone posts that were earned before Firebase auth resolved
   flushMilestonePosts();
+}
+
+function fetchPosts(){
+  if(!db)return;
+  commState.postsLoading=true;
+  const cutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-14*86400000));
+  db.collection('posts')
+    .where('ts','>',cutoff).orderBy('ts','desc').limit(40)
+    .get().then(snap=>{
+      commState.posts=snap.docs.map(d=>({id:d.id,...d.data()}));
+      commState.postsLoading=false;
+      refreshCommUI();
+    }).catch(()=>{commState.postsLoading=false;refreshCommUI();});
 }
 
 function refreshCommUI(){
@@ -2688,7 +2720,7 @@ function renderCommunity(){
         <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px">Sign in with Google to appear as active, post updates, and react. Your Google identity stays private — you choose your display name.</div>
         <input class="gold-inp" id="comm-name-inp" placeholder="Choose a display name..." maxlength="24" value="${char.name||''}" style="margin-bottom:8px;font-size:13px">
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.87h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.97h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.94C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continue with Google
         </button>
       </div>`
@@ -2726,7 +2758,7 @@ function renderCommunity(){
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
     ${tabs.map(t=>`
-      <button onclick="commTab='${t.id}';setLastSeen('${t.id}');refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
+      <button onclick="commTab='${t.id}';setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts();':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
         background:${commTab===t.id?'var(--bg-card)':'transparent'};
         color:${commTab===t.id?'var(--accent)':'var(--text4)'};
         box-shadow:${commTab===t.id?'0 1px 4px rgba(0,0,0,.2)':'none'}">
@@ -2758,14 +2790,23 @@ function renderCommunity(){
   }
 
   else if(commTab==='posts'){
-    const feedCards=regularPosts.length
-      ?regularPosts.map(p=>buildPostCard(p,now,reacted,isJoined)).join('')
-      :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:2;background:var(--bg-stat);border-radius:12px">
-          <div style="font-size:28px;margin-bottom:8px">💬</div>
-          ${isJoined?'No posts yet — be the first to share an update.':'No posts yet.'}
-        </div>`;
+    const feedCards=commState.postsLoading
+      ?`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:11px">
+          <div class="live-dot" style="display:inline-block;margin-bottom:8px"></div><br>Loading posts...
+        </div>`
+      :regularPosts.length
+        ?regularPosts.map(p=>buildPostCard(p,now,reacted,isJoined)).join('')
+        :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:2;background:var(--bg-stat);border-radius:12px">
+            <div style="font-size:28px;margin-bottom:8px">💬</div>
+            ${isJoined?'No posts yet — be the first to share an update.':'No posts yet.'}
+          </div>`;
     content=`
-      <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px">Community Posts</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:var(--text1)">Community Posts</div>
+        <button onclick="fetchPosts();refreshCommUI()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;gap:5px">
+          <span style="font-size:13px">↻</span> Refresh
+        </button>
+      </div>
       ${feedCards}
       <div style="height:68px"></div>
       ${isJoined?`<button id="comm-post-btn" style="position:fixed;bottom:80px;right:max(12px,calc(50vw - 228px));background:var(--accent);border:none;border-radius:28px;padding:0 20px 0 16px;height:48px;box-shadow:0 4px 20px rgba(0,0,0,.45);cursor:pointer;display:flex;align-items:center;gap:8px;z-index:19;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;color:var(--bg);letter-spacing:.3px">
@@ -2805,8 +2846,9 @@ function renderCommunity(){
 function buildUserCard(u,now,isJoined){
   const isMe=u.uid===fbUID;
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
-  const minsAgo=Math.floor((now-ms)/60000);
-  const timeStr=u.active?(u.todayMins>0?fmtMin(u.todayMins)+' today':'Active now'):(minsAgo<2?'Just now':minsAgo+'m ago');
+  const timeStr=u.active
+    ?(u.todayMins>0?fmtMin(u.todayMins)+' today':'Active now')
+    :(ms>0?timeAgo(ms):'Inactive');
   const encourageBtn=isMe?''
     :isJoined
       ?`<button onclick="event.stopPropagation();commEncourage('${u.uid}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>`
@@ -2832,8 +2874,7 @@ function buildUserCard(u,now,isJoined){
 function buildPostCard(p,now,reacted,isJoined){
   if(!p.ts)return'';
   const ms=p.ts.toMillis?p.ts.toMillis():now;
-  const diff=now-ms;
-  const ago=diff<3600000?Math.floor(diff/60000)+'m ago':diff<86400000?Math.floor(diff/3600000)+'h ago':Math.floor(diff/86400000)+'d ago';
+  const ago=timeAgo(ms);
   const isMe=p.uid===fbUID;
   const isMilestone=p.type==='milestone';
   const replyCount=p.replyCount||0;
@@ -2850,8 +2891,7 @@ function buildPostCard(p,now,reacted,isJoined){
         ?`<div style="font-size:11px;color:var(--text5);padding:8px 0">No replies yet — be first.</div>`
         :rlist.map(r=>{
             const rms=r.ts?.toMillis?r.ts.toMillis():now;
-            const rdiff=now-rms;
-            const rago=rdiff<3600000?Math.floor(rdiff/60000)+'m':rdiff<86400000?Math.floor(rdiff/3600000)+'h':Math.floor(rdiff/86400000)+'d';
+            const rago=timeAgoShort(rms);
             return`<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--stat-border)">
               ${avatarCircle(r.avatar||'🌱',28,'var(--acc18)','var(--acc6)')}
               <div style="flex:1;min-width:0">
