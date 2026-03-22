@@ -497,7 +497,7 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
   showSessFlash(`✓ ${fmtMin(totalMins)}`);
   if(newly.length){
     showToast(`🏅 ${newly[0].title} — milestone reached!`);
-    newly.forEach(m=>commMilestonePost(m.title,m.icon));
+
   }
   else if(ns>1)showToast(`${fmtMin(totalMins)} logged · ${ns}-day streak 🔥`);
   else showToast(`${fmtMin(totalMins)} logged · Session #${char.sessions}`);
@@ -529,7 +529,7 @@ function setCILevel(n){
   if(n>prev)showToast(`🎉 ${LEVELS[n].ci} reached!`);
   if(newly.length){
     setTimeout(()=>showToast(`🏅 ${newly[0].title} unlocked!`),1800);
-    newly.forEach(m=>commMilestonePost(m.title,m.icon));
+
   }
   showCISheet=false;render();
 }
@@ -781,7 +781,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v2.9</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.2</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1671,10 +1671,16 @@ function renderReports(){
   const goalDaysSet=new Set();
   calDays.filter(Boolean).forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
   const restDaySet=new Set(char.restDays||[]);
-  const calDots=calDays.map(d=>d===null
-    ?`<div></div>`
-    :`<div class="cal-dot${goalDaysSet.has(d)?' goal':restDaySet.has(d)?' rest':activeDays.has(d)?' on':''}${d===today()?' now':''}" title="${d}"></div>`
-  ).join('');
+  const calDots=calDays.map(d=>{
+    if(d===null)return`<div></div>`;
+    const dayNum=parseInt(d.split('-')[2]);
+    const isGoal=goalDaysSet.has(d),isRest=restDaySet.has(d),isActive=activeDays.has(d),isToday=d===td;
+    const bg=isGoal?'rgba(34,168,90,.55)':isRest?'rgba(100,120,200,.4)':isActive?'var(--acc45)':'var(--bg-stat)';
+    const textCol=isGoal||isRest||isActive?'rgba(255,255,255,.9)':(isToday?'var(--accent)':'var(--text5)');
+    return`<div onclick="showDayDetail('${d}')"
+      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${isToday?'1.5px solid var(--accent)':'1px solid transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none"
+      title="${d}">${dayNum}</div>`;
+  }).join('');
   const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
   const monthTotal=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0)+liveMins;
   const histHtml=logs.length?logs.slice(0,40).map(l=>{const cat=catFor(l.cat);return`
@@ -1725,16 +1731,75 @@ function renderReports(){
   <div class="sec-title">Method Breakdown</div>
   <div class="card">${catBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions yet.</div>`}</div>
   <div class="sec-title">Export Data</div>
-  <div class="card" style="display:flex;align-items:center;justify-content:space-between">
-    <div><div style="font-size:13px;font-weight:600;color:var(--text1)">Download Session Log</div>
-    <div style="font-size:10px;color:var(--text4);margin-top:2px">${logs.length} sessions · CSV format</div></div>
-    <button class="btn-outline" id="export-btn">📊 Export CSV</button>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text1)">Session Log — CSV</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:2px;line-height:1.5">${logs.length} sessions · Opens in Excel or Google Sheets for your own analysis. Not a backup — use the backup in your profile for that.</div>
+      </div>
+      <button class="btn-outline" id="export-btn" style="flex-shrink:0">📊 Export</button>
+    </div>
   </div>
   <div class="sec-title">Session Notes</div>
   <div class="card" style="padding:8px 12px">${notesHtml}</div>
   <div class="sec-title">Session History</div>${histHtml}`;
 }
-// ── MILESTONES ─────────────────────────────────────────────────────────────────
+function showDayDetail(dateStr){
+  const ex=document.getElementById('day-detail-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='day-detail-ov';
+
+  const dayLogs=logs.filter(l=>l.date===dateStr);
+  const isRest=(char.restDays||[]).includes(dateStr);
+  const isToday=dateStr===today();
+  const totalMins=dayLogs.reduce((a,l)=>a+l.dur,0)+(isToday?liveTimerTodayMins():0);
+  const goal=char.dailyGoalMin||120;
+  const goalMet=totalMins>=goal;
+
+  // Format date nicely
+  const d=new Date(dateStr+'T12:00:00');
+  const dateLabel=d.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  const statusBadge=isToday
+    ?`<span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--accent);font-weight:600">Today</span>`
+    :goalMet
+      ?`<span style="background:rgba(34,168,90,.1);border:1px solid rgba(34,168,90,.3);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--green);font-weight:600">🎯 Goal met</span>`
+      :isRest
+        ?`<span style="background:rgba(100,120,200,.1);border:1px solid rgba(100,120,200,.3);border-radius:20px;padding:2px 9px;font-size:10px;color:#8899CC;font-weight:600">🛌 Rest day</span>`
+        :dayLogs.length
+          ?`<span style="background:var(--acc6);border:1px solid var(--stat-border);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--text3)">Active</span>`
+          :`<span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--text5)">No sessions</span>`;
+
+  const sessionItems=dayLogs.length
+    ?dayLogs.map(l=>{
+      const cat=catFor(l.cat);
+      return`<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--stat-border)">
+        <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px;color:var(--text1)">${l.method}</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">${fmtMin(l.dur)}${l.notes?`<span style="color:var(--text3)"> · ${l.notes}</span>`:''}</div>
+        </div>
+      </div>`;
+    }).join('')
+    :isRest
+      ?`<div style="text-align:center;padding:18px;color:var(--text5);font-size:12px">Rest day — no sessions logged.</div>`
+      :`<div style="text-align:center;padding:18px;color:var(--text5);font-size:12px">No sessions logged on this day.</div>`;
+
+  el.innerHTML=`<div class="sheet" style="max-height:80vh">
+    <div class="sheet-handle"></div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;color:var(--text4);margin-bottom:4px">${dateLabel}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        ${totalMins>0?`<div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent)">${fmtMin(totalMins)}</div>`:''}
+        ${statusBadge}
+      </div>
+      ${totalMins>0&&!goalMet?`<div style="font-size:10px;color:var(--text5);margin-top:4px">${fmtMin(goal-totalMins)} short of daily goal</div>`:''}
+    </div>
+    <div style="max-height:52vh;overflow-y:auto">${sessionItems}</div>
+    <button class="btn-ghost" onclick="document.getElementById('day-detail-ov').remove()" style="width:100%;margin-top:14px">Close</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
 function renderAch(){
   const unlocked=char.achievements.length;
   const sorted=[...ACHS].sort((a,b)=>{
@@ -1809,7 +1874,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.9</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.2</span></div>
     </div>
 
     <!-- Profile card -->
@@ -1852,7 +1917,7 @@ function renderProfileScreen(){
     <!-- Backup -->
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Data Backup</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Export all your data as a backup file. Import it on a new device or after reinstalling.</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup of all your data — sessions, photos, settings, and progress. Use this to switch devices or reinstall. This is not the same as the CSV export in Reports.</div>
       <div style="display:flex;gap:8px">
         <button class="btn-outline" id="backup-btn" style="flex:1;padding:10px">⬇ Export Backup</button>
         <button class="btn-ghost" id="restore-btn" style="flex:1;padding:10px;font-size:12px">⬆ Import Backup</button>
@@ -2313,17 +2378,17 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 }
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
-let commTab='live'; // inner community tab: live | posts | miles | members
+let commTab='live'; // inner community tab: live | posts | members
 let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{}};
 
 // ── NEW-POST BADGE TRACKING ─────────────────────────────────────────────────
 function getLastSeen(tabKey){return parseInt(localStorage.getItem(`rst-lastseen-${tabKey}`)||'0');}
 function setLastSeen(tabKey){localStorage.setItem(`rst-lastseen-${tabKey}`,Date.now());}
-function countNewPosts(type){
-  const cutoff=getLastSeen(type==='milestone'?'miles':'posts');
+function countNewPosts(){
+  const cutoff=getLastSeen('posts');
   if(!cutoff)return 0;
   return commState.posts.filter(p=>{
-    if(type==='milestone'?p.type!=='milestone':p.type==='milestone')return false;
+    if(p.type==='milestone')return false;
     const ms=p.ts?.toMillis?p.ts.toMillis():0;
     return ms>cutoff;
   }).length;
@@ -2476,7 +2541,7 @@ function startCommunityListeners(){
     },()=>{});
 
   if(char.communityEnabled&&char.communityDisplayName)syncPresence();
-  flushMilestonePosts();
+
 }
 
 function fetchPosts(){
@@ -2511,6 +2576,7 @@ function syncPresence(){
     sessions:char.communityShareStats!==false?char.sessions:null,
     totalHours:char.communityShareStats!==false?Math.floor(char.minutes/60):null,
     topMethods:getTopMethods(3),
+    achievements:char.communityShareStats!==false?(char.achievements||[]):[],
     active:running,
     method:running?(activeTimer.method||''):'',
     todayMins:todayMin(),
@@ -2541,41 +2607,23 @@ function leaveComm(){
 
 function commPost(text,title){
   if(!db||!fbUID||!fbIsGoogle||!text.trim()){showToast('⚠ Sign in with Google to post');return;}
-  db.collection('posts').add({
+  const postData={
     title:title||'',text:text.trim().slice(0,200),uid:fbUID,
     name:char.communityDisplayName||'Anonymous',
     avatar:char.communityAvatar||'🌱',
     ci:char.ciLevel||0,
     ts:firebase.firestore.FieldValue.serverTimestamp(),
     rf:0,rm:0,rh:0,replyCount:0,type:'post'
-  }).then(()=>showToast('✓ Posted!')).catch(()=>showToast('⚠ Could not post'));
+  };
+  db.collection('posts').add(postData).then(doc=>{
+    // Inject into local cache immediately so it appears without a manual refresh
+    const localPost={...postData,id:doc.id,ts:{toMillis:()=>Date.now()}};
+    commState.posts=[localPost,...commState.posts];
+    showToast('✓ Posted!');
+    if(commTab==='posts')refreshCommUI();
+  }).catch(()=>showToast('⚠ Could not post'));
 }
 
-let pendingMilestonePosts=[]; // queued if Firebase not ready when milestone earned
-
-function commMilestonePost(title,icon){
-  if(!char.communityEnabled||!char.communityDisplayName)return;
-  // If Firebase isn't ready yet, queue it — will flush once auth resolves
-  if(!db||!fbUID||!fbIsGoogle){
-    pendingMilestonePosts.push({title,icon});
-    return;
-  }
-  db.collection('posts').add({
-    text:`Just unlocked: ${title}`,uid:fbUID,
-    name:char.communityDisplayName,
-    avatar:char.communityAvatar||'🌱',
-    ci:char.ciLevel||0,
-    ts:firebase.firestore.FieldValue.serverTimestamp(),
-    rf:0,rm:0,rh:0,type:'milestone',mIcon:icon,mTitle:title
-  }).catch(()=>{});
-}
-
-function flushMilestonePosts(){
-  if(!pendingMilestonePosts.length)return;
-  const queue=[...pendingMilestonePosts];
-  pendingMilestonePosts=[];
-  queue.forEach(m=>commMilestonePost(m.title,m.icon));
-}
 
 function commReact(postId,r){
   if(!db||!fbUID)return;
@@ -2711,7 +2759,6 @@ function renderCommunity(){
     return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
   });
   const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
-  const milestonePosts=commState.posts.filter(p=>p.type==='milestone');
 
   // ── Status bar (joined) or join banner ──
   const topBar=!isJoined
@@ -2720,7 +2767,7 @@ function renderCommunity(){
         <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px">Sign in with Google to appear as active, post updates, and react. Your Google identity stays private — you choose your display name.</div>
         <input class="gold-inp" id="comm-name-inp" placeholder="Choose a display name..." maxlength="24" value="${char.name||''}" style="margin-bottom:8px;font-size:13px">
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.97h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.94C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.27h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.24C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continue with Google
         </button>
       </div>`
@@ -2748,12 +2795,10 @@ function renderCommunity(){
     </div>`:'';
 
   // ── Inner tab bar ──
-  const newPosts=countNewPosts('post');
-  const newMiles=countNewPosts('milestone');
+  const newPosts=countNewPosts();
   const tabs=[
     {id:'live',   label:'🟢 Live',    badge:active.length>0?active.length:null},
     {id:'posts',  label:'💬 Posts',   badge:newPosts>0?newPosts:null},
-    {id:'miles',  label:'🏅 Miles',   badge:newMiles>0?newMiles:null},
     {id:'members',label:'👥 Members', badge:null},
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
@@ -2815,17 +2860,6 @@ function renderCommunity(){
       </button>`:''}`;
   }
 
-  else if(commTab==='miles'){
-    const milestoneCards=milestonePosts.length
-      ?milestonePosts.map(p=>buildPostCard(p,now,reacted,isJoined)).join('')
-      :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:2;background:var(--bg-stat);border-radius:12px">
-          <div style="font-size:28px;margin-bottom:8px">🏅</div>
-          No milestones unlocked yet.<br>Keep logging sessions to earn the first one.
-        </div>`;
-    content=`
-      <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px">Recent Milestones</div>
-      ${milestoneCards}`;
-  }
 
   else if(commTab==='members'){
     const allMembers=commState.users;
@@ -3024,6 +3058,19 @@ function showUserProfile(uid){
       </div>
     </div>`:'';
 
+  // Milestone badges — from achievements synced on community_users doc
+  const userAchs=u.achievements||[];
+  const achBadges=userAchs.length?`
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Milestones Unlocked</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${ACHS.filter(a=>userAchs.includes(a.id)).map(a=>`
+          <span title="${a.title}" style="background:var(--acc6);border:1px solid var(--acc18);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);display:inline-flex;align-items:center;gap:4px">
+            ${a.icon} ${a.title}
+          </span>`).join('')}
+      </div>
+    </div>`:'';
+
   const statsHtml=u.shareStats!==false&&(u.sessions||u.totalHours)?`
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
@@ -3064,6 +3111,7 @@ function showUserProfile(uid){
     ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${u.bio}"</div>`:''}
     ${statsHtml}
     ${methodsHtml}
+    ${achBadges}
     <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
