@@ -343,8 +343,9 @@ function loadProfile(pid){
   if(!char.ciHistory)char.ciHistory=[];
   if(!char.restDays)char.restDays=[];
   if(char.communityEnabled===undefined)char.communityEnabled=false;
-  if(char.communityDisplayName===undefined)char.communityDisplayName='';
   if(char.communityVisible===undefined)char.communityVisible=true;
+  // communityDisplayName is always derived from char.name — kept in sync automatically
+  char.communityDisplayName=char.name;
   if(!char.communityAvatar)char.communityAvatar='🌱';
   if(char.communityBio===undefined)char.communityBio='';
   if(char.communityShareStats===undefined)char.communityShareStats=true;
@@ -385,10 +386,29 @@ function showRenameInline(){
 function saveRenameInline(){
   const inp=document.getElementById('rename-val');
   const n=inp?.value.trim();if(!n)return;
-  if(currentPid)profiles=profiles.map(p=>p.id===currentPid?{...p,name:n}:p);
-  saveProfiles();
-  char.name=n;saveChar();
-  renderProfileScreen();
+  const prev=char.name;
+  if(n===prev){renderProfileScreen();return;}
+  // If in community, check the new name isn't taken
+  if(char.communityEnabled&&fbIsGoogle){
+    checkNameAvailable(n).then(available=>{
+      if(!available){
+        showToast('⚠ That name is already used in the community — choose another');
+        return;
+      }
+      // Commit
+      if(currentPid)profiles=profiles.map(p=>p.id===currentPid?{...p,name:n}:p);
+      saveProfiles();
+      char.name=n;char.communityDisplayName=n;saveChar();
+      syncPresence();
+      showToast('✓ Name updated');
+      renderProfileScreen();
+    });
+  } else {
+    if(currentPid)profiles=profiles.map(p=>p.id===currentPid?{...p,name:n}:p);
+    saveProfiles();
+    char.name=n;char.communityDisplayName=n;saveChar();
+    renderProfileScreen();
+  }
 }
 function confirmDeleteProfile(){
   // Step 1 — first warning
@@ -409,9 +429,9 @@ function confirmDeleteProfile(){
 }
 function deleteProfile(){
   if(!currentPid)return;
-  // Remove community presence first
+  // Delete community doc entirely — frees the name for future use with same Google account
   if(db&&fbUID&&fbIsGoogle){
-    db.collection('community_users').doc(fbUID).update({visible:false}).catch(()=>{});
+    db.collection('community_users').doc(fbUID).delete().catch(()=>{});
   }
   leaveComm();
   // Wipe all local data
@@ -422,7 +442,7 @@ function deleteProfile(){
   S.del('rst-profiles');
   S.del('rst-active-pid');
   S.del('rst-reactions');
-  localStorage.removeItem('rst-comm-pending-name');
+  localStorage.removeItem('rst-comm-pending');
   // Reset all state
   profiles=[];currentPid=null;
   char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true};
@@ -853,7 +873,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.5</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.6</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1962,7 +1982,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.5</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.6</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2491,38 +2511,29 @@ function initFirebase(){
     // Eagerly check redirect result BEFORE registering onAuthStateChanged
     // This ensures Google auth is processed first on redirect return
     fbAuth.getRedirectResult().then(result=>{
-      if(result&&result.user){
-        const pendingName=localStorage.getItem('rst-comm-pending-name')||'';
-        if(pendingName){
-          localStorage.removeItem('rst-comm-pending-name');
-          fbUID=result.user.uid;fbIsGoogle=true;
-          commState.ready=true;commState.authError=null;
-          finaliseJoin(pendingName);
-          return; // onAuthStateChanged will still fire but we're already done
-        }
+      if(result&&result.user&&localStorage.getItem('rst-comm-pending')){
+        localStorage.removeItem('rst-comm-pending');
+        fbUID=result.user.uid;fbIsGoogle=true;
+        commState.ready=true;commState.authError=null;
+        finaliseJoin();
+        return;
       }
     }).catch(()=>{});
-    // Listen for auth state changes
     fbAuth.onAuthStateChanged(user=>{
       if(user){
         const isGoogle=user.providerData.some(p=>p.providerId==='google.com');
-        // Never let an anonymous auth overwrite a Google auth
         if(!isGoogle&&fbIsGoogle)return;
         fbUID=user.uid;
         fbIsGoogle=isGoogle;
         commState.ready=true;commState.authError=null;
-        // Check if this is a pending new join (redirect came back)
-        const pendingName=localStorage.getItem('rst-comm-pending-name');
-        if(fbIsGoogle&&pendingName){
-          localStorage.removeItem('rst-comm-pending-name');
-          finaliseJoin(pendingName);
+        if(fbIsGoogle&&localStorage.getItem('rst-comm-pending')){
+          localStorage.removeItem('rst-comm-pending');
+          finaliseJoin();
         } else {
           startCommunityListeners();
         }
       } else {
-        // Only sign in anonymously if there is NO pending Google redirect
-        // — if there is one, wait for the Google auth to arrive
-        if(localStorage.getItem('rst-comm-pending-name'))return;
+        if(localStorage.getItem('rst-comm-pending'))return;
         fbAuth.signInAnonymously().catch(e=>{
           commState.authError='Could not connect. Check your internet connection.';
           commState.loading=false;refreshCommUI();
@@ -2535,22 +2546,18 @@ function initFirebase(){
   }
 }
 
-function signInWithGoogle(displayName){
+function signInWithGoogle(){
   if(!fbAuth)return;
   const provider=new firebase.auth.GoogleAuthProvider();
-  // Try popup first on all platforms — it's cleaner and avoids page reload
-  // Safari on iOS may block popups; if so we fall back to redirect
   fbAuth.signInWithPopup(provider).then(result=>{
     fbUID=result.user.uid;fbIsGoogle=true;
     commState.ready=true;commState.authError=null;
-    const name=displayName||localStorage.getItem('rst-comm-pending-name')||'';
-    localStorage.removeItem('rst-comm-pending-name');
-    if(name)finaliseJoin(name);
-    else refreshCommUI();
+    localStorage.removeItem('rst-comm-pending');
+    finaliseJoin();
   }).catch(e=>{
     if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'){
       // Popup blocked (Safari) — fall back to redirect
-      localStorage.setItem('rst-comm-pending-name',displayName||'');
+      localStorage.setItem('rst-comm-pending','1');
       fbAuth.signInWithRedirect(provider);
     } else if(e.code!=='auth/popup-closed-by-user'){
       showToast('⚠ Sign-in failed. Try again.');
@@ -2582,27 +2589,50 @@ function checkNameAvailable(name){
     .catch(()=>true); // on error, allow — don't block the user
 }
 
-function finaliseJoin(name){
-  const trimmed=name.trim();
-  if(!trimmed)return;
-  // Check name is available before committing
-  checkNameAvailable(trimmed).then(available=>{
-    if(!available){
-      showToast('⚠ That name is already taken — please choose another');
-      // Clear pending name so they can try again
-      localStorage.removeItem('rst-comm-pending-name');
-      char.communityEnabled=false;saveChar();
-      tab='community';render();
-      return;
+function finaliseJoin(){
+  // Community name IS the profile name — no separate display name
+  const name=char.name.trim();
+  if(!name||!db||!fbUID)return;
+
+  // First: check if this Google account already has a community profile
+  // (handles returning user on a new device — Firestore is source of truth)
+  db.collection('community_users').doc(fbUID).get().then(doc=>{
+    if(doc.exists&&doc.data().name){
+      // Returning user — restore their community identity from Firestore
+      const existing=doc.data();
+      char.communityDisplayName=existing.name;
+      char.communityEnabled=true;char.communityVisible=char.communityVisible!==false;
+      saveChar();tab='community';
+      startCommunityListeners();
+      setTimeout(()=>{syncPresence();refreshCommUI();},1200);
+      render();
+    } else {
+      // New user — check profile name availability
+      checkNameAvailable(name).then(available=>{
+        if(!available){
+          showToast(`⚠ The name "${name}" is already taken in the community.\nRename your profile and try again.`);
+          localStorage.removeItem('rst-comm-pending');
+          char.communityEnabled=false;saveChar();
+          tab='community';render();
+          return;
+        }
+        // Name is free — commit
+        char.communityDisplayName=name;
+        char.communityEnabled=true;char.communityVisible=true;saveChar();
+        tab='community';
+        db.collection('community_users').doc(fbUID).set({
+          joinedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true}).catch(()=>{});
+        startCommunityListeners();
+        setTimeout(()=>{syncPresence();refreshCommUI();},1200);
+        render();
+      });
     }
-    char.communityDisplayName=trimmed;
+  }).catch(()=>{
+    // Network error — proceed optimistically
+    char.communityDisplayName=name;
     char.communityEnabled=true;char.communityVisible=true;saveChar();
     tab='community';
-    if(db&&fbUID){
-      db.collection('community_users').doc(fbUID).set({
-        joinedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true}).catch(()=>{});
-    }
     startCommunityListeners();
     setTimeout(()=>{syncPresence();refreshCommUI();},1200);
     render();
@@ -2911,12 +2941,11 @@ function renderCommunity(){
   // ── Status bar (joined) or join banner ──
   const topBar=!isJoined
     ?`<div style="background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:10px">
-        <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:4px">◈ Join the Community</div>
-        <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px">Sign in with Google to appear as active, post updates, and react. Your Google identity stays private — you choose your display name.</div>
-        <input class="gold-inp" id="comm-name-inp" placeholder="Choose a display name..." maxlength="24" value="${char.name||''}" style="margin-bottom:8px;font-size:13px">
+        <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:6px">◈ Join the Community</div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:10px">You can browse freely without signing in. To post, react, and appear as active — connect with Google. Your community name will be <strong style="color:var(--accent)">${htmlEsc(char.name)}</strong>, matching your profile.</div>
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.57h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.54C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Continue with Google
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Join as ${htmlEsc(char.name)}
         </button>
       </div>`
     :`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
@@ -3141,13 +3170,8 @@ function buildPostCard(p,now,reacted,isJoined){
 
 function attachCommunityEvents(){
   document.getElementById('comm-join-btn')?.addEventListener('click',()=>{
-    const name=document.getElementById('comm-name-inp')?.value?.trim()||'';
-    if(!name){showToast('Please enter a display name first');return;}
-    localStorage.setItem('rst-comm-pending-name',name);
-    signInWithGoogle(name);
-  });
-  document.getElementById('comm-name-inp')?.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){document.getElementById('comm-join-btn')?.click();}
+    localStorage.setItem('rst-comm-pending','1');
+    signInWithGoogle();
   });
   document.getElementById('comm-post-btn')?.addEventListener('click',()=>{
     if(!fbIsGoogle){showToast('Sign in with Google to post');return;}
@@ -3291,11 +3315,9 @@ function showCommSettings(){
     </div>
 
     <div style="margin-bottom:14px">
-      <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Display Name</div>
-      <div style="display:flex;gap:7px">
-        <input class="gold-inp" id="comm-name-edit" value="${char.communityDisplayName||''}" maxlength="24" style="margin:0;flex:1;font-size:13px">
-        <button class="btn-outline" id="comm-name-save">Save</button>
-      </div>
+      <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Community Name</div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text2)">${htmlEsc(char.communityDisplayName||char.name)}</div>
+      <div style="font-size:9px;color:var(--text5);margin-top:5px">Your community name matches your profile name. To change it, rename your profile first.</div>
     </div>
 
     <div style="margin-bottom:14px">
@@ -3331,18 +3353,6 @@ function showCommSettings(){
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
   document.getElementById('comm-settings-done').onclick=()=>el.remove();
-  document.getElementById('comm-name-save').onclick=()=>{
-    const n=document.getElementById('comm-name-edit')?.value.trim();
-    if(!n)return;
-    if(n===char.communityDisplayName){showToast('That is already your name');return;}
-    checkNameAvailable(n).then(available=>{
-      if(!available){showToast('⚠ That name is already taken — try another');return;}
-      char.communityDisplayName=n;saveChar();syncPresence();
-      showToast('✓ Display name updated');
-      document.getElementById('comm-settings-ov')?.remove();
-      refreshCommUI();
-    });
-  };
   document.getElementById('comm-bio-save').onclick=()=>{
     const b=(document.getElementById('comm-bio-edit')?.value||'').slice(0,200).trim();
     char.communityBio=b;saveChar();syncPresence();
@@ -3394,7 +3404,7 @@ function selectAvatar(emoji){
 // ── INIT ───────────────────────────────────────────────────────────────────────
 loadAll();render();scheduleReminder();
 // Init Firebase if already a community member, or if returning from Google redirect
-if(char.communityEnabled||localStorage.getItem('rst-comm-pending-name')){
+if(char.communityEnabled||localStorage.getItem('rst-comm-pending')){
   initFirebase();
   // If a session is already running, sync presence once Firebase auth settles
   if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
