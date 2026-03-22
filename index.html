@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RestoreTrack">
+<meta name="theme-color" content="#0D0B14">
+<meta name="description" content="Personal foreskin restoration tracker. Log sessions, track CI progress, and connect with the restoration community.">
 <title>RestoreTrack</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -175,6 +180,8 @@ const CATS=[
    methods:['HyperRestore (Balloon)','Foreskinned Air','Airforce Direct Air','Priva Air',"Chris' Air Retainer (CAR-1)",'DIY Balloon Method']},
   {id:'retaining',label:'Retaining',icon:'🔒',color:'#F472B6',
    methods:['Your-Skin Cone','Stealth Retainer','O-Rings (Retaining)','SI Retainer','ManHood']},
+  {id:'packing',label:'Packing',icon:'📦',color:'#FB923C',
+   methods:['TLC Packer','TLC Stacker','Restore In Comfort (RIC)','Stealth Extended P-Tainer','Pear Gauge','Compact Device','Foam Insert (DIY)']},
   {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
 ];
 const ACHS=[
@@ -269,6 +276,8 @@ let currentCoachCTA=null;
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
 const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${r}m`:`${h}h`};
+// HTML escape — always use for user-generated content rendered into innerHTML
+const htmlEsc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 function timeAgo(ms){
   const diff=Date.now()-ms;
   if(diff<60000)return'Just now';
@@ -844,7 +853,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.3</span>
+        <span style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0">v3.4</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -1038,6 +1047,9 @@ function buildNextMilestone(){
     } else if(a.id.startsWith('photo')){
       const n=parseInt(a.id.slice(5));if(isNaN(n))continue;
       current=photos.length;target=n;label=`photo${n!==1?'s':''}`;
+    } else if(a.id.startsWith('meth')){
+      const n=parseInt(a.id.slice(4));if(isNaN(n))continue;
+      current=(char.methods||[]).length;target=n;label=`methods tried`;
     } else continue;
     if(target<=0||current>=target)continue;
     const remaining=target-current;
@@ -1767,7 +1779,7 @@ function renderReports(){
         <span style="font-size:11px;font-weight:600;color:var(--text2)">${l.method}</span>
         <span style="font-size:10px;color:var(--text5);margin-left:auto">${l.date} · ${fmtMin(l.dur)}</span>
       </div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${l.notes}</div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${htmlEsc(l.notes)}</div>
     </div>`}).join(''):`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
 
   const monthName=now.toLocaleString('default',{month:'long',year:'numeric'});
@@ -1839,7 +1851,7 @@ function showDayDetail(dateStr){
         <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:13px;color:var(--text1)">${l.method}</div>
-          <div style="font-size:11px;color:var(--text4);margin-top:2px">${fmtMin(l.dur)}${l.notes?`<span style="color:var(--text3)"> · ${l.notes}</span>`:''}</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">${fmtMin(l.dur)}${l.notes?`<span style="color:var(--text3)"> · ${htmlEsc(l.notes)}</span>`:''}</div>
         </div>
       </div>`;
     }).join('')
@@ -1896,14 +1908,25 @@ function renderProfileScreen(){
   if(isNewUser){
     // ── ONBOARDING ──────────────────────────────────────────────────────────────
     document.getElementById('root').innerHTML=`<div class="pscreen">
-      <div style="text-align:center;margin-bottom:28px;margin-top:8px">
-        <div style="font-family:Cinzel,serif;font-size:26px;color:var(--accent);letter-spacing:3px;margin-bottom:10px">◉ RESTORETRACK</div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.8;max-width:300px;margin:0 auto">Your personal restoration journal.<br>Private, honest, and built for the long haul.</div>
+      <div style="text-align:center;margin-bottom:24px;margin-top:8px">
+        <div style="font-family:Cinzel,serif;font-size:28px;color:var(--accent);letter-spacing:3px;margin-bottom:12px">◉ RESTORETRACK</div>
+        <div style="font-size:13px;color:var(--text3);line-height:1.9;max-width:300px;margin:0 auto">The most complete foreskin restoration tracker ever built.<br><span style="color:var(--text5);font-size:11px">Free. Private. No account required.</span></div>
+      </div>
+
+      <div style="width:100%;background:var(--bg-stat);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${[['📊','Track CI progress','CI-0 through CI-10'],['⏱','Log every session','Timer + manual logging'],['📸','Photo journal','Visual progress over time'],['◈','Community','Restore with others']].map(([icon,title,sub])=>`
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <span style="font-size:16px;flex-shrink:0">${icon}</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2)">${title}</div>
+              <div style="font-size:9px;color:var(--text5);margin-top:1px">${sub}</div>
+            </div>
+          </div>`).join('')}
       </div>
 
       <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:20px;margin-bottom:16px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px;text-align:center">Create Your Profile</div>
-        <div style="font-size:11px;color:var(--text4);margin-bottom:12px;text-align:center;line-height:1.6">This is your one restoration journal.<br>Choose a name — your real name or a nickname.</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:12px;text-align:center">Create Your Profile</div>
+        <div style="font-size:11px;color:var(--text4);margin-bottom:12px;text-align:center;line-height:1.6">One profile, one journey. Choose a name — your real name or a nickname.</div>
         <input class="gold-inp" id="new-name" placeholder="Your name..." maxlength="24" style="text-align:center;font-size:16px;margin-bottom:12px">
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Choose a theme</div>
         <div class="theme-row" style="margin-bottom:0">${chips}</div>
@@ -1911,7 +1934,7 @@ function renderProfileScreen(){
 
       <button class="btn-gold" id="create-btn" style="width:100%;padding:14px;font-size:15px;letter-spacing:1px">Begin Your Journey</button>
 
-      <div style="margin-top:22px;text-align:center">
+      <div style="margin-top:18px;text-align:center">
         <div style="font-size:10px;color:var(--text5);margin-bottom:10px">Restoring from another device? Import a backup.</div>
         <button class="btn-ghost" id="restore-btn" style="padding:8px 20px;font-size:12px">⬆ Import Backup</button>
         <input type="file" id="restore-file" accept=".json" style="display:none">
@@ -1937,7 +1960,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.3</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v3.4</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2534,9 +2557,6 @@ function signInWithGoogle(displayName){
   });
 }
 
-// handleGoogleRedirect is no longer needed — getRedirectResult is called
-// eagerly inside initFirebase before onAuthStateChanged can interfere
-
 function finaliseJoin(name){
   char.communityDisplayName=name.trim();
   char.communityEnabled=true;char.communityVisible=true;saveChar();
@@ -2840,7 +2860,7 @@ function renderCommunity(){
         <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px">Sign in with Google to appear as active, post updates, and react. Your Google identity stays private — you choose your display name.</div>
         <input class="gold-inp" id="comm-name-inp" placeholder="Choose a display name..." maxlength="24" value="${char.name||''}" style="margin-bottom:8px;font-size:13px">
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
-          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.37h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.34C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v3.47h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v3.44C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continue with Google
         </button>
       </div>`
@@ -3007,7 +3027,7 @@ function buildPostCard(p,now,reacted,isJoined){
                   <span style="font-family:Cinzel,serif;font-size:9px;color:var(--accent)">${LEVELS[Math.min(r.ci||0,10)].ci}</span>
                   <span style="font-size:9px;color:var(--text5);margin-left:auto">${rago}</span>
                 </div>
-                <div style="font-size:12px;color:var(--text2);line-height:1.55">${r.text||''}</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.55">${htmlEsc(r.text||'')}</div>
               </div>
             </div>`;
           }).join('');
@@ -3034,10 +3054,10 @@ function buildPostCard(p,now,reacted,isJoined){
           <span style="font-family:Cinzel,serif;font-size:9px;color:var(--accent)">${LEVELS[Math.min(p.ci||0,10)].ci}</span>
           <span style="font-size:9px;color:var(--text5);margin-left:auto">${ago}</span>
         </div>
-        ${p.title?`<div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:4px;line-height:1.4">${p.title}</div>`:''}
+        ${p.title?`<div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:4px;line-height:1.4">${htmlEsc(p.title)}</div>`:''}
         ${isMilestone
-          ?`<div style="font-size:12px;color:var(--text2)"><span style="color:var(--accent);font-weight:600">${p.mTitle||p.text}</span> unlocked 🎉</div>`
-          :`<div style="font-size:12px;color:var(--text2);line-height:1.6">${p.text||''}</div>`}
+          ?`<div style="font-size:12px;color:var(--text2)"><span style="color:var(--accent);font-weight:600">${htmlEsc(p.mTitle||p.text)}</span> unlocked 🎉</div>`
+          :`<div style="font-size:12px;color:var(--text2);line-height:1.6">${htmlEsc(p.text||'')}</div>`}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--stat-border);flex-wrap:wrap">
@@ -3181,7 +3201,7 @@ function showUserProfile(uid){
       }
     </div>
     ${joinedStr?`<div style="font-size:10px;color:var(--text5);margin-bottom:12px">Member since ${joinedStr}</div>`:''}
-    ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${u.bio}"</div>`:''}
+    ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${htmlEsc(u.bio)}"</div>`:''}
     ${statsHtml}
     ${methodsHtml}
     ${achBadges}
