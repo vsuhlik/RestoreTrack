@@ -958,7 +958,7 @@ const COACH_BRAIN={
   },
 
   goals:{
-    keywords:['goal','daily goal','target','how much','how many minutes','how many hours','aim','recommended','enough'],
+    keywords:['goal','daily goal','target','set a goal','my goal','change goal','update goal','aim','recommended daily','enough per day'],
     response:(u)=>`Your current daily goal is ${fmtMin(u.goal)}. ${u.avgDay>=u.goal?'You\'ve been meeting or exceeding it — consider whether it\'s time to set a higher target.':u.avgDay>=u.goal*0.7?'You\'re close to your goal most days. A small push to consistently hit it would compound significantly.':'You\'re currently averaging below your goal. Either adjust the goal to be more realistic, or identify what\'s preventing you from hitting it.'}\n\nFor reference, the general guidance in the restoration community:\n• 30 min/day — minimum to see any progress (slow)\n• 60 min/day — recommended baseline for consistent progress\n• 2–4 hrs/day — what faster progressors typically report\n• 6+ hrs/day — possible with tape or device during work/sleep\n\nMore is generally better, but consistency over time matters more than occasional very long sessions. A steady 90 minutes every day beats 8 hours once a week.\n\nYou can adjust your daily goal in the goal field on the Today tab.`
   },
 
