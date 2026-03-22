@@ -945,7 +945,7 @@ function render(){
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
-        <span id="v-tap" onclick="adminTap()" style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:default;user-select:none">v4.0</span>
+        <span id="v-tap" onclick="adminTap()" style="font-size:10px;color:var(--text5);font-family:'DM Sans',sans-serif;flex-shrink:0;cursor:default;user-select:none">v4.2</span>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
         ${isRunning?`<div style="display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:2px 8px;flex-shrink:0">
           <div class="live-dot"></div>
@@ -2161,7 +2161,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.0</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v4.2</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2728,6 +2728,8 @@ function initFirebase(){
 function signInWithGoogle(){
   if(!fbAuth)return;
   const provider=new firebase.auth.GoogleAuthProvider();
+  // Always show account picker — prevents auto-reuse of previous session
+  provider.setCustomParameters({prompt:'select_account'});
   fbAuth.signInWithPopup(provider).then(result=>{
     fbUID=result.user.uid;fbIsGoogle=true;
     commState.ready=true;commState.authError=null;
@@ -2773,8 +2775,24 @@ function finaliseJoin(){
   const name=char.name.trim();
   if(!name||!db||!fbUID)return;
 
-  // First: check if this Google account already has a community profile
-  // (handles returning user on a new device — Firestore is source of truth)
+  // First: check bans collection — this is separate from community_users
+  // and survives profile deletion, so banned users can't rejoin by deleting their profile
+  db.collection('bans').doc(fbUID).get().then(banDoc=>{
+    if(banDoc.exists&&banDoc.data().banned){
+      showToast('⚠ Your account has been suspended from the community.');
+      localStorage.removeItem('rst-comm-pending');
+      char.communityEnabled=false;saveChar();
+      if(fbAuth)fbAuth.signOut().catch(()=>{});
+      fbUID=null;fbIsGoogle=false;
+      tab='community';render();
+      return;
+    }
+    // Not banned — proceed with normal join flow
+    joinProceed();
+  }).catch(()=>joinProceed()); // on network error, proceed optimistically
+
+  function joinProceed(){
+  // Check if this Google account already has a community profile
   db.collection('community_users').doc(fbUID).get().then(doc=>{
     if(doc.exists&&doc.data().name){
       // Returning user — restore their community identity from Firestore
@@ -2816,6 +2834,7 @@ function finaliseJoin(){
     setTimeout(()=>{syncPresence();refreshCommUI();},1200);
     render();
   });
+  } // end joinProceed
 }
 
 function startCommunityListeners(){
@@ -2831,11 +2850,17 @@ function startCommunityListeners(){
     .orderBy('lastSeen','desc').limit(60)
     .onSnapshot(snap=>{
       commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false&&!u.banned);
-      // Check if current user is banned
+      // Check if current user is banned (community_users doc may have been updated)
       const myDoc=snap.docs.find(d=>d.id===fbUID);
       if(myDoc?.data()?.banned){
-        commState.authError='Your account has been suspended.';
-        commState.loading=false;refreshCommUI();return;
+        // Double-check against bans collection to confirm
+        db.collection('bans').doc(fbUID).get().then(banDoc=>{
+          if(banDoc.exists&&banDoc.data().banned){
+            commState.authError='Your account has been suspended from the community.';
+            commState.loading=false;refreshCommUI();
+          }
+        }).catch(()=>{});
+        return;
       }
       commState.loading=false;refreshCommUI();
     },e=>{
@@ -2946,6 +2971,8 @@ function leaveComm(){
   if(commState.unsubPosts)commState.unsubPosts();
   if(commState.unsubEncourage)commState.unsubEncourage();
   commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{}};
+  // Sign out of Firebase so the account picker shows fresh on next join
+  if(fbAuth)fbAuth.signOut().catch(()=>{});
   db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
   const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
   render();
@@ -3758,15 +3785,24 @@ function adminBanUID(uid,reportId){
   if(!uid||!db){showToast('No UID');return;}
   confirmDialog(
     'Ban this user?',
-    'They will be removed from the community and cannot post, react, or appear as active.',
+    'They will be removed from the community permanently. They cannot rejoin even if they delete and recreate their profile.',
     'Ban User',
     ()=>{
-      db.collection('community_users').doc(uid).set({banned:true},{merge:true})
+      // Write to separate bans collection — survives community_users doc deletion
+      const batch=db.batch();
+      batch.set(db.collection('bans').doc(uid),{
+        banned:true,
+        bannedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        bannedBy:fbUID
+      });
+      // Also mark on community_users for real-time listener filtering
+      batch.set(db.collection('community_users').doc(uid),{banned:true},{merge:true});
+      batch.commit()
         .then(()=>{
           showToast('✓ User banned');
           if(reportId)db.collection('reports').doc(reportId).update({resolved:true}).catch(()=>{});
           adminLoadTab();
-        }).catch(()=>showToast('⚠ Could not ban user — check Firestore rules'));
+        }).catch(()=>showToast('⚠ Could not ban — check Firestore rules'));
     }
   );
 }
@@ -3774,7 +3810,10 @@ function adminBanUID(uid,reportId){
 function adminUnbanUID(uid){
   if(!uid||!db)return;
   confirmDialog('Unban this user?','They will be able to participate in the community again.','Unban',()=>{
-    db.collection('community_users').doc(uid).update({banned:false})
+    const batch=db.batch();
+    batch.delete(db.collection('bans').doc(uid));
+    batch.update(db.collection('community_users').doc(uid),{banned:false});
+    batch.commit()
       .then(()=>{showToast('✓ User unbanned');adminLoadTab();})
       .catch(()=>showToast('⚠ Could not unban'));
   });
