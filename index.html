@@ -1157,7 +1157,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.9</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.0</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2169,7 +2169,11 @@ function renderReports(){
   const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*76)),isT=wDays[i]===today();
     return`<div class="bar-col"><div class="bar-val">${m>0?fmtDur(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
   }).join('');
-  // Method breakdown — only methods actually used, by name
+  // Calendar month key — needed for both monthly breakdown and calendar
+  const year=_repYear,month=_repMonth;
+  const calMonthKeyEarly=`${year}-${String(month+1).padStart(2,'0')}`;
+
+  // Method breakdown — ALL TIME
   const methodTotals={};
   logs.forEach(l=>{
     if(!l.method)return;
@@ -2189,8 +2193,31 @@ function renderReports(){
       <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
     </div>`;
   }).join('');
+
+  // Method breakdown — SELECTED MONTH
+  const monthLogs=logs.filter(l=>l.date.slice(0,7)===calMonthKeyEarly);
+  const monthMethodTotals={};
+  monthLogs.forEach(l=>{
+    if(!l.method)return;
+    if(!monthMethodTotals[l.method])monthMethodTotals[l.method]={mins:0,cat:l.cat};
+    monthMethodTotals[l.method].mins+=l.dur;
+  });
+  const usedMonthMethods=Object.entries(monthMethodTotals).sort((a,b)=>b[1].mins-a[1].mins);
+  const totMonthM=usedMonthMethods.reduce((a,[,v])=>a+v.mins,0)||1;
+  const catBarsMonth=usedMonthMethods.map(([method,{mins,cat}])=>{
+    const c=catFor(cat);
+    const p=Math.round((mins/totMonthM)*100);
+    return`<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${method}</span>
+        <span style="color:${c.color};flex-shrink:0">${fmtDur(mins)} · ${p}%</span>
+      </div>
+      <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
+    </div>`;
+  }).join('');
+
   // Calendar — navigable month
-  const year=_repYear,month=_repMonth;
+  // (year and month already set above)
   const daysInMonth=new Date(year,month+1,0).getDate();
   const firstDow=new Date(year,month,1).getDay(); // 0=Sun
   const calDays=[];
@@ -2303,8 +2330,22 @@ function renderReports(){
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(100,120,200,.4);vertical-align:middle;margin-right:3px"></span>Rest day</span>
     </div>
   </div>
-  <div class="sec-title">Method Breakdown</div>
-  <div class="card">${catBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions yet.</div>`}</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
+    <div style="font-size:10px;color:var(--accent);font-weight:600">${monthName}</div>
+  </div>
+  <div class="card">
+    ${catBarsMonth||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions logged in ${monthName}.</div>`}
+    ${monthLogs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${monthLogs.length} sessions · ${fmtDur(monthLogs.reduce((a,l)=>a+l.dur,0))} total</div>`:''}
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
+    <div style="font-size:10px;color:var(--text4);font-weight:600">All Time</div>
+  </div>
+  <div class="card">
+    ${catBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions yet.</div>`}
+    ${logs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${logs.length} sessions · ${fmtDur(logs.reduce((a,l)=>a+l.dur,0))} total</div>`:''}
+  </div>
   <div class="sec-title">Export Data</div>
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -2507,7 +2548,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.9</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.0</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2580,7 +2621,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v1.9';
+    const version='v2.0';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -4469,6 +4510,22 @@ if(char.communityEnabled||localStorage.getItem('rst-comm-pending')){
   initFirebase();
   // If a session is already running, sync presence once Firebase auth settles
   if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
+}
+
+// ── SERVICE WORKER REGISTRATION ───────────────────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    // Listen for a new SW waiting to activate (= new version downloaded)
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed'&&navigator.serviceWorker.controller){
+          // New version ready — tell the user
+          showToast('🔄 Update available — close and reopen the app');
+        }
+      });
+    });
+  }).catch(()=>{});
 }
 </script>
 </body>
