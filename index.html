@@ -3008,7 +3008,7 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
 let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
-let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{}};
+let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{},broadcast:null};
 
 // ── NEW-POST BADGE TRACKING ─────────────────────────────────────────────────
 function getLastSeen(tabKey){return parseInt(localStorage.getItem(`rst-lastseen-${tabKey}`)||'0');}
@@ -3232,6 +3232,12 @@ function startCommunityListeners(){
       });
     },()=>{});
 
+  // Broadcast listener — single doc, near-zero read cost
+  db.collection('broadcast').doc('active').onSnapshot(snap=>{
+    commState.broadcast=snap.exists?snap.data():null;
+    if(tab==='community')refreshCommUI();
+  },()=>{});
+
   if(char.communityEnabled&&char.communityDisplayName)syncPresence();
 
 }
@@ -3303,7 +3309,7 @@ function leaveComm(){
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts)commState.unsubPosts();
   if(commState.unsubEncourage)commState.unsubEncourage();
-  commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{}};
+  commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{},broadcast:null};
   // Sign out of Firebase so the account picker shows fresh on next join
   if(fbAuth)fbAuth.signOut().catch(()=>{});
   db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
@@ -3521,7 +3527,17 @@ function renderCommunity(){
         </div>`).join('')}
     </div>`:'';
 
-  // ── Inner tab bar ──
+  // Broadcast banner (admin announcements)
+  const broadcastBanner=commState.broadcast?.msg?`
+    <div style="background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.06));border:1px solid var(--acc30);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+        <span style="font-size:14px">📣</span>
+        <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent)">Announcement</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.65">${htmlEsc(commState.broadcast.msg)}</div>
+    </div>`:'';
+
+  // Inner tab bar
   const newPosts=countNewPosts();
   const tabs=[
     {id:'live',   label:'🟢 Live',    badge:active.length>0?active.length:null},
@@ -3601,7 +3617,7 @@ function renderCommunity(){
       ${memberCards}`;
   }
 
-  return`${topBar}${encCard}${tabBar}${content}`;
+  return`${topBar}${broadcastBanner}${encCard}${tabBar}${content}`;
 }
 
 function buildUserCard(u,now,isJoined){
@@ -4051,11 +4067,9 @@ function captureCoachQuestion(question){
     ts:firebase.firestore.FieldValue.serverTimestamp()
   }).catch(()=>{}); // silent fail — non-critical
 }
-// Admin UID — replace with your Firebase UID (find it in browser console: fbUID)
-const ADMIN_UID='ucBxGcyLCTMxyYDKgqOnDmlq2j52';
 
-let _adminTaps=0,_adminTimer=null;
-let _adminTab='reports'; // reports | users
+const ADMIN_UID='ucBxGcyLCTMxyYDKgqOnDmlq2j52';
+let _adminTaps=0,_adminTimer=null,_adminTab='dashboard';
 
 function adminTap(){
   _adminTaps++;
@@ -4066,136 +4080,238 @@ function adminTap(){
 
 function showAdminPanel(){
   if(!db){showToast('Not connected to Firebase');return;}
-  if(ADMIN_UID!=='REPLACE_WITH_YOUR_FIREBASE_UID'&&fbUID!==ADMIN_UID){
-    showToast('Not authorised');return;
-  }
+  if(fbUID!==ADMIN_UID){showToast('Not authorised');return;}
   const ex=document.getElementById('admin-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='admin-ov';
-  el.innerHTML=`<div class="sheet" style="max-height:92vh;overflow-y:auto">
-    <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:#e74c3c;margin-bottom:14px">⚙ Admin Panel</div>
-
-    <div style="display:flex;gap:5px;margin-bottom:14px;background:var(--bg-stat);border-radius:10px;padding:4px">
-      <button id="admin-tab-reports" onclick="adminSwitchTab('reports')"
-        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;
-        background:${_adminTab==='reports'?'var(--bg-card)':'transparent'};
-        color:${_adminTab==='reports'?'#e74c3c':'var(--text4)'}">${IC.flag(12)} Reports</button>
-      <button id="admin-tab-users" onclick="adminSwitchTab('users')"
-        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;
-        background:${_adminTab==='users'?'var(--bg-card)':'transparent'};
-        color:${_adminTab==='users'?'var(--accent)':'var(--text4)'}">👥 Users</button>
-      <button id="admin-tab-coach" onclick="adminSwitchTab('coach')"
-        style="flex:1;padding:7px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;
-        background:${_adminTab==='coach'?'var(--bg-card)':'transparent'};
-        color:${_adminTab==='coach'?'var(--accent)':'var(--text4)'}">🧠 Coach</button>
+  el.innerHTML=`<div style="background:var(--bg-sheet);border:1px solid var(--card-border);border-radius:18px 18px 0 0;padding:16px 0 32px;width:100%;max-height:94vh;display:flex;flex-direction:column">
+    <div style="padding:0 16px;flex-shrink:0">
+      <div style="width:36px;height:4px;background:var(--stat-border);border-radius:2px;margin:0 auto 14px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-family:Cinzel,serif;font-size:15px;color:#e74c3c;letter-spacing:1px">⚙ Admin</div>
+        <button onclick="document.getElementById('admin-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Close</button>
+      </div>
+      <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--bg-stat);border-radius:10px;padding:3px;overflow-x:auto;scrollbar-width:none">
+        ${[['dashboard','📊','Stats'],['reports','🚩','Reports'],['users','👥','Users'],['broadcast','📣','Broadcast'],['coach','🧠','Coach']].map(([id,icon,label])=>`
+        <button id="admin-tab-${id}" onclick="adminSwitchTab('${id}')"
+          style="flex:1;min-width:52px;padding:6px 4px;border:none;border-radius:7px;cursor:pointer;font-size:10px;font-weight:600;font-family:DM Sans,sans-serif;white-space:nowrap;transition:all .15s;
+          background:${_adminTab===id?'var(--bg-card)':'transparent'};
+          color:${_adminTab===id?'var(--accent)':'var(--text4)'}">
+          ${icon} ${label}
+        </button>`).join('')}
+      </div>
     </div>
-
-    <div id="admin-content"></div>
-    <button class="btn-ghost" onclick="document.getElementById('admin-ov').remove()" style="width:100%;margin-top:14px">Close</button>
+    <div id="admin-content" style="flex:1;overflow-y:auto;padding:0 16px"></div>
   </div>`;
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
   adminLoadTab();
 }
 
-function adminSwitchTab(tab){
-  _adminTab=tab;
-  const rBtn=document.getElementById('admin-tab-reports');
-  const uBtn=document.getElementById('admin-tab-users');
-  const cBtn=document.getElementById('admin-tab-coach');
-  if(rBtn){rBtn.style.background=tab==='reports'?'var(--bg-card)':'transparent';rBtn.style.color=tab==='reports'?'#e74c3c':'var(--text4)';}
-  if(uBtn){uBtn.style.background=tab==='users'?'var(--bg-card)':'transparent';uBtn.style.color=tab==='users'?'var(--accent)':'var(--text4)';}
-  if(cBtn){cBtn.style.background=tab==='coach'?'var(--bg-card)':'transparent';cBtn.style.color=tab==='coach'?'var(--accent)':'var(--text4)';}
+function adminSwitchTab(t){
+  _adminTab=t;
+  ['dashboard','reports','users','broadcast','coach'].forEach(id=>{
+    const btn=document.getElementById('admin-tab-'+id);
+    if(!btn)return;
+    btn.style.background=_adminTab===id?'var(--bg-card)':'transparent';
+    btn.style.color=_adminTab===id?'var(--accent)':'var(--text4)';
+  });
   adminLoadTab();
 }
 
 function adminLoadTab(){
   const content=document.getElementById('admin-content');
   if(!content)return;
-  if(_adminTab==='reports'){
-    content.innerHTML='<div style="font-size:11px;color:var(--text4)">Loading reports...</div>';
-    db.collection('reports').where('resolved','==',false).limit(20)
-      .get().then(snap=>{
-        if(!document.getElementById('admin-content'))return;
-        const sorted=snap.docs.sort((a,b)=>(b.data().ts?.toMillis?.()??0)-(a.data().ts?.toMillis?.()??0));
-        if(snap.empty){
-          content.innerHTML='<div style="font-size:11px;color:var(--green)">✓ No open reports — community is clean.</div>';
-          return;
-        }
-        // Fetch the actual post content for each report
-        const fetches=sorted.map(d=>{
-          const r=d.data();
-          return db.collection('posts').doc(r.postId).get()
-            .then(pDoc=>({report:d,post:pDoc.exists?pDoc.data():null}))
-            .catch(()=>({report:d,post:null}));
-        });
-        Promise.all(fetches).then(results=>{
-          if(!document.getElementById('admin-content'))return;
-          content.innerHTML=`<div style="font-size:10px;color:var(--text4);margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px">Open Reports (${snap.size})</div>`+
-            results.map(({report:d,post})=>{
-              const r=d.data();
-              const ts=r.ts?.toDate?r.ts.toDate().toLocaleDateString():'?';
-              const postPreview=post
-                ?`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:8px;margin:6px 0;font-size:11px;color:var(--text2);line-height:1.5">
-                    ${post.title?`<div style="font-weight:700;margin-bottom:3px">${htmlEsc(post.title)}</div>`:''}
-                    <div>${htmlEsc(post.text||'')}</div>
-                    <div style="font-size:9px;color:var(--text5);margin-top:4px">by ${htmlEsc(post.name||'?')} · UID: ${post.uid||'?'}</div>
-                  </div>`
-                :`<div style="font-size:10px;color:var(--text5);margin:4px 0">Post already deleted</div>`;
-              return`<div style="background:var(--bg-stat);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px;margin-bottom:8px">
-                <div style="font-size:10px;color:var(--text4);margin-bottom:2px">Reported ${ts} by <code style="font-size:9px">${r.reportedBy?.slice(0,12)}…</code></div>
-                ${postPreview}
-                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-                  ${post?`
-                  <button onclick="adminDeletePost('${r.postId}','${d.id}')" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:5px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">🗑 Delete Post</button>
-                  <button onclick="adminBanUID('${post.uid||''}','${d.id}')" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:5px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban User</button>`:''}
-                  <button onclick="adminResolve('${d.id}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:5px 10px;font-size:10px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✓ Dismiss</button>
-                </div>
-              </div>`;
-            }).join('');
-        });
-      }).catch(e=>{
-        if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load reports.<br><span style="font-size:10px;color:var(--text5)">Error: ${e.code||e.message}</span></div>`;
+
+  // ── DASHBOARD ──────────────────────────────────────────────────────────
+  if(_adminTab==='dashboard'){
+    content.innerHTML='<div style="font-size:11px;color:var(--text4);text-align:center;padding:20px">Loading stats…</div>';
+    const cutoff7=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-7*86400000));
+    const cutoff30=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-30*86400000));
+    Promise.all([
+      db.collection('community_users').get(),
+      db.collection('community_users').where('lastSeen','>',cutoff7).get(),
+      db.collection('community_users').where('lastSeen','>',cutoff30).get(),
+      db.collection('community_users').where('active','==',true).get(),
+      db.collection('posts').where('ts','>',cutoff7).get(),
+      db.collection('reports').where('resolved','==',false).get(),
+    ]).then(([all,w7,w30,liveSnap,posts7,openReports])=>{
+      if(!document.getElementById('admin-content'))return;
+      const totalMembers=all.size;
+      const active7=w7.size;
+      const active30=w30.size;
+      const liveNow=liveSnap.size;
+      const posts7Count=posts7.size;
+      const openReportsCount=openReports.size;
+      // avg CI across all users
+      let ciSum=0,ciCount=0;
+      all.docs.forEach(d=>{const ci=d.data().ci;if(ci!=null){ciSum+=ci;ciCount++;}});
+      const avgCI=ciCount?Math.round((ciSum/ciCount)*10)/10:0;
+      // retention: users who joined >7 days ago and were seen in last 7 days
+      let retained=0,oldEnough=0;
+      const now=Date.now();
+      all.docs.forEach(d=>{
+        const dd=d.data();
+        const joined=dd.joinedAt?.toMillis?dd.joinedAt.toMillis():0;
+        const seen=dd.lastSeen?.toMillis?dd.lastSeen.toMillis():0;
+        if(now-joined>7*86400000){oldEnough++;if(now-seen<7*86400000)retained++;}
       });
-  } else if(_adminTab==='users') {
-    // Users tab — search community members and ban directly
+      const retentionPct=oldEnough?Math.round(retained/oldEnough*100):null;
+
+      const statBox=(value,label,sub='',color='var(--text1)')=>`
+        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px 10px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:${color};line-height:1">${value}</div>
+          <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:4px">${label}</div>
+          ${sub?`<div style="font-size:9px;color:var(--text5);margin-top:2px">${sub}</div>`:''}
+        </div>`;
+
+      content.innerHTML=`
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);margin-bottom:10px">Overview</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
+          ${statBox(totalMembers,'Total Members')}
+          ${statBox(active7,'Active 7d',`${active30} in 30d`,'var(--accent)')}
+          ${statBox(liveNow,'Live Now','restoring','var(--green)')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
+          ${statBox('CI-'+avgCI,'Avg CI Level','community avg')}
+          ${statBox(posts7Count,'Posts 7d')}
+          ${statBox(openReportsCount,'Open Reports','',openReportsCount>0?'#e74c3c':'var(--text1)')}
+        </div>
+        ${retentionPct!==null?`
+        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:600;color:var(--text2)">7-Day Retention</div>
+            <div style="font-family:Cinzel,serif;font-size:16px;font-weight:700;color:${retentionPct>=50?'var(--green)':retentionPct>=25?'var(--accent)':'#e74c3c'}">${retentionPct}%</div>
+          </div>
+          <div style="height:6px;background:var(--bg-card);border-radius:3px;overflow:hidden">
+            <div style="height:100%;border-radius:3px;background:${retentionPct>=50?'var(--green)':retentionPct>=25?'var(--accent)':'#e74c3c'};width:${retentionPct}%;transition:width .6s"></div>
+          </div>
+          <div style="font-size:9px;color:var(--text5);margin-top:5px">${retained} of ${oldEnough} members seen in last 7 days</div>
+        </div>`:''}
+        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px;margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text4);margin-bottom:10px">CI Distribution</div>
+          ${(()=>{
+            const dist=Array(11).fill(0);
+            all.docs.forEach(d=>{const ci=Math.min(d.data().ci||0,10);dist[ci]++;});
+            const max=Math.max(...dist,1);
+            return dist.map((n,i)=>`
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+                <div style="font-family:Cinzel,serif;font-size:9px;color:var(--accent);width:28px;flex-shrink:0">CI-${i}</div>
+                <div style="flex:1;height:8px;background:var(--bg-card);border-radius:4px;overflow:hidden">
+                  <div style="height:100%;border-radius:4px;background:var(--acc45);width:${Math.round(n/max*100)}%;transition:width .6s"></div>
+                </div>
+                <div style="font-size:9px;color:var(--text4);width:20px;text-align:right">${n}</div>
+              </div>`).join('');
+          })()}
+        </div>`;
+    }).catch(()=>{
+      if(document.getElementById('admin-content'))
+        document.getElementById('admin-content').innerHTML='<div style="font-size:11px;color:var(--text4)">Could not load stats — check Firestore rules.</div>';
+    });
+
+  // ── REPORTS ────────────────────────────────────────────────────────────
+  } else if(_adminTab==='reports'){
+    content.innerHTML='<div style="font-size:11px;color:var(--text4)">Loading reports…</div>';
+    db.collection('reports').where('resolved','==',false).limit(20).get().then(snap=>{
+      if(!document.getElementById('admin-content'))return;
+      if(snap.empty){content.innerHTML='<div style="font-size:11px;color:var(--green);text-align:center;padding:20px">✓ No open reports — community is clean.</div>';return;}
+      const sorted=snap.docs.sort((a,b)=>(b.data().ts?.toMillis?.()??0)-(a.data().ts?.toMillis?.()??0));
+      const fetches=sorted.map(d=>{
+        const r=d.data();
+        return db.collection('posts').doc(r.postId).get()
+          .then(p=>({report:d,post:p.exists?p.data():null})).catch(()=>({report:d,post:null}));
+      });
+      Promise.all(fetches).then(results=>{
+        if(!document.getElementById('admin-content'))return;
+        content.innerHTML=`<div style="font-size:10px;color:var(--text4);margin-bottom:10px;text-transform:uppercase;letter-spacing:.8px">Open Reports (${snap.size})</div>`+
+          results.map(({report:d,post})=>{
+            const r=d.data();
+            const ts=r.ts?.toDate?r.ts.toDate().toLocaleDateString():'?';
+            const preview=post
+              ?`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:8px;margin:6px 0;font-size:11px;color:var(--text2);line-height:1.5">
+                  ${post.title?`<div style="font-weight:700;margin-bottom:3px">${htmlEsc(post.title)}</div>`:''}
+                  <div>${htmlEsc(post.text||'')}</div>
+                  <div style="font-size:9px;color:var(--text5);margin-top:4px">by ${htmlEsc(post.name||'?')} · UID: ${post.uid||'?'}</div>
+                </div>`
+              :'<div style="font-size:10px;color:var(--text5);margin:4px 0">Post already deleted</div>';
+            return`<div style="background:var(--bg-stat);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:12px;margin-bottom:8px">
+              <div style="font-size:10px;color:var(--text4);margin-bottom:4px">Reported ${ts} · by <code style="font-size:9px">${r.reportedBy?.slice(0,12)}…</code></div>
+              ${preview}
+              <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                ${post?`
+                <button onclick="adminDeletePost('${r.postId}','${d.id}')" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:6px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">🗑 Delete Post</button>
+                <button onclick="adminBanUID('${post.uid||''}','${d.id}')" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:6px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban User</button>`:''}
+                <button onclick="adminResolve('${d.id}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✓ Dismiss</button>
+              </div>
+            </div>`;
+          }).join('');
+      });
+    }).catch(e=>{if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load reports.<br><span style="font-size:10px;color:var(--text5)">${e.code||e.message}</span></div>`;});
+
+  // ── USERS ──────────────────────────────────────────────────────────────
+  } else if(_adminTab==='users'){
     content.innerHTML=`
       <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Search Members</div>
-      <div style="display:flex;gap:7px;margin-bottom:10px">
-        <input id="admin-search-inp" class="gold-inp" placeholder="Search by display name..." style="margin:0;flex:1;font-size:12px" oninput="adminSearchUsers()">
-      </div>
-      <div id="admin-user-results"><div style="font-size:11px;color:var(--text4)">Type to search members…</div></div>`;
-  } else if(_adminTab==='coach') {
-    // Coach questions — what users are asking, gaps to fill
-    content.innerHTML='<div style="font-size:11px;color:var(--text4)">Loading coach questions...</div>';
-    db.collection('coach_questions').orderBy('ts','desc').limit(50)
-      .get().then(snap=>{
-        if(!document.getElementById('admin-content'))return;
-        if(snap.empty){
-          content.innerHTML=`<div style="font-size:11px;color:var(--green)">✓ No questions captured yet — users haven't asked Coach anything.</div>`;
-          return;
-        }
-        // Group by question text to find most common
-        const qCounts={};
-        snap.docs.forEach(d=>{
-          const q=d.data().q||'';
-          qCounts[q]=(qCounts[q]||0)+1;
-        });
-        const sorted=Object.entries(qCounts).sort((a,b)=>b[1]-a[1]);
-        content.innerHTML=`
-          <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Coach Questions (${snap.size} total · ${sorted.length} unique)</div>
-          <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.5">These are questions users asked Coach that you can bring to Claude to expand the brain. Most frequent first.</div>
-          ${sorted.map(([q,count])=>`
-            <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px">
-              <div style="font-size:11px;color:var(--text2);flex:1;line-height:1.5">${htmlEsc(q)}</div>
-              ${count>1?`<span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:1px 7px;font-size:9px;color:var(--accent);flex-shrink:0;white-space:nowrap">×${count}</span>`:''}
-            </div>`).join('')}
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--stat-border)">
-            <button onclick="adminClearCoachQuestions()" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:6px 14px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Clear all questions</button>
-          </div>`;
-      }).catch(e=>{
-        if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load — update Firestore rules to allow admin reads on coach_questions.<br><span style="font-size:10px;color:var(--text5)">${e.code||e.message}</span></div>`;
+      <input id="admin-search-inp" class="gold-inp" placeholder="Search by name…" style="margin-bottom:10px;font-size:12px" oninput="adminSearchUsers()">
+      <div id="admin-user-results" style="font-size:11px;color:var(--text4)">Type to search…</div>`;
+
+  // ── BROADCAST ──────────────────────────────────────────────────────────
+  } else if(_adminTab==='broadcast'){
+    db.collection('broadcast').doc('active').get().then(snap=>{
+      if(!document.getElementById('admin-content'))return;
+      const current=snap.exists?snap.data().msg:'';
+      content.innerHTML=`
+        <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Pinned Announcement</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.65">
+          Appears at the top of the Community tab for all users. Useful for updates, welcome messages, or announcements. Leave blank to hide.
+        </div>
+        <textarea id="admin-broadcast-inp" placeholder="Write your announcement here… (leave blank to clear)"
+          style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:12px;width:100%;outline:none;resize:vertical;min-height:90px;font-family:DM Sans,sans-serif;margin-bottom:10px">${htmlEsc(current)}</textarea>
+        <div style="display:flex;gap:8px">
+          <button onclick="adminClearBroadcast()" style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px 16px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Clear</button>
+          <button onclick="adminSaveBroadcast()" style="flex:1;background:linear-gradient(135deg,var(--acc18),var(--accent));border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif">📣 Publish</button>
+        </div>
+        ${current?`<div style="margin-top:12px;background:var(--acc6);border:1px solid var(--acc18);border-radius:8px;padding:10px 12px">
+          <div style="font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Currently Live</div>
+          <div style="font-size:11px;color:var(--text2)">${htmlEsc(current)}</div>
+        </div>`:'<div style="margin-top:10px;font-size:10px;color:var(--text5)">No announcement currently set.</div>'}`;
+    }).catch(()=>{if(content)content.innerHTML='<div style="font-size:11px;color:var(--text4)">Could not load broadcast data.</div>';});
+
+  // ── COACH ──────────────────────────────────────────────────────────────
+  } else if(_adminTab==='coach'){
+    content.innerHTML='<div style="font-size:11px;color:var(--text4)">Loading coach questions…</div>';
+    db.collection('coach_questions').orderBy('ts','desc').limit(100).get().then(snap=>{
+      if(!document.getElementById('admin-content'))return;
+      if(snap.empty){content.innerHTML='<div style="font-size:11px;color:var(--green);text-align:center;padding:20px">✓ No questions yet.</div>';return;}
+      const qMap={};
+      snap.docs.forEach(d=>{
+        const q=d.data().q||'';
+        if(!qMap[q])qMap[q]={count:0,ci:[],ts:d.data().ts};
+        qMap[q].count++;
+        qMap[q].ci.push(d.data().ci||0);
       });
+      const sorted=Object.entries(qMap).sort((a,b)=>b[1].count-a[1].count);
+      // Group: unanswered (count>1) vs single
+      const trending=sorted.filter(([,v])=>v.count>1);
+      const single=sorted.filter(([,v])=>v.count===1);
+      const renderQ=([q,v])=>`
+        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:var(--text2);line-height:1.5">${htmlEsc(q)}</div>
+            <div style="font-size:9px;color:var(--text5);margin-top:3px">avg CI: ${Math.round(v.ci.reduce((a,b)=>a+b,0)/v.ci.length*10)/10}</div>
+          </div>
+          ${v.count>1?`<span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0">×${v.count}</span>`:''}
+        </div>`;
+      content.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px">${snap.size} questions · ${sorted.length} unique</div>
+          <button onclick="adminClearCoachQuestions()" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:4px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Clear all</button>
+        </div>
+        <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.5;background:var(--acc6);border:1px solid var(--acc18);border-radius:8px;padding:8px 10px">
+          💡 Bring the trending questions to Claude to expand the Coach brain.
+        </div>
+        ${trending.length?`<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:7px;text-transform:uppercase;letter-spacing:.8px">🔥 Trending (asked multiple times)</div>${trending.map(renderQ).join('')}`:''}
+        ${single.length?`<div style="font-size:10px;font-weight:700;color:var(--text4);margin:10px 0 7px;text-transform:uppercase;letter-spacing:.8px">Single asks</div>${single.map(renderQ).join('')}`:''}`;
+    }).catch(e=>{if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load — check Firestore rules.<br><span style="font-size:10px;color:var(--text5)">${e.code||e.message}</span></div>`;});
   }
 }
 
@@ -4203,86 +4319,83 @@ function adminSearchUsers(){
   const q=(document.getElementById('admin-search-inp')?.value||'').toLowerCase().trim();
   const results=document.getElementById('admin-user-results');
   if(!results)return;
-  if(!q){results.innerHTML='<div style="font-size:11px;color:var(--text4)">Type to search members…</div>';return;}
-  // Search loaded community users (already in memory)
+  if(!q){results.innerHTML='<div style="font-size:11px;color:var(--text4)">Type to search…</div>';return;}
   const matches=commState.users.filter(u=>(u.name||'').toLowerCase().includes(q)||(u.nameLower||'').includes(q));
-  if(!matches.length){
-    // Also try Firestore if not in memory (user may not be in 7-day window)
-    results.innerHTML='<div style="font-size:11px;color:var(--text4)">Searching…</div>';
-    db.collection('community_users').orderBy('nameLower').startAt(q).endAt(q+'\uf8ff').limit(10)
-      .get().then(snap=>{
-        if(!document.getElementById('admin-user-results'))return;
-        if(snap.empty){document.getElementById('admin-user-results').innerHTML='<div style="font-size:11px;color:var(--text4)">No members found</div>';return;}
-        document.getElementById('admin-user-results').innerHTML=snap.docs.map(d=>adminUserCard(d.id,d.data())).join('');
-      }).catch(()=>{document.getElementById('admin-user-results').innerHTML='<div style="font-size:11px;color:var(--text4)">Search failed</div>';});
-    return;
-  }
-  results.innerHTML=matches.map(u=>adminUserCard(u.uid,u)).join('');
+  if(matches.length){results.innerHTML=matches.map(u=>adminUserCard(u.uid,u)).join('');return;}
+  results.innerHTML='<div style="font-size:11px;color:var(--text4)">Searching…</div>';
+  db.collection('community_users').orderBy('nameLower').startAt(q).endAt(q+'\uf8ff').limit(10).get()
+    .then(snap=>{
+      if(!document.getElementById('admin-user-results'))return;
+      document.getElementById('admin-user-results').innerHTML=snap.empty
+        ?'<div style="font-size:11px;color:var(--text4)">No members found</div>'
+        :snap.docs.map(d=>adminUserCard(d.id,d.data())).join('');
+    }).catch(()=>{if(document.getElementById('admin-user-results'))document.getElementById('admin-user-results').innerHTML='<div style="font-size:11px;color:var(--text4)">Search failed</div>';});
 }
 
 function adminUserCard(uid,u){
   const banned=u.banned===true;
-  return`<div style="background:var(--bg-stat);border:1px solid ${banned?'rgba(200,50,50,.3)':'var(--stat-border)'};border-radius:8px;padding:10px;margin-bottom:7px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div style="font-size:22px">${u.avatar||'🌱'}</div>
+  return`<div style="background:var(--bg-stat);border:1px solid ${banned?'rgba(200,50,50,.3)':'var(--stat-border)'};border-radius:10px;padding:12px;margin-bottom:7px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-size:26px;flex-shrink:0">${u.avatar||'🌱'}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700;color:var(--text1)">${htmlEsc(u.name||'?')} ${banned?'<span style="font-size:9px;color:#e74c3c;background:rgba(200,50,50,.1);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:1px 6px">BANNED</span>':''}</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[Math.min(u.ci||0,10)].ci} · ${u.sessions||0} sessions · UID: <code style="font-size:9px">${uid.slice(0,12)}…</code></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text1)">${htmlEsc(u.name||'?')}${banned?' <span style="font-size:9px;color:#e74c3c;background:rgba(200,50,50,.1);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:1px 6px">BANNED</span>':''}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:2px">${LEVELS[Math.min(u.ci||0,10)].ci} · ${u.sessions||0} sessions · ${u.streak||0}🔥</div>
+        <div style="font-size:9px;color:var(--text5);margin-top:1px;word-break:break-all">${uid}</div>
       </div>
     </div>
     <div style="display:flex;gap:6px">
       ${!banned
-        ?`<button onclick="adminBanUID('${uid}',null)" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:5px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban</button>`
-        :`<button onclick="adminUnbanUID('${uid}')" style="background:rgba(34,168,90,.06);border:1px solid rgba(34,168,90,.25);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--green);cursor:pointer;font-family:DM Sans,sans-serif">✓ Unban</button>`
+        ?`<button onclick="adminBanUID('${uid}',null)" style="flex:1;background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:7px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban</button>`
+        :`<button onclick="adminUnbanUID('${uid}')" style="flex:1;background:rgba(34,168,90,.06);border:1px solid rgba(34,168,90,.25);border-radius:6px;padding:7px;font-size:11px;color:var(--green);cursor:pointer;font-family:DM Sans,sans-serif">✓ Unban</button>`
       }
     </div>
   </div>`;
 }
 
+function adminSaveBroadcast(){
+  const msg=(document.getElementById('admin-broadcast-inp')?.value||'').trim();
+  if(!db)return;
+  const ref=db.collection('broadcast').doc('active');
+  (msg?ref.set({msg,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}):ref.delete())
+    .then(()=>{showToast(msg?'📣 Announcement published!':'✓ Announcement cleared');adminLoadTab();})
+    .catch(()=>showToast('⚠ Could not save — check Firestore rules'));
+}
+
+function adminClearBroadcast(){
+  if(!db)return;
+  db.collection('broadcast').doc('active').delete()
+    .then(()=>{showToast('✓ Announcement cleared');adminLoadTab();})
+    .catch(()=>showToast('⚠ Could not clear'));
+}
+
 function adminDeletePost(postId,reportId){
   if(!db)return;
-  db.collection('posts').doc(postId).delete().then(()=>{
-    if(reportId)adminResolve(reportId);
-    else{showToast('✓ Post deleted');adminLoadTab();}
-  }).catch(()=>showToast('⚠ Could not delete post'));
+  db.collection('posts').doc(postId).delete()
+    .then(()=>{if(reportId)adminResolve(reportId);else{showToast('✓ Post deleted');adminLoadTab();}})
+    .catch(()=>showToast('⚠ Could not delete post'));
 }
 
 function adminResolve(reportId){
   if(!db)return;
   db.collection('reports').doc(reportId).update({resolved:true}).catch(()=>{});
-  showToast('✓ Report resolved');
-  adminLoadTab();
+  showToast('✓ Report resolved');adminLoadTab();
 }
 
 function adminBanUID(uid,reportId){
   if(!uid||!db){showToast('No UID');return;}
-  confirmDialog(
-    'Ban this user?',
-    'They will be removed from the community permanently. They cannot rejoin even if they delete and recreate their profile.',
-    'Ban User',
-    ()=>{
-      // Write to separate bans collection — survives community_users doc deletion
-      const batch=db.batch();
-      batch.set(db.collection('bans').doc(uid),{
-        banned:true,
-        bannedAt:firebase.firestore.FieldValue.serverTimestamp(),
-        bannedBy:fbUID
-      });
-      // Also mark on community_users for real-time listener filtering
-      batch.set(db.collection('community_users').doc(uid),{banned:true},{merge:true});
-      batch.commit()
-        .then(()=>{
-          showToast('✓ User banned');
-          if(reportId)db.collection('reports').doc(reportId).update({resolved:true}).catch(()=>{});
-          adminLoadTab();
-        }).catch(()=>showToast('⚠ Could not ban — check Firestore rules'));
-    }
-  );
+  confirmDialog('Ban this user?','They will be permanently removed from the community.','Ban User',()=>{
+    const batch=db.batch();
+    batch.set(db.collection('bans').doc(uid),{banned:true,bannedAt:firebase.firestore.FieldValue.serverTimestamp(),bannedBy:fbUID});
+    batch.set(db.collection('community_users').doc(uid),{banned:true},{merge:true});
+    batch.commit()
+      .then(()=>{showToast('✓ User banned');if(reportId)db.collection('reports').doc(reportId).update({resolved:true}).catch(()=>{});adminLoadTab();})
+      .catch(()=>showToast('⚠ Could not ban — check Firestore rules'));
+  });
 }
 
 function adminUnbanUID(uid){
   if(!uid||!db)return;
-  confirmDialog('Unban this user?','They will be able to participate in the community again.','Unban',()=>{
+  confirmDialog('Unban this user?','They will be able to participate again.','Unban',()=>{
     const batch=db.batch();
     batch.delete(db.collection('bans').doc(uid));
     batch.update(db.collection('community_users').doc(uid),{banned:false});
@@ -4294,13 +4407,10 @@ function adminUnbanUID(uid){
 
 function adminClearCoachQuestions(){
   if(!db)return;
-  confirmDialog('Clear all coach questions?','This will delete the captured question log. Do this after reviewing and updating the Coach brain.','Clear All',()=>{
+  confirmDialog('Clear all coach questions?','This will delete the captured question log.','Clear All',()=>{
     db.collection('coach_questions').get().then(snap=>{
-      const batch=db.batch();
-      snap.docs.forEach(d=>batch.delete(d.ref));
-      return batch.commit();
-    }).then(()=>{showToast('✓ Coach questions cleared');adminLoadTab();})
-      .catch(()=>showToast('⚠ Could not clear'));
+      const batch=db.batch();snap.docs.forEach(d=>batch.delete(d.ref));return batch.commit();
+    }).then(()=>{showToast('✓ Cleared');adminLoadTab();}).catch(()=>showToast('⚠ Could not clear'));
   });
 }
 
