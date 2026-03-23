@@ -374,6 +374,7 @@ function loadProfile(pid){
   if(!char.communityAvatar)char.communityAvatar='🌱';
   if(char.communityBio===undefined)char.communityBio='';
   if(char.communityShareStats===undefined)char.communityShareStats=true;
+  if(!char.dayNotes)char.dayNotes={};
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
   const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
@@ -477,7 +478,7 @@ function deleteProfile(){
   localStorage.removeItem('rst-comm-pending');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,dayNotes:{}};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
   stopInterval();
   showProfileScreen=true;
@@ -1157,7 +1158,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.0</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.2</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2235,11 +2236,16 @@ function renderReports(){
     if(d===null)return`<div></div>`;
     const dayNum=parseInt(d.split('-')[2]);
     const isGoal=goalDaysSet.has(d),isRest=restDaySet.has(d),isActive=activeDays.has(d),isToday=d===td;
-    const bg=isGoal?'rgba(34,168,90,.55)':isRest?'rgba(100,120,200,.4)':isActive?'var(--acc45)':'var(--bg-stat)';
-    const textCol=isGoal||isRest||isActive?'rgba(255,255,255,.9)':(isToday?'var(--accent)':'var(--text5)');
+    const dayNote=char.dayNotes&&char.dayNotes[d];
+    const noteColor=dayNote?.color||null;
+    // Note color overrides default bg if set; otherwise use standard priority
+    const bg=noteColor?noteColor+'99':isGoal?'rgba(34,168,90,.55)':isRest?'rgba(100,120,200,.4)':isActive?'var(--acc45)':'var(--bg-stat)';
+    const border=isToday?'1.5px solid var(--accent)':noteColor?`1px solid ${noteColor}`:'1px solid transparent';
+    const textCol=noteColor||isGoal||isRest||isActive?'rgba(255,255,255,.9)':(isToday?'var(--accent)':'var(--text5)');
+    const noteDot=dayNote?`<span style="position:absolute;bottom:2px;right:2px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.8)"></span>`:'';
     return`<div onclick="showDayDetail('${d}')"
-      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${isToday?'1.5px solid var(--accent)':'1px solid transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none"
-      title="${d}">${dayNum}</div>`;
+      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative"
+      title="${d}">${dayNum}${noteDot}</div>`;
   }).join('');
   const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
   const calMonthKey=`${year}-${String(month+1).padStart(2,'0')}`;
@@ -2328,6 +2334,7 @@ function renderReports(){
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--acc45);vertical-align:middle;margin-right:3px"></span>Active</span>
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(34,168,90,.55);vertical-align:middle;margin-right:3px"></span>Goal met</span>
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(100,120,200,.4);vertical-align:middle;margin-right:3px"></span>Rest day</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.6);border:1px solid var(--text4);vertical-align:middle;margin-right:3px"></span>Has note</span>
     </div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
@@ -2400,6 +2407,7 @@ function showDayDetail(dateStr){
       ?`<div style="text-align:center;padding:18px;color:var(--text5);font-size:12px">Rest day — no sessions logged.</div>`
       :`<div style="text-align:center;padding:18px;color:var(--text5);font-size:12px">No sessions logged on this day.</div>`;
 
+  const dayNote=(char.dayNotes&&char.dayNotes[dateStr])||null;
   el.innerHTML=`<div class="sheet" style="max-height:80vh">
     <div class="sheet-handle"></div>
     <div style="margin-bottom:12px">
@@ -2410,12 +2418,99 @@ function showDayDetail(dateStr){
       </div>
       ${totalMins>0&&!goalMet?`<div style="font-size:10px;color:var(--text5);margin-top:4px">${fmtMin(goal-totalMins)} short of daily goal</div>`:''}
     </div>
-    <div style="max-height:52vh;overflow-y:auto">${sessionItems}</div>
-    <button class="btn-ghost" onclick="document.getElementById('day-detail-ov').remove()" style="width:100%;margin-top:14px">Close</button>
+    <div style="max-height:42vh;overflow-y:auto">${sessionItems}</div>
+    ${dayNote?`<div style="margin-top:12px;border-radius:10px;padding:10px 12px;background:${dayNote.color}22;border-left:3px solid ${dayNote.color};border-right:1px solid ${dayNote.color}44;border-top:1px solid ${dayNote.color}44;border-bottom:1px solid ${dayNote.color}44">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:${dayNote.color};margin-bottom:4px">Day Note</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">${htmlEsc(dayNote.note)}</div>
+    </div>`:''}
+    <div id="day-note-area" style="margin-top:12px">
+      ${dayNote
+        ?`<button onclick="showDayNoteEditor('${dateStr}')" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✏ Edit note</button>`
+        :`<button onclick="showDayNoteEditor('${dateStr}')" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">📝 Add a note for this day</button>`
+      }
+    </div>
+    <button class="btn-ghost" onclick="document.getElementById('day-detail-ov').remove()" style="width:100%;margin-top:8px">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
 }
+
+const NOTE_COLORS=[
+  {hex:'#e74c3c',label:'Red'},
+  {hex:'#e67e22',label:'Orange'},
+  {hex:'#f1c40f',label:'Yellow'},
+  {hex:'#2ecc71',label:'Green'},
+  {hex:'#3498db',label:'Blue'},
+  {hex:'#9b59b6',label:'Purple'},
+  {hex:'#1abc9c',label:'Teal'},
+  {hex:'#e91e8c',label:'Pink'},
+];
+let _noteEditorColor='#3498db'; // default color
+
+function showDayNoteEditor(dateStr){
+  const ex=document.getElementById('note-editor-ov');if(ex)ex.remove();
+  const existing=(char.dayNotes&&char.dayNotes[dateStr])||null;
+  _noteEditorColor=existing?.color||'#3498db';
+  const d=new Date(dateStr+'T12:00:00');
+  const label=d.toLocaleDateString('en',{weekday:'long'})+', '+fmtDateLong(dateStr);
+  const el=document.createElement('div');
+  el.className='overlay';el.id='note-editor-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:2px">Day Note</div>
+    <div style="font-size:11px;color:var(--text4);margin-bottom:14px">${label}</div>
+    <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Colour</div>
+    <div id="note-color-row" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      ${NOTE_COLORS.map(c=>`
+        <button onclick="selectNoteColor('${c.hex}')" id="ncol-${c.hex.slice(1)}"
+          style="width:32px;height:32px;border-radius:50%;background:${c.hex};border:${_noteEditorColor===c.hex?'3px solid var(--text1)':'2px solid transparent'};cursor:pointer;transition:border .15s;flex-shrink:0" title="${c.label}"></button>
+      `).join('')}
+    </div>
+    <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Note</div>
+    <textarea id="day-note-inp" placeholder="How did you feel? Anything notable about today..."
+      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:13px;width:100%;outline:none;resize:vertical;min-height:80px;font-family:'DM Sans',sans-serif;margin-bottom:14px">${existing?htmlEsc(existing.note):''}</textarea>
+    <div style="display:flex;gap:8px">
+      ${existing?`<button onclick="deleteDayNote('${dateStr}')" style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Delete</button>`:''}
+      <button class="btn-ghost" onclick="document.getElementById('note-editor-ov').remove()" style="flex:1">Cancel</button>
+      <button class="btn-gold" onclick="saveDayNote('${dateStr}')" style="flex:2">Save Note</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+  document.getElementById('day-note-inp')?.focus();
+}
+
+function selectNoteColor(hex){
+  _noteEditorColor=hex;
+  NOTE_COLORS.forEach(c=>{
+    const btn=document.getElementById('ncol-'+c.hex.slice(1));
+    if(btn)btn.style.border=c.hex===hex?'3px solid var(--text1)':'2px solid transparent';
+  });
+}
+
+function saveDayNote(dateStr){
+  const note=(document.getElementById('day-note-inp')?.value||'').trim();
+  if(!note){showToast('Please write something first');return;}
+  if(!char.dayNotes)char.dayNotes={};
+  char.dayNotes[dateStr]={note,color:_noteEditorColor};
+  saveChar();
+  document.getElementById('note-editor-ov')?.remove();
+  document.getElementById('day-detail-ov')?.remove();
+  showToast('📝 Note saved');
+  // Refresh calendar if on reports tab
+  if(tab==='reports'){const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}}
+}
+
+function deleteDayNote(dateStr){
+  if(!char.dayNotes)return;
+  delete char.dayNotes[dateStr];
+  saveChar();
+  document.getElementById('note-editor-ov')?.remove();
+  document.getElementById('day-detail-ov')?.remove();
+  showToast('Note deleted');
+  if(tab==='reports'){const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}}
+}
+
 let expandedBadgeGroups=new Set(['first']); // first-steps open by default
 function toggleBadgeGroup(id){
   if(expandedBadgeGroups.has(id))expandedBadgeGroups.delete(id);
@@ -2548,7 +2643,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.0</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.2</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2621,7 +2716,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.0';
+    const version='v2.2';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -4144,7 +4239,17 @@ function adminTap(){
 }
 
 function showAdminPanel(){
-  if(!db){showToast('Not connected to Firebase');return;}
+  // If Firebase hasn't loaded yet (not in community), init it now for admin use
+  if(!db){
+    showToast('Connecting…');
+    initFirebase();
+    // Wait for auth to settle then retry
+    setTimeout(()=>{
+      if(!db||fbUID!==ADMIN_UID){showToast('Not authorised — sign in with your Google account first');return;}
+      showAdminPanel();
+    },2500);
+    return;
+  }
   if(fbUID!==ADMIN_UID){showToast('Not authorised');return;}
   const ex=document.getElementById('admin-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='admin-ov';
