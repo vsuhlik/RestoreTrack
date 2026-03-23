@@ -3282,6 +3282,7 @@ function syncPresence(){
     achievements:char.communityShareStats!==false?(char.achievements||[]):[],
     active:running,
     method:running?(activeTimer.method||''):'',
+    sessionStartedAt:running&&activeTimer.startedAt?new Date(activeTimer.startedAt):null,
     todayMins:todayMin(),
     lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
     joinedAt:firebase.firestore.FieldValue.serverTimestamp(), // only sets on first write due to merge:true below
@@ -3472,9 +3473,14 @@ function renderCommunity(){
   const now=Date.now();
   const running=!!activeTimer&&!!activeTimer.startedAt;
 
+
   const active=commState.users.filter(u=>{
-    if(!u.active||!u.lastSeen)return false;
-    return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
+    if(!u.active)return false;
+    if(u.sessionStartedAt){
+      const startMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
+      return(now-startMs)<24*60*60*1000;
+    }
+    return u.lastSeen&&(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
