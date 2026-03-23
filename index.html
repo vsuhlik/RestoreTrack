@@ -1157,7 +1157,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.8</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.9</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2156,6 +2156,8 @@ function openCompareViewer(){
 }
 
 // ── REPORTS ────────────────────────────────────────────────────────────────────
+function repNavPrev(){const firstLog=logs.length?logs[logs.length-1].date.slice(0,7):"2020-01";const cur=`${_repYear}-${String(_repMonth+1).padStart(2,"0")}`;if(cur<=firstLog)return;_repMonth--;if(_repMonth<0){_repMonth=11;_repYear--;}const c=document.getElementById("content");if(c){c.innerHTML=renderReports();attachEvents();}}
+function repNavNext(){const now=new Date();if(_repYear===now.getFullYear()&&_repMonth===now.getMonth())return;_repMonth++;if(_repMonth>11){_repMonth=0;_repYear++;}const c=document.getElementById("content");if(c){c.innerHTML=renderReports();attachEvents();}}
 function renderReports(){
   const td=today();
   const liveMins=liveTimerTodayMins();
@@ -2287,9 +2289,9 @@ function renderReports(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Activity</div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="if(canGoPrev){_repMonth--;if(_repMonth<0){_repMonth=11;_repYear--;};document.getElementById('content').innerHTML=renderReports();attachEvents();}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoPrev?'var(--text2)':'var(--text6)'};cursor:${canGoPrev?'pointer':'default'};font-family:DM Sans,sans-serif">‹</button>
+      <button onclick="repNavPrev()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:DM Sans,sans-serif">‹</button>
       <span style="font-size:11px;font-weight:600;color:var(--text2);min-width:100px;text-align:center">${monthName}</span>
-      <button onclick="if(canGoNext){_repMonth++;if(_repMonth>11){_repMonth=0;_repYear++;};document.getElementById('content').innerHTML=renderReports();attachEvents();}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoNext?'var(--text2)':'var(--text6)'};cursor:${canGoNext?'pointer':'default'};font-family:DM Sans,sans-serif">›</button>
+      <button onclick="repNavNext()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:DM Sans,sans-serif">›</button>
     </div>
   </div>
   <div class="card">
@@ -2505,7 +2507,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.8</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.9</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2578,7 +2580,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v1.8';
+    const version='v1.9';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
