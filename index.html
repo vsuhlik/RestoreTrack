@@ -256,6 +256,7 @@ const THEMES=[
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let profiles=[],currentPid=null,currentTheme='shadow';
+let _repYear=new Date().getFullYear(),_repMonth=new Date().getMonth();
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
   dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
@@ -272,6 +273,9 @@ let currentCoachCTA=null;
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
 const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${r}m`:`${h}h`};
+const fmtDur=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;if(h<24)return r?`${h}h ${r}m`:`${h}h`;const d=Math.floor(h/24),rh=h%24;if(rh===0)return r?`${d}d ${r}m`:`${d}d`;return r?`${d}d ${rh}h ${r}m`:`${d}d ${rh}h`;};
+const fmtDate=s=>{if(!s)return'';const p=s.split('-');return`${p[2]}/${p[1]}/${p[0].slice(2)}`;};
+const fmtDateLong=s=>{if(!s)return'';const p=s.split('-');return`${p[2]}/${p[1]}/${p[0]}`;};
 // HTML escape — always use for user-generated content rendered into innerHTML
 const htmlEsc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
@@ -729,7 +733,7 @@ function openPhotoViewer(photo,eraPhotos){
       ${era.length>1?`<div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text5)">${era.length-i} of ${era.length}</div>`:''}
       <div id="viewer-meta" style="margin-top:10px;text-align:center;width:100%">
         <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">${p.ci}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px">${p.date}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">${fmtDate(p.date)}</div>
         ${p.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${p.note}</div>`:'<div style="font-size:11px;color:var(--text5);margin-top:6px">No caption</div>'}
       </div>
       <div id="viewer-edit-area"></div>
@@ -1152,7 +1156,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.0</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.1</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1303,7 +1307,7 @@ function buildWeeklySummary(){
 
   // Format the week range label
   const weekEnd=prevWeekDates[6];
-  const fmtShort=d=>new Date(d+'T12:00:00').toLocaleDateString('en',{month:'short',day:'numeric'});
+  const fmtShort=d=>{const p=d.split('-');return`${parseInt(p[2])} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]}`;};
   const weekLabel=`${fmtShort(prevMondayStr)} – ${fmtShort(weekEnd)}`;
 
   return`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:9px;position:relative">
@@ -1459,7 +1463,7 @@ function renderToday(){
       <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:1px;flex-shrink:0">Last</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:11px;font-weight:600;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lastLog.method}</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:1px">${lastLog.date} · ${fmtMin(lastLog.dur)}</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">${fmtDate(lastLog.date)} · ${fmtMin(lastLog.dur)}</div>
       </div>
     </div>`:'';
   const lastMethod=char.lastMethod||null;
@@ -1677,7 +1681,7 @@ function renderJourney(){
       <div style="font-size:11px;color:var(--text4);margin-bottom:12px">
         Restoring for <strong style="color:var(--text2)">${monthsRestoring>0?monthsRestoring+' month'+(monthsRestoring!==1?'s':''):daysRestoring+' day'+(daysRestoring!==1?'s':'')}</strong>
         · <strong style="color:var(--text2)">${char.sessions}</strong> sessions
-        · <strong style="color:var(--text2)">${Math.floor(char.minutes/60)}</strong> hours
+        · <strong style="color:var(--text2)">${fmtDur(char.minutes)}</strong>
       </div>
       ${timelineEntries.map((e,i)=>`
         <div style="display:flex;gap:10px;align-items:flex-start;${i<timelineEntries.length-1?'margin-bottom:4px':''}">
@@ -1687,7 +1691,7 @@ function renderJourney(){
           </div>
           <div style="flex:1;padding-top:4px;${i<timelineEntries.length-1?'padding-bottom:8px':''}">
             <div style="font-size:12px;font-weight:600;color:${e.ci===ci?'var(--accent)':'var(--text2)'}">${e.label}</div>
-            <div style="font-size:10px;color:var(--text5);margin-top:2px">${e.date}</div>
+            <div style="font-size:10px;color:var(--text5);margin-top:2px">${fmtDate(e.date)}</div>
           </div>
         </div>`).join('')}
     </div>`:'';
@@ -1822,7 +1826,7 @@ function renderPhotos(){
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
               <span style="font-family:Cinzel,serif;font-size:10px;font-weight:700;color:var(--accent)">${p.ci}</span>
-              <span style="font-size:10px;color:var(--text5)">${p.date}</span>
+              <span style="font-size:10px;color:var(--text5)">${fmtDate(p.date)}</span>
             </div>
             ${p.note?`<div style="font-size:10px;color:var(--text4);font-style:italic;line-height:1.5">${p.note}</div>`:''}
             <button class="del-btn" onclick="confirmDialog('Delete this photo?','This photo will be permanently removed. This cannot be undone.','Delete',()=>deletePhoto(${p.id}))" style="margin-top:6px">Delete</button>
@@ -2111,7 +2115,7 @@ function openCompareViewer(){
           </div>
           <div style="text-align:center;margin-top:5px">
             <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent)">${pA.ci}</div>
-            <div style="font-size:10px;color:var(--text4)">${pA.date}</div>
+            <div style="font-size:10px;color:var(--text4)">${fmtDate(pA.date)}</div>
             ${pA.note?`<div style="font-size:9px;color:var(--text5);font-style:italic;margin-top:2px">${pA.note.slice(0,30)}</div>`:''}
           </div>
         </div>
@@ -2121,7 +2125,7 @@ function openCompareViewer(){
           </div>
           <div style="text-align:center;margin-top:5px">
             <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent)">${pB.ci}</div>
-            <div style="font-size:10px;color:var(--text4)">${pB.date}</div>
+            <div style="font-size:10px;color:var(--text4)">${fmtDate(pB.date)}</div>
             ${pB.note?`<div style="font-size:9px;color:var(--text5);font-style:italic;margin-top:2px">${pB.note.slice(0,30)}</div>`:''}
           </div>
         </div>
@@ -2177,14 +2181,13 @@ function renderReports(){
     return`<div style="margin-bottom:9px">
       <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
         <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${method}</span>
-        <span style="color:${c.color};flex-shrink:0">${fmtMin(mins)} · ${p}%</span>
+        <span style="color:${c.color};flex-shrink:0">${fmtDur(mins)} · ${p}%</span>
       </div>
       <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
     </div>`;
   }).join('');
-  // Current month calendar
-  const now=new Date();
-  const year=now.getFullYear(),month=now.getMonth();
+  // Calendar — navigable month
+  const year=_repYear,month=_repMonth;
   const daysInMonth=new Date(year,month+1,0).getDate();
   const firstDow=new Date(year,month,1).getDay(); // 0=Sun
   const calDays=[];
@@ -2209,7 +2212,9 @@ function renderReports(){
       title="${d}">${dayNum}</div>`;
   }).join('');
   const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
-  const monthTotal=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0)+liveMins;
+  const calMonthKey=`${year}-${String(month+1).padStart(2,'0')}`;
+  const isCurrentMonth=(calMonthKey===td.slice(0,7));
+  const monthTotal=logs.filter(l=>l.date.slice(0,7)===calMonthKey).reduce((a,l)=>a+l.dur,0)+(isCurrentMonth?liveMins:0);
   // Session History — grouped by method, expandable
   const histByMethod={};
   logs.slice(0,200).forEach(l=>{
@@ -2225,7 +2230,7 @@ function renderReports(){
       const rows=sess.map(l=>`
         <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-top:1px solid var(--stat-border)">
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;color:var(--text2)">${l.date} · ${fmtMin(l.dur)}</div>
+            <div style="font-size:11px;color:var(--text2)">${fmtDate(l.date)} · ${fmtMin(l.dur)}</div>
             ${l.notes?`<div style="font-size:10px;color:var(--text4);margin-top:2px;font-style:italic">${htmlEsc(l.notes)}</div>`:''}
           </div>
           <button class="del-btn" data-id="${l.id}" style="flex-shrink:0;margin-left:8px;display:flex;align-items:center">${IC.x(13)}</button>
@@ -2236,7 +2241,7 @@ function renderReports(){
           <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text1)">${method}</div>
-            <div style="font-size:10px;color:var(--text4);margin-top:1px">${sess.length} session${sess.length!==1?'s':''} · ${fmtMin(totalMins)} total · Last: ${latest.date}</div>
+            <div style="font-size:10px;color:var(--text4);margin-top:1px">${sess.length} session${sess.length!==1?'s':''} · ${fmtDur(totalMins)} total · Last: ${fmtDate(latest.date)}</div>
           </div>
           <span style="font-size:10px;color:var(--text5);flex-shrink:0">▾</span>
         </button>
@@ -2254,23 +2259,35 @@ function renderReports(){
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
         <span style="font-size:13px">${cat.icon}</span>
         <span style="font-size:11px;font-weight:600;color:var(--text2)">${l.method}</span>
-        <span style="font-size:10px;color:var(--text5);margin-left:auto">${l.date} · ${fmtMin(l.dur)}</span>
+        <span style="font-size:10px;color:var(--text5);margin-left:auto">${fmtDate(l.date)} · ${fmtMin(l.dur)}</span>
       </div>
       <div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${htmlEsc(l.notes)}</div>
     </div>`}).join(''):`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
 
-  const monthName=now.toLocaleString('default',{month:'long',year:'numeric'});
+  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthName=`${monthNames[month]} ${year}`;
+  const nowD=new Date(),todayYear=nowD.getFullYear(),todayMonth=nowD.getMonth();
+  const canGoNext=!(year===todayYear&&month===todayMonth);
+  const firstLogDate=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
+  const canGoPrev=(calMonthKey>firstLogDate);
   return`<div class="page-title">Reports</div>
   <div class="page-sub">Your restoration journey in numbers.</div>
   <div class="sg2">
-    <div class="stat"><div class="sv" style="font-size:15px">${fmtMin(weekTotal)}</div><div class="sl">This Week</div></div>
-    <div class="stat"><div class="sv" style="font-size:15px">${fmtMin(monthTotal)}</div><div class="sl">This Month</div></div>
-    <div class="stat"><div class="sv" style="font-size:15px">${(char.minutes/60).toFixed(1)}h</div><div class="sl">All Time</div></div>
+    <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(weekTotal)}</div><div class="sl">This Week</div></div>
+    <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(monthTotal)}</div><div class="sl">${isCurrentMonth?'This Month':monthName}</div></div>
+    <div class="stat"><div class="sv" style="font-size:13px">${fmtDur(char.minutes)}</div><div class="sl">All Time</div></div>
     <div class="stat"><div class="sv" style="font-size:15px;color:#F59E0B">${char.streak}</div><div class="sl">Best Streak</div></div>
   </div>
   <div class="sec-title">This Week</div>
   <div class="card"><div class="bar-wrap">${bars}</div></div>
-  <div class="sec-title">Activity — ${monthName}</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Activity</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="if(canGoPrev){_repMonth--;if(_repMonth<0){_repMonth=11;_repYear--;};document.getElementById('content').innerHTML=renderReports();attachEvents();}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoPrev?'var(--text2)':'var(--text6)'};cursor:${canGoPrev?'pointer':'default'};font-family:DM Sans,sans-serif">‹</button>
+      <span style="font-size:11px;font-weight:600;color:var(--text2);min-width:100px;text-align:center">${monthName}</span>
+      <button onclick="if(canGoNext){_repMonth++;if(_repMonth>11){_repMonth=0;_repYear++;};document.getElementById('content').innerHTML=renderReports();attachEvents();}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoNext?'var(--text2)':'var(--text6)'};cursor:${canGoNext?'pointer':'default'};font-family:DM Sans,sans-serif">›</button>
+    </div>
+  </div>
   <div class="card">
     <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text5);margin-bottom:4px"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
     <div class="cal-grid">${calDots}</div>
@@ -2309,7 +2326,7 @@ function showDayDetail(dateStr){
 
   // Format date nicely
   const d=new Date(dateStr+'T12:00:00');
-  const dateLabel=d.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const dateLabel=new Date(dateStr+'T12:00:00').toLocaleDateString('en',{weekday:'long'})+', '+fmtDateLong(dateStr);
 
   const statusBadge=isToday
     ?`<span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--accent);font-weight:600">Today</span>`
@@ -2484,7 +2501,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.0</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.1</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2493,7 +2510,7 @@ function renderProfileScreen(){
         <div class="pavatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${char.name.charAt(0).toUpperCase()}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:16px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.name}</div>
-          <div style="font-size:10px;color:var(--text4);margin-top:3px">${LEVELS[char.ciLevel||0].ci} · ${char.sessions} session${char.sessions!==1?'s':''} · Since ${joined}</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:3px">${LEVELS[char.ciLevel||0].ci} · ${char.sessions} session${char.sessions!==1?'s':''} · Since ${fmtDate(joined)}</div>
         </div>
       </div>
       <div id="rename-inline" style="display:none;margin-bottom:10px">
@@ -2557,7 +2574,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v1.0';
+    const version='v1.1';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -2977,7 +2994,7 @@ function attachEvents(){
     const id=+b.dataset.id;
     const entry=logs.find(l=>l.id===id);
     if(!entry)return;
-    const label=`${entry.method} · ${fmtMin(entry.dur)} · ${entry.date}`;
+    const label=`${entry.method} · ${fmtMin(entry.dur)} · ${fmtDate(entry.date)}`;
     confirmDialog(
       'Delete this session?',
       `"${label}" will be permanently removed. Your session count and total time will be adjusted.`,
