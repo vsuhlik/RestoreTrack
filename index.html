@@ -1109,9 +1109,9 @@ function coachMessage(){
   if(char.sessions>=10&&prev7Mins>0){
     const diff=last7Mins-prev7Mins;
     if(diff<-60)
-      return{icon:'📉',msg:`You've logged ${fmtMin(Math.abs(diff))} less this week than last week. Restoration responds to consistent volume — a dip like this is worth noticing. What's getting in the way?`,cta:'log'};
+      return{icon:'📉',msg:`You've logged ${fmtDur(Math.abs(diff))} less this week than last week. Restoration responds to consistent volume — a dip like this is worth noticing. What's getting in the way?`,cta:'log'};
     if(diff>60&&last7.length>=4)
-      return{icon:'📈',msg:`You've logged ${fmtMin(diff)} more this week than last — solid improvement. Your average is ${fmtMin(avgDailyMins)}/day over the past month. Keep building on this.`,cta:null};
+      return{icon:'📈',msg:`You've logged ${fmtDur(diff)} more this week than last — solid improvement. Your average is ${fmtMin(avgDailyMins)}/day over the past month. Keep building on this.`,cta:null};
   }
 
   // Day-of-week weakness
@@ -1156,7 +1156,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.3</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.5</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1290,8 +1290,8 @@ function buildWeeklySummary(){
     compLine=`Up from ${prevSessions} session${prevSessions!==1?'s':''} the week before. Keep building.`;
   } else if(sessions===prevSessions){
     const timeDiff=totalMins-prevTotalMins;
-    compLine=timeDiff>5?`Same sessions as the previous week but ${fmtMin(timeDiff)} more time.`:
-              timeDiff<-5?`Same sessions as the previous week but ${fmtMin(Math.abs(timeDiff))} less time.`:
+    compLine=timeDiff>5?`Same sessions as the previous week but ${fmtDur(timeDiff)} more time.`:
+              timeDiff<-5?`Same sessions as the previous week but ${fmtDur(Math.abs(timeDiff))} less time.`:
               'Consistent with the previous week.';
   } else {
     compLine=`Down from ${prevSessions} session${prevSessions!==1?'s':''} the week before. This week is a new start.`;
@@ -1321,7 +1321,7 @@ function buildWeeklySummary(){
         <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Session${sessions!==1?'s':''}</div>
       </div>
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
-        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${fmtMin(totalMins)}</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${fmtDur(totalMins)}</div>
         <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Total time</div>
       </div>
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
@@ -1333,7 +1333,7 @@ function buildWeeklySummary(){
         <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Goal days hit</div>
       </div>
     </div>
-    ${bestDayName?`<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Best day: <strong style="color:var(--text2)">${bestDayName}</strong> — ${fmtMin(bestDay.mins)}</div>`:''}
+    ${bestDayName?`<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Best day: <strong style="color:var(--text2)">${bestDayName}</strong> — ${fmtDur(bestDay.mins)}</div>`:''}
     <div style="font-size:11px;color:var(--text4);line-height:1.6;border-top:1px solid var(--stat-border);padding-top:8px">${compLine}</div>
   </div>`;
 }
@@ -1515,11 +1515,11 @@ function renderToday(){
         <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Today</div>
       </div>
       <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
-        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtMin(monthMin)}</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtDur(monthMin)}</div>
         <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Month</div>
       </div>
       <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
-        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtMin(yearMin)}</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtDur(yearMin)}</div>
         <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Year</div>
       </div>
       <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
@@ -2164,7 +2164,7 @@ function renderReports(){
   });
   const maxM=Math.max(...wMins,1);
   const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*76)),isT=wDays[i]===today();
-    return`<div class="bar-col"><div class="bar-val">${m>0?fmtMin(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
+    return`<div class="bar-col"><div class="bar-val">${m>0?fmtDur(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
   }).join('');
   // Method breakdown — only methods actually used, by name
   const methodTotals={};
@@ -2361,7 +2361,7 @@ function showDayDetail(dateStr){
     <div style="margin-bottom:12px">
       <div style="font-size:12px;color:var(--text4);margin-bottom:4px">${dateLabel}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        ${totalMins>0?`<div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent)">${fmtMin(totalMins)}</div>`:''}
+        ${totalMins>0?`<div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent)">${fmtDur(totalMins)}</div>`:''}
         ${statusBadge}
       </div>
       ${totalMins>0&&!goalMet?`<div style="font-size:10px;color:var(--text5);margin-top:4px">${fmtMin(goal-totalMins)} short of daily goal</div>`:''}
@@ -2504,7 +2504,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.3</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.5</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2577,7 +2577,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v1.3';
+    const version='v1.5';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -3644,7 +3644,7 @@ function buildUserCard(u,now,isJoined){
   const isMe=u.uid===fbUID;
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
   const timeStr=u.active
-    ?(u.todayMins>0?fmtMin(u.todayMins)+' today':'Active now')
+    ?(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now')
     :(ms>0?timeAgo(ms):'Inactive');
   const encourageBtn=isMe?''
     :isJoined
