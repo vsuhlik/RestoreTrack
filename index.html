@@ -1156,7 +1156,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.2</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.3</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2217,7 +2217,7 @@ function renderReports(){
   const monthTotal=logs.filter(l=>l.date.slice(0,7)===calMonthKey).reduce((a,l)=>a+l.dur,0)+(isCurrentMonth?liveMins:0);
   // Session History — grouped by method, expandable
   const histByMethod={};
-  logs.slice(0,200).forEach(l=>{
+  logs.forEach(l=>{
     if(!histByMethod[l.method])histByMethod[l.method]={cat:l.cat,sessions:[]};
     histByMethod[l.method].sessions.push(l);
   });
@@ -2227,7 +2227,8 @@ function renderReports(){
       const totalMins=sess.reduce((a,l)=>a+l.dur,0);
       const latest=sess[0];
       const uid=`hist-${method.replace(/[^a-z0-9]/gi,'_')}`;
-      const rows=sess.map(l=>`
+      const PAGE=50;
+      const renderRows=(items)=>items.map(l=>`
         <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-top:1px solid var(--stat-border)">
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;color:var(--text2)">${fmtDate(l.date)} · ${fmtMin(l.dur)}</div>
@@ -2235,6 +2236,8 @@ function renderReports(){
           </div>
           <button class="del-btn" data-id="${l.id}" style="flex-shrink:0;margin-left:8px;display:flex;align-items:center">${IC.x(13)}</button>
         </div>`).join('');
+      const firstPage=renderRows(sess.slice(0,PAGE));
+      const moreBtn=sess.length>PAGE?`<button onclick="(function(){var el=document.getElementById('${uid}-more');el.style.display='block';this.remove();})()" style="width:100%;padding:8px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;margin-top:4px">Show all ${sess.length} sessions ▾</button><div id="${uid}-more" style="display:none">${renderRows(sess.slice(PAGE))}</div>`:'';
       return`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;margin-bottom:7px;overflow:hidden">
         <button onclick="(function(){var d=document.getElementById('${uid}');d.style.display=d.style.display==='none'?'block':'none';})()"
           style="width:100%;display:flex;gap:10px;align-items:center;padding:10px;background:none;border:none;cursor:pointer;text-align:left;font-family:DM Sans,sans-serif">
@@ -2245,7 +2248,7 @@ function renderReports(){
           </div>
           <span style="font-size:10px;color:var(--text5);flex-shrink:0">▾</span>
         </button>
-        <div id="${uid}" style="display:none;padding:0 10px 8px">${rows}</div>
+        <div id="${uid}" style="display:none;padding:0 10px 8px">${firstPage}${moreBtn}</div>
       </div>`;
     }).join('')
     :`<div class="empty">No sessions logged yet.</div>`;
@@ -2501,7 +2504,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.2</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.3</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2574,7 +2577,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v1.2';
+    const version='v1.3';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
