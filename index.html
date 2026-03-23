@@ -46,7 +46,7 @@ body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;mi
 /* COACH CARD */
 .coach-card{background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:9px}
 .coach-icon{font-size:22px;flex-shrink:0;margin-top:1px}
-.coach-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px;opacity:.8}
+.coach-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px;opacity:.8}
 .coach-msg{font-size:12px;color:var(--text2);line-height:1.65}
 .coach-cta{display:inline-block;margin-top:9px;background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .coach-cta:hover{background:var(--acc18)}
@@ -59,7 +59,7 @@ body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;mi
 .sg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:9px}
 .stat{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px 10px}
 .sv{font-size:20px;font-weight:700;color:var(--text1);line-height:1}
-.sl{font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+.sl{font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
 /* CHARTS */
 .ci-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
 .ci-sel-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:7px 4px;cursor:pointer;text-align:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--text3);transition:all .15s}
@@ -94,8 +94,8 @@ textarea:focus{border-color:var(--acc30)}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
 .bar{border-radius:3px 3px 0 0;width:100%;background:var(--acc18);min-height:2px;transition:height .5s ease}
 .bar.today{background:linear-gradient(180deg,var(--accent),var(--acc45))}
-.bar-lbl{font-size:9px;color:var(--text4);text-align:center}
-.bar-val{font-size:8px;color:var(--text5);text-align:center;min-height:10px;max-height:12px;overflow:hidden;line-height:1.2}
+.bar-lbl{font-size:10px;color:var(--text4);text-align:center}
+.bar-val{font-size:9px;color:var(--text5);text-align:center;min-height:10px;max-height:14px;overflow:hidden;line-height:1.2}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:4px 0}
 .cal-dot{aspect-ratio:1;border-radius:3px;background:var(--bg-stat)}
 .cal-dot.on{background:var(--acc45)}
@@ -104,9 +104,9 @@ textarea:focus{border-color:var(--acc30)}
 .cal-dot.now{border:1.5px solid var(--accent)}
 /* NAV */
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-nav);border-top:1px solid var(--nav-border);display:flex;max-width:480px;margin:0 auto;z-index:20}
-.nav-btn{flex:1;padding:8px 0 7px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text5);transition:color .2s}
+.nav-btn{flex:1;padding:6px 2px 5px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:9px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--text5);transition:color .2s}
 .nav-btn.active{color:var(--accent)}
-.nav-icon{font-size:18px;line-height:1.2}
+.nav-icon{font-size:17px;line-height:1.2}
 /* TOASTS & OVERLAYS */
 .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid var(--acc45);border-radius:12px;padding:11px 20px;color:var(--accent);font-weight:600;font-size:13px;z-index:300;white-space:pre-line;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.7);animation:sd .3s ease}
 @keyframes sd{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -128,7 +128,7 @@ textarea:focus{border-color:var(--acc30)}
 .theme-chip.sel{border-color:var(--accent)}
 .theme-swatch{width:100%;padding:10px 6px 7px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .tdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.theme-lbl{font-size:8px;font-weight:700;text-align:center}
+.theme-lbl{font-size:9px;font-weight:700;text-align:center}
 .live-dot{width:7px;height:7px;border-radius:50%;background:#22a85a;animation:blink 1.2s infinite;display:inline-block}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
 .del-btn{background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:3px 8px;color:#a03232;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
@@ -272,6 +272,7 @@ let currentCoachCTA=null;
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
+const fmtLive=s=>{if(s<86400)return fmtHMS(s);const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60);return`${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;};
 const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${r}m`:`${h}h`};
 const fmtDur=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;if(h<24)return r?`${h}h ${r}m`:`${h}h`;const d=Math.floor(h/24),rh=h%24;if(rh===0)return r?`${d}d ${r}m`:`${d}d`;return r?`${d}d ${rh}h ${r}m`:`${d}d ${rh}h`;};
 const fmtDate=s=>{if(!s)return'';const p=s.split('-');return`${p[1]}/${p[2]}/${p[0].slice(2)}`;};
@@ -488,10 +489,10 @@ function startInterval(){
   timerInterval=setInterval(()=>{
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
-    const el=document.getElementById('mc-run-time');if(el)el.textContent=fmtHMS(timerSecs);
-    const el2=document.getElementById('mc-run-time-2');if(el2)el2.textContent=fmtHMS(timerSecs);
-    const el3=document.getElementById('mc-run-time-3');if(el3)el3.textContent=fmtHMS(timerSecs);
-    const si=document.getElementById('sheet-timer');if(si)si.textContent=fmtHMS(timerSecs);
+    const el=document.getElementById('mc-run-time');if(el)el.textContent=fmtLive(timerSecs);
+    const el2=document.getElementById('mc-run-time-2');if(el2)el2.textContent=fmtLive(timerSecs);
+    const el3=document.getElementById('mc-run-time-3');if(el3)el3.textContent=fmtLive(timerSecs);
+    const si=document.getElementById('sheet-timer');if(si)si.textContent=fmtLive(timerSecs);
     // Every 60 seconds — refresh live stats elements without full re-render
     liveTickCount++;
     if(liveTickCount%60===0){
@@ -1085,7 +1086,7 @@ function coachMessage(){
     return{icon:'👋',msg:`Welcome, ${char.name}. Your restoration journey starts with a single session. Even 15 minutes applies the tension signal your body needs. Tap Start Session below.`,cta:'log'};
 
   if(isRunning)
-    return{icon:'⏱',msg:`Session in progress — ${fmtHMS(timerSecs)}. Relax and let consistent, comfortable tension do the work. Pushing harder doesn't speed things up — patience does.`,cta:null};
+    return{icon:'⏱',msg:`Session in progress — ${fmtLive(timerSecs)}. Relax and let consistent, comfortable tension do the work. Pushing harder doesn't speed things up — patience does.`,cta:null};
 
   // Missed days — urgent
   if(daysSinceLast>=5)
@@ -1156,7 +1157,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.5</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v1.6</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1171,7 +1172,7 @@ function render(){
     ${isRunning?`<div class="session-strip" onclick="tab='today';render()">
       <div class="live-dot" style="flex-shrink:0"></div>
       <span style="font-size:11px;font-weight:600;color:var(--green);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${activeTimer.method||'Session'}</span>
-      <span style="font-size:12px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:.3px" id="mc-run-time">${fmtHMS(timerSecs)}</span>
+      <span style="font-size:12px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:.3px" id="mc-run-time">${fmtLive(timerSecs)}</span>
       <button id="stop-strip-btn" onclick="event.stopPropagation();stopSession()"
         style="background:rgba(34,168,90,.15);border:1px solid var(--green-border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--green)">
         ${IC.stop(13)}
@@ -1416,14 +1417,14 @@ function renderToday(){
       <div class="live-dot"></div>
       <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--green)">Session Active</div>
       <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method}</div></div>
-      <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtHMS(timerSecs)}</div>
+      <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtLive(timerSecs)}</div>
     </div>
     <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop Session</button>
   </div>`:isPaused?`<div class="card" style="border-color:var(--acc30);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:16px">⏸</span>
       <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--accent)">Session Paused</div>
-      <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method} · ${fmtHMS(timerSecs)}</div></div>
+      <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method} · ${fmtLive(timerSecs)}</div></div>
     </div>
     <div style="display:flex;gap:7px">
       <button id="resume-btn" class="btn-green" style="margin:0;padding:10px;font-size:13px;flex:1">${IC.play(14)} Resume</button>
@@ -1438,7 +1439,7 @@ function renderToday(){
         <div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--green)">${activeTimer.method}</div>
         <div style="font-size:10px;color:var(--text4);margin-top:1px">
           <span class="live-dot" style="margin-right:4px"></span>
-          Running · <span id="mc-run-time-2">${fmtHMS(timerSecs)}</span>
+          Running · <span id="mc-run-time-2">${fmtLive(timerSecs)}</span>
           ${timerSecs>=86400?` · ${Math.floor(timerSecs/86400)}d ${Math.floor((timerSecs%86400)/3600)}h today: ${fmtMin(liveTimerTodayMins())}`:''}
         </div>
       </div>
@@ -1512,19 +1513,19 @@ function renderToday(){
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--stat-border)">
       <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
         <div style="font-size:16px;font-weight:800;color:${tMin>0?'var(--accent)':'var(--text3)'};line-height:1" data-live="today-min">${fmtMin(tMin)}</div>
-        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Today</div>
+        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Today</div>
       </div>
       <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
         <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtDur(monthMin)}</div>
-        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Month</div>
+        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Month</div>
       </div>
       <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
         <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtDur(yearMin)}</div>
-        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Year</div>
+        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Year</div>
       </div>
       <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
         <div style="font-size:16px;font-weight:800;color:${char.streak>0?'#F59E0B':'var(--text3)'};line-height:1">${char.streak>0?char.streak+'🔥':'—'}</div>
-        <div style="font-size:8px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Streak</div>
+        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Streak</div>
       </div>
     </div>
   </div>
@@ -1554,7 +1555,7 @@ function renderJourney(){
         border:${active?'2px solid var(--accent)':done?'1px solid var(--acc30)':'1px solid var(--stat-border)'};
         color:${active?'var(--bg)':done?'var(--accent)':'var(--text5)'};
         box-shadow:${active?'0 0 0 3px var(--acc18)':'none'}">${i}</div>
-      <div style="font-size:7px;color:${active?'var(--accent)':done?'var(--text4)':'var(--text6)'};text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">${done&&!active?'✓':active?'▲':''}</div>
+      <div style="font-size:8px;color:${active?'var(--accent)':done?'var(--text4)':'var(--text6)'};text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">${done&&!active?'✓':active?'▲':''}</div>
     </div>`;
   }).join('');
 
@@ -2504,7 +2505,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.5</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v1.6</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2577,7 +2578,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v1.5';
+    const version='v1.6';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -2906,7 +2907,7 @@ function mountStopSheet(){
     <div class="sheet-handle"></div>
     <div style="text-align:center;margin-bottom:14px">
       <div style="font-family:Cinzel,serif;font-size:12px;color:var(--text4);margin-bottom:6px">Session Complete</div>
-      <div class="big-timer">${fmtHMS(timerSecs)}</div>
+      <div class="big-timer">${fmtLive(timerSecs)}</div>
       <div style="font-size:12px;color:var(--text3);margin-top:4px">${method}</div>
       <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <div class="xp-tag">Session #${char.sessions+1}</div>
