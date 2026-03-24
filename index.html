@@ -524,7 +524,7 @@ function refreshLiveStats(){
 function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
 function beginSession(){
   if(!sheetMethod||!sheetCat)return;
-  activeTimer={startedAt:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
+  activeTimer={startedAt:Date.now(),wallStart:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
   timerSecs=0;saveTimer(activeTimer);startInterval();showSessionSheet=false;
   if(navigator.vibrate)navigator.vibrate(60);
   syncPresence();
@@ -561,20 +561,94 @@ function resumeSession(){
   saveTimer(activeTimer);startInterval();showStopSheet=false;render();
 }
 function commitSession(notes){
-  const finalMins=Math.max(1,Math.round(timerSecs/60));
   const method=activeTimer?activeTimer.method:sheetMethod;
   const catId=activeTimer?activeTimer.cat:sheetCat;
-  awardSession(method,catId,finalMins,notes||sheetNotes||'');
+  const n=notes||sheetNotes||'';
+  // If we have a real start timestamp, split across days accurately
+  // wallStart survives stopSession() which nulls startedAt
+  if(activeTimer&&activeTimer.wallStart){
+    awardMultiDay(method,catId,activeTimer.wallStart,Date.now(),n);
+  } else {
+    const finalMins=Math.max(1,Math.round(timerSecs/60));
+    awardSession(method,catId,finalMins,n);
+  }
   stopInterval();activeTimer=null;timerSecs=0;sheetMethod='';sheetCat=null;sheetNotes='';
   saveTimer(null);showStopSheet=false;
   syncPresence();
   render();
 }
-function logManual(method,catId,totalMins,notes,dateStr){
+function logManual(method,catId,totalMins,notes,dateStr,startMs,endMs){
   if(totalMins<=0)return;
-  awardSession(method,catId,totalMins,notes||'',dateStr||today());
+  if(startMs&&endMs&&endMs-startMs>86400000){
+    // Session spans multiple days — split it
+    awardMultiDay(method,catId,startMs,endMs,notes||'');
+  } else {
+    awardSession(method,catId,totalMins,notes||'',dateStr||today());
+  }
   showSessionSheet=false;render();
 }
+function awardMultiDay(method,catId,startMs,endMs,notes){
+  // Split a long session into per-day chunks and award each day separately
+  // startMs/endMs are Unix milliseconds
+  const chunks=[];
+  let cursor=startMs;
+  while(cursor<endMs){
+    // Find midnight at end of cursor's day
+    const d=new Date(cursor);
+    const midnight=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
+    const chunkEnd=Math.min(midnight,endMs);
+    const mins=Math.round((chunkEnd-cursor)/60000);
+    const dateStr=new Date(cursor).toISOString().split('T')[0];
+    if(mins>0)chunks.push({dateStr,mins});
+    cursor=chunkEnd;
+  }
+  if(!chunks.length)return;
+  const totalMins=chunks.reduce((a,c)=>a+c.mins,0);
+  // Award each day chunk — only the last one triggers toasts/badges/streak update
+  // to avoid spamming. We batch-add all log entries then do one full recalc.
+  const newLogs=[];
+  chunks.forEach((chunk,i)=>{
+    newLogs.push({id:Date.now()+i,date:chunk.dateStr,method,cat:catId,dur:chunk.mins,notes:i===0?notes:''});
+  });
+  // Update char stats as one combined award
+  const lastDay=chunks[chunks.length-1].dateStr;
+  let ns=char.streak;
+  if(char.lastDate){
+    const diff=Math.round((new Date(lastDay)-new Date(char.lastDate))/86400000);
+    if(diff===1)ns++;
+    else if(diff>1){
+      let broken=false;
+      // Every day in the gap that isn't a rest day and isn't covered by our new chunks breaks the streak
+      const newDates=new Set(chunks.map(c=>c.dateStr));
+      for(let i=1;i<diff;i++){
+        const gd=new Date(char.lastDate+'T12:00:00');
+        gd.setDate(gd.getDate()+i);
+        const gs=gd.toISOString().split('T')[0];
+        if(!(char.restDays||[]).includes(gs)&&!newDates.has(gs)){broken=true;break;}
+      }
+      ns=broken?chunks.length:ns+chunks.length;
+    }
+  } else ns=chunks.length;
+  const nm=char.methods.includes(method)?char.methods:[...char.methods,method];
+  let ngd=char.goalDays;
+  // Count goal days hit across the new chunks
+  const byDay={};
+  newLogs.forEach(l=>{byDay[l.date]=(byDay[l.date]||0)+l.dur;});
+  Object.entries(byDay).forEach(([d,m])=>{
+    const existing=logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0);
+    if(existing<char.dailyGoalMin&&existing+m>=char.dailyGoalMin)ngd++;
+  });
+  char={...char,sessions:char.sessions+chunks.length,minutes:char.minutes+totalMins,streak:ns,lastDate:lastDay,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
+  const newly=[];
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
+  logs=[...newLogs.reverse(),...logs];
+  saveChar();saveLogs();
+  const days=chunks.length;
+  showSessFlash(`✓ ${fmtDur(totalMins)}`);
+  if(newly.length)showToast(`🏅 ${newly[0].title} — milestone reached!`);
+  else showToast(`${fmtDur(totalMins)} logged across ${days} day${days!==1?'s':''} 🔥`);
+}
+
 function awardSession(method,catId,totalMins,notes,dateOverride){
   const td=dateOverride||today();
   let ns=char.streak;
@@ -1158,7 +1232,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.2</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2643,7 +2717,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.2</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2716,7 +2790,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.2';
+    const version='v2.4';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -2902,7 +2976,7 @@ function beginSessionFrom(dateStr,timeStr){
   if(isNaN(startMs))return;
   const elapsedMs=Math.max(0,Date.now()-startMs);
   const elapsedSecs=Math.floor(elapsedMs/1000);
-  activeTimer={startedAt:Date.now()-elapsedMs,method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
+  activeTimer={startedAt:Date.now()-elapsedMs,wallStart:Date.now()-elapsedMs,method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
   timerSecs=elapsedSecs;
   saveTimer(activeTimer);startInterval();
   showSessionSheet=false;manualStillActive=false;
@@ -3012,7 +3086,12 @@ function mountSheet(){
   });
   document.getElementById('s-log')?.addEventListener('click',()=>{
     const mins=calcManualMins();
-    if(mins>0)logManual(sheetMethod,sheetCat,mins,'',manualStartDate||today());
+    if(mins<=0)return;
+    // Pass actual timestamps so multi-day sessions get split properly
+    const sd=manualStartDate||today(),ed=manualEndDate||today();
+    const startMs=new Date(`${sd}T${manualStart}:00`).getTime();
+    const endMs=new Date(`${ed}T${manualEnd}:00`).getTime();
+    logManual(sheetMethod,sheetCat,mins,'',sd,startMs,endMs);
   });
   document.getElementById('add-cust-btn')?.addEventListener('click',()=>{
     const inp=document.getElementById('cust-inp');const save=document.getElementById('save-cust-chk')?.checked!==false;
