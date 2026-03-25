@@ -34,17 +34,17 @@ body{background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;mi
 .ci-pill{background:var(--acc12);border:1px solid var(--pill-border,var(--acc30));border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--accent);font-family:'Cinzel',serif;white-space:nowrap}
 .profile-btn{background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .profile-btn:hover{border-color:var(--acc30);color:var(--accent)}
-.content{padding:12px;flex:1}
-.card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:9px}
+.content{padding:16px;flex:1}
+.card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:14px;margin-bottom:12px}
 .card-gold{border-color:var(--card-border-gold)!important;background:var(--bg-card-gold)!important}
-.sec-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin:12px 0 6px}
+.sec-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin:18px 0 8px}
 /* CI RING */
 .ci-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 4px}
 .ci-ring-wrap svg{filter:drop-shadow(0 0 6px var(--acc12))}
 .ci-set-btn{background:var(--acc6);border:1px solid var(--acc30);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .ci-set-btn:hover{background:var(--acc12)}
 /* COACH CARD */
-.coach-card{background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:9px}
+.coach-card{background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:14px;padding:16px;margin-bottom:12px}
 .coach-icon{font-size:22px;flex-shrink:0;margin-top:1px}
 .coach-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:4px;opacity:.8}
 .coach-msg{font-size:12px;color:var(--text2);line-height:1.65}
@@ -90,7 +90,7 @@ textarea{background:var(--bg-stat);border:1px solid var(--stat-border);border-ra
 textarea::placeholder{color:var(--text5)}
 textarea:focus{border-color:var(--acc30)}
 /* CHARTS */
-.bar-wrap{display:flex;align-items:flex-end;gap:5px;height:100px;padding:0 2px}
+.bar-wrap{display:flex;align-items:flex-end;gap:5px;height:120px;padding:0 2px}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
 .bar{border-radius:3px 3px 0 0;width:100%;background:var(--acc18);min-height:2px;transition:height .5s ease}
 .bar.today{background:linear-gradient(180deg,var(--accent),var(--acc45))}
@@ -133,6 +133,11 @@ textarea:focus{border-color:var(--acc30)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
 .del-btn{background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:3px 8px;color:#a03232;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
 .del-btn:hover{background:rgba(200,50,50,.15)}
+.edit-btn{background:var(--acc6);border:1px solid var(--acc30);border-radius:6px;padding:3px 8px;color:var(--accent);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.edit-btn:hover{background:var(--acc12)}
+/* Stat pillboxes — responsive 4-up grid, wraps gracefully on small screens */
+.stats-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--stat-border)}
+.stats-grid-4 .sg-val{font-size:clamp(11px,3.5vw,16px);font-weight:800;color:var(--text1);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .goal-inp{background:var(--bg-stat);border:1px solid var(--acc30);border-radius:7px;padding:5px 8px;color:var(--accent);font-size:15px;font-weight:700;width:76px;outline:none;text-align:center;font-family:'Cinzel',serif}
 .xp-tag{background:var(--acc6);border:1px solid var(--acc30);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--accent);font-weight:600;display:inline-block;margin-top:6px}
 .mode-row{display:flex;gap:6px;margin-bottom:10px}
@@ -277,7 +282,10 @@ const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60
 const fmtDur=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;if(h<24)return r?`${h}h ${r}m`:`${h}h`;const d=Math.floor(h/24),rh=h%24;if(rh===0)return r?`${d}d ${r}m`:`${d}d`;return r?`${d}d ${rh}h ${r}m`:`${d}d ${rh}h`;};
 const fmtDate=s=>{if(!s)return'';const p=s.split('-');return`${p[1]}/${p[2]}/${p[0].slice(2)}`;};
 const fmtDateLong=s=>{if(!s)return'';const p=s.split('-');return`${p[1]}/${p[2]}/${p[0]}`;};
-// HTML escape — always use for user-generated content rendered into innerHTML
+// Convert HH:MM (24h) string to 12-hour AM/PM using device locale
+const time12=t=>{if(!t)return'';try{const [h,m]=t.split(':').map(Number);return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(2000,0,1,h,m));}catch{return t;}};
+// Alias used inside setReminder toast
+const fmtTime12=time12;
 const htmlEsc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 // ── LUCIDE ICONS (inline SVG — consistent, theme-colored, crisp at any size) ──
@@ -319,46 +327,149 @@ function timeAgoShort(ms){
   if(diff<604800000)return Math.floor(diff/86400000)+'d';
   return Math.floor(diff/604800000)+'w';
 }
-const today=()=>new Date().toISOString().split('T')[0];
+// Always returns YYYY-MM-DD in the user's LOCAL timezone — never UTC
+const localDateStr=(d)=>{const x=d||new Date();return`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;};
+const today=()=>localDateStr();
 const todayLogs=()=>logs.filter(l=>l.date===today());
 
 // How many minutes of the currently running session fall within today only
-// Handles sessions that started yesterday or days ago (T-tape / long sessions)
+// Uses wallStart (real wall-clock start) if available — more accurate than timerSecs
 function liveTimerTodayMins(){
   if(!activeTimer||!activeTimer.startedAt)return 0;
   const midnight=new Date();midnight.setHours(0,0,0,0);
-  // Approximate original session start = now minus total elapsed seconds
-  const totalElapsedMs=timerSecs*1000;
-  const sessionStartMs=Date.now()-totalElapsedMs;
-  // Only count time from midnight (or session start if it started today)
+  // Prefer wallStart (actual wall-clock start); fall back to reconstructed start
+  const sessionStartMs=activeTimer.wallStart
+    ?activeTimer.wallStart
+    :Date.now()-(timerSecs*1000);
+  // Only count elapsed time from midnight (or session start if it started today)
   const countFromMs=Math.max(sessionStartMs,midnight.getTime());
+  // Subtract any paused time that occurred today (elapsedOnPause only accumulates during pauses)
   const msSinceCount=Date.now()-countFromMs;
-  return Math.floor(msSinceCount/60000);
+  return Math.max(0,Math.floor(msSinceCount/60000));
 }
 
 const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
-const thisWeekDays=()=>{const d=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);d.push(x.toISOString().split('T')[0]);}return d;};
+// Returns Mon-Sun of the current calendar week (never a rolling 7-day window)
+const thisWeekDays=()=>{
+  const d=[];const now=new Date();const dow=now.getDay();
+  const mondayOffset=dow===0?-6:1-dow; // days back to Monday
+  for(let i=0;i<7;i++){const x=new Date(now);x.setDate(now.getDate()+mondayOffset+i);d.push(localDateStr(x));}
+  return d;
+};
 const dayLbl=d=>['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(d+'T12:00:00').getDay()];
 const catFor=id=>CATS.find(c=>c.id===id)||{icon:'?',color:'#888',label:'',methods:[]};
 
 // ── STORAGE ────────────────────────────────────────────────────────────────────
 const S={
   get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}},
-  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},
-  del(k){try{localStorage.removeItem(k);}catch{}}
+  set(k,v){
+    try{localStorage.setItem(k,JSON.stringify(v));return true;}
+    catch(e){
+      if(e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014)){
+        showStorageWarning();
+      }
+      return false;
+    }
+  },
+  del(k){try{localStorage.removeItem(k);}catch{}},
+  usage(){try{let b=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);b+=k.length+(localStorage.getItem(k)||'').length;}return Math.round(b/1024);}catch{return 0;}}
 };
-function loadAll(){
+// ── INDEXEDDB PHOTO STORE ──────────────────────────────────────────────────────
+// Photos are stored in IndexedDB (no 5 MB cap) instead of localStorage.
+// One record per profile pid: { pid, photos: [...] }
+const PhotoDB=(()=>{
+  const DB='rst_photos',STORE='photos',VER=1;
+  let _db=null;
+  function open(){
+    if(_db)return Promise.resolve(_db);
+    return new Promise((res,rej)=>{
+      const req=indexedDB.open(DB,VER);
+      req.onupgradeneeded=e=>{
+        const db=e.target.result;
+        if(!db.objectStoreNames.contains(STORE))
+          db.createObjectStore(STORE,{keyPath:'pid'});
+      };
+      req.onsuccess=e=>{_db=e.target.result;res(_db);};
+      req.onerror=e=>rej(e.target.error);
+    });
+  }
+  return{
+    async save(pid,arr){
+      const db=await open();
+      return new Promise((res,rej)=>{
+        const tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).put({pid,photos:arr||[]});
+        tx.oncomplete=()=>res(true);
+        tx.onerror=e=>rej(e.target.error);
+      });
+    },
+    async load(pid){
+      const db=await open();
+      return new Promise((res,rej)=>{
+        const tx=db.transaction(STORE,'readonly');
+        const req=tx.objectStore(STORE).get(pid);
+        req.onsuccess=e=>res(e.target.result?.photos||[]);
+        req.onerror=e=>rej(e.target.error);
+      });
+    },
+    async del(pid){
+      const db=await open();
+      return new Promise((res,rej)=>{
+        const tx=db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).delete(pid);
+        tx.oncomplete=()=>res(true);
+        tx.onerror=e=>rej(e.target.error);
+      });
+    }
+  };
+})();
+
+// ── MIGRATE PHOTOS: localStorage → IndexedDB (runs once on startup) ───────────
+async function migratePhotosToIDB(){
+  const toMigrate=[];
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.match(/^rst-.+-photos$/))toMigrate.push(k);
+    }
+  }catch{return;}
+  for(const key of toMigrate){
+    try{
+      const raw=localStorage.getItem(key);
+      if(!raw){localStorage.removeItem(key);continue;}
+      const arr=JSON.parse(raw);
+      if(!Array.isArray(arr)||!arr.length){localStorage.removeItem(key);continue;}
+      const pid=key.replace(/^rst-/,'').replace(/-photos$/,'');
+      const existing=await PhotoDB.load(pid);
+      if(!existing.length)await PhotoDB.save(pid,arr); // only write if IDB is empty
+      localStorage.removeItem(key); // always clean up localStorage
+    }catch(e){console.warn('[RT] Photo migration error',key,e);}
+  }
+}
+
+// ── STORAGE WARNING ────────────────────────────────────────────────────────────let _storageWarnShown=false;
+function showStorageWarning(){
+  if(_storageWarnShown)return;_storageWarnShown=true;
+  const usedKB=S.usage();
+  const el=document.createElement('div');
+  el.id='storage-warn-banner';
+  el.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#5c0f0f;border:1px solid #c0392b;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;z-index:9999;max-width:340px;width:90%;text-align:center;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+  el.innerHTML=`⚠️ <strong>Storage almost full</strong> (${usedKB} KB used)<br><span style="font-size:11px;opacity:.85">New data may not be saved. Back up your data now.</span><br><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><button onclick="document.getElementById('storage-warn-banner')?.remove();showProfileSheet=true;render();" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:DM Sans,sans-serif;font-size:12px;font-weight:600">Backup Now →</button><button onclick="document.getElementById('storage-warn-banner')?.remove()" style="background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:DM Sans,sans-serif;font-size:12px">Dismiss</button></div>`;
+  document.body.appendChild(el);
+}
+async function loadAll(){
+  await migratePhotosToIDB(); // one-time migration, no-op once localStorage photos are gone
   profiles=S.get('rst-profiles')||[];
   currentPid=S.get('rst-active-pid');
   // Single profile system — take the first (and only) profile if it exists
   if(!currentPid&&profiles.length>0){currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);}
   if(currentPid&&profiles.find(p=>p.id===currentPid)){
-    showProfileScreen=false;loadProfile(currentPid);
+    showProfileScreen=false;await loadProfile(currentPid);
   } else {
     showProfileScreen=true;
   }
 }
-function loadProfile(pid){
+async function loadProfile(pid){
   const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
   char={...defaults};logs=[];photos=[];
   const c=S.get(`rst-${pid}-char`);if(c)char={...char,...c};
@@ -376,7 +487,7 @@ function loadProfile(pid){
   if(char.communityShareStats===undefined)char.communityShareStats=true;
   if(!char.dayNotes)char.dayNotes={};
   const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
-  const p=S.get(`rst-${pid}-photos`);if(p)photos=p;
+  photos=await PhotoDB.load(pid); // load from IndexedDB (migrated from localStorage on startup)
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
   const t=S.get(`rst-${pid}-timer`);
   if(t){
@@ -390,7 +501,10 @@ function loadProfile(pid){
 }
 function saveChar(){if(!currentPid)return;S.set(`rst-${currentPid}-char`,char);}
 function saveLogs(){if(!currentPid)return;S.set(`rst-${currentPid}-logs`,logs);}
-function savePhotos(){if(!currentPid)return;S.set(`rst-${currentPid}-photos`,photos);}
+function savePhotos(){
+  if(!currentPid)return Promise.resolve(false);
+  return PhotoDB.save(currentPid,photos).catch(e=>{console.warn('[RT] savePhotos error',e);return false;});
+}
 function saveTimer(t){if(!currentPid)return;t?S.set(`rst-${currentPid}-timer`,t):S.del(`rst-${currentPid}-timer`);}
 function saveProfiles(){S.set('rst-profiles',profiles);}
 
@@ -470,8 +584,9 @@ function deleteProfile(){
   // Wipe all local data
   S.del(`rst-${currentPid}-char`);
   S.del(`rst-${currentPid}-logs`);
-  S.del(`rst-${currentPid}-photos`);
+  S.del(`rst-${currentPid}-photos`); // legacy, may already be empty
   S.del(`rst-${currentPid}-timer`);
+  PhotoDB.del(currentPid).catch(()=>{}); // remove from IndexedDB
   S.del('rst-profiles');
   S.del('rst-active-pid');
   S.del('rst-reactions');
@@ -524,6 +639,11 @@ function refreshLiveStats(){
 function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
 function beginSession(){
   if(!sheetMethod||!sheetCat)return;
+  // Guard: if a session is already running or paused, don't silently overwrite it
+  if(activeTimer&&(activeTimer.startedAt||activeTimer.elapsedOnPause>0)){
+    showToast('⚠ A session is already in progress');
+    showSessionSheet=false;render();return;
+  }
   activeTimer={startedAt:Date.now(),wallStart:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
   timerSecs=0;saveTimer(activeTimer);startInterval();showSessionSheet=false;
   if(navigator.vibrate)navigator.vibrate(60);
@@ -579,11 +699,25 @@ function commitSession(notes){
 }
 function logManual(method,catId,totalMins,notes,dateStr,startMs,endMs){
   if(totalMins<=0)return;
-  if(startMs&&endMs&&endMs-startMs>86400000){
-    // Session spans multiple days — split it
+  // Duplicate detection: warn if same method already logged on same date
+  const checkDate=dateStr||today();
+  const isMultiDay=startMs&&endMs&&(endMs-startMs>86400000);
+  if(!isMultiDay){
+    const dup=logs.find(l=>l.date===checkDate&&l.method===method);
+    if(dup){
+      confirmDialog(
+        'Duplicate session?',
+        `You already have a ${method} session on ${checkDate} (${fmtMin(dup.dur)}). Add another anyway?`,
+        'Add Anyway',
+        ()=>{awardSession(method,catId,totalMins,notes||'',checkDate);showSessionSheet=false;render();}
+      );
+      return;
+    }
+  }
+  if(isMultiDay){
     awardMultiDay(method,catId,startMs,endMs,notes||'');
   } else {
-    awardSession(method,catId,totalMins,notes||'',dateStr||today());
+    awardSession(method,catId,totalMins,notes||'',checkDate);
   }
   showSessionSheet=false;render();
 }
@@ -598,7 +732,7 @@ function awardMultiDay(method,catId,startMs,endMs,notes){
     const midnight=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
     const chunkEnd=Math.min(midnight,endMs);
     const mins=Math.round((chunkEnd-cursor)/60000);
-    const dateStr=new Date(cursor).toISOString().split('T')[0];
+    const dateStr=localDateStr(new Date(cursor));
     if(mins>0)chunks.push({dateStr,mins});
     cursor=chunkEnd;
   }
@@ -623,7 +757,7 @@ function awardMultiDay(method,catId,startMs,endMs,notes){
       for(let i=1;i<diff;i++){
         const gd=new Date(char.lastDate+'T12:00:00');
         gd.setDate(gd.getDate()+i);
-        const gs=gd.toISOString().split('T')[0];
+        const gs=localDateStr(gd);
         if(!(char.restDays||[]).includes(gs)&&!newDates.has(gs)){broken=true;break;}
       }
       ns=broken?chunks.length:ns+chunks.length;
@@ -661,7 +795,7 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
       for(let i=1;i<diff;i++){
         const gapDate=new Date(char.lastDate+'T12:00:00');
         gapDate.setDate(gapDate.getDate()+i);
-        const gapStr=gapDate.toISOString().split('T')[0];
+        const gapStr=localDateStr(gapDate);
         if(!(char.restDays||[]).includes(gapStr)){gapBroken=true;break;}
       }
       ns=gapBroken?1:ns+1;
@@ -689,6 +823,103 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
 // Runs on every load — silently awards any badges the user qualifies for
 // but doesn't have yet. Handles: CI jumps, bulk past sessions, new badges
 // added in app updates, any scenario where incremental checks were missed.
+// ── SESSION EDITING ────────────────────────────────────────────────────────────
+// After any edit we fully rebuild char.sessions, char.minutes, char.streak,
+// char.goalDays, and char.lastDate from the logs array so nothing drifts.
+function calcStreakFromLogs(){
+  if(!logs.length)return{streak:0,lastDate:null};
+  // Collect unique session dates, sort ascending
+  const dates=[...new Set(logs.map(l=>l.date))].sort();
+  let streak=1,best=1;
+  for(let i=1;i<dates.length;i++){
+    const prev=new Date(dates[i-1]+'T12:00:00');
+    const curr=new Date(dates[i]+'T12:00:00');
+    const diff=Math.round((curr-prev)/86400000);
+    const gapBroken=diff>1&&![...Array(diff-1)].every((_,k)=>{
+      const gd=new Date(dates[i-1]+'T12:00:00');gd.setDate(gd.getDate()+k+1);
+      return(char.restDays||[]).includes(localDateStr(gd));
+    });
+    streak=diff===1||!gapBroken?streak+1:1;
+    if(streak>best)best=streak;
+  }
+  return{streak,lastDate:dates[dates.length-1]};
+}
+function rebuildCharFromLogs(){
+  // Recalculate derived counters from the ground-truth logs array
+  char.sessions=logs.length;
+  char.minutes=logs.reduce((a,l)=>a+l.dur,0);
+  // Methods
+  char.methods=[...new Set(logs.map(l=>l.method).filter(Boolean))];
+  // Daily goal days — count distinct dates where cumulative mins hit the goal
+  const byDate={};
+  logs.forEach(l=>{byDate[l.date]=(byDate[l.date]||0)+l.dur;});
+  char.goalDays=Object.values(byDate).filter(m=>m>=(char.dailyGoalMin||120)).length;
+  // lastMethod / lastCat from most recent log
+  if(logs.length){char.lastMethod=logs[0].method;char.lastCat=logs[0].cat;}
+  // Streak
+  const {streak,lastDate}=calcStreakFromLogs();
+  char.streak=streak;char.lastDate=lastDate;
+  recalcAchievements();
+  saveChar();saveLogs();
+}
+
+function openEditSessionSheet(id){
+  const entry=logs.find(l=>l.id===id);
+  if(!entry)return;
+  const ex=document.getElementById('edit-sess-ov');if(ex)ex.remove();
+  const cat=catFor(entry.cat);
+  // Build method options for the current category
+  const allMethods=[...(cat.methods||[]),...(char.customMethods||[])];
+  const methOpts=allMethods.map(m=>`<option value="${htmlEsc(m)}" ${m===entry.method?'selected':''}>${htmlEsc(m)}</option>`).join('');
+  // Duration helpers
+  const durH=Math.floor(entry.dur/60),durM=entry.dur%60;
+  const el=document.createElement('div');el.className='overlay';el.id='edit-sess-ov';
+  el.innerHTML=`<div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:13px;color:var(--accent);margin-bottom:14px;text-align:center">Edit Session</div>
+    <div class="sec-title">Date</div>
+    <input type="date" id="es-date" class="gold-inp" value="${entry.date}" max="${today()}">
+    <div class="sec-title">Duration</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <input type="number" id="es-hours" class="gold-inp" style="flex:1;margin:0" min="0" max="23" value="${durH}" placeholder="h">
+      <span style="color:var(--text4);font-size:13px">h</span>
+      <input type="number" id="es-mins" class="gold-inp" style="flex:1;margin:0" min="0" max="59" value="${durM}" placeholder="m">
+      <span style="color:var(--text4);font-size:13px">min</span>
+    </div>
+    <div class="sec-title">Method</div>
+    <select id="es-method" class="gold-inp" style="margin-bottom:10px">
+      ${methOpts}
+      <option value="${htmlEsc(entry.method)}" ${!allMethods.includes(entry.method)?'selected':''} ${!allMethods.includes(entry.method)?'':'style="display:none"'}>${htmlEsc(entry.method)}</option>
+    </select>
+    <div class="sec-title">Notes</div>
+    <textarea id="es-notes" style="margin-bottom:14px">${htmlEsc(entry.notes||'')}</textarea>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" id="es-cancel" style="flex:1">Cancel</button>
+      <button class="btn-gold" id="es-save" style="flex:2">✓ Save Changes</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('es-cancel').onclick=()=>el.remove();
+  document.getElementById('es-save').onclick=()=>{
+    const newDate=document.getElementById('es-date').value||entry.date;
+    const h=parseInt(document.getElementById('es-hours').value)||0;
+    const m=parseInt(document.getElementById('es-mins').value)||0;
+    const newDur=Math.max(1,h*60+m);
+    const newMethod=document.getElementById('es-method').value||entry.method;
+    const newNotes=document.getElementById('es-notes').value||'';
+    // Detect method category
+    const newCat=CATS.find(c=>c.methods.includes(newMethod))?.id||entry.cat;
+    // Apply edit
+    logs=logs.map(l=>l.id===id?{...l,date:newDate,dur:newDur,method:newMethod,cat:newCat,notes:newNotes}:l);
+    // Re-sort logs newest first
+    logs.sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+    rebuildCharFromLogs();
+    el.remove();
+    showToast('✓ Session updated');
+    render();
+  };
+}
+
 function recalcAchievements(){
   if(!char||!logs)return;
   let changed=false;
@@ -709,7 +940,9 @@ function markRestDay(){
     showToast('Rest day removed');
   } else {
     char.restDays=[...restDays,td];
-    showToast('🛌 Rest day marked — your streak is protected');
+    // Only claim streak protection if the user actually has an active streak
+    const streakMsg=char.streak>0?'🛌 Rest day marked — your streak is protected':'🛌 Rest day marked';
+    showToast(streakMsg);
   }
   saveChar();render();
 }
@@ -731,10 +964,19 @@ function setCILevel(n){
 }
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
-function addPhoto(ciLevel,dataUrl,note,dateStr){
+async function addPhoto(ciLevel,dataUrl,note,dateStr){
   const photoDate=dateStr||today();
-  photos=[{id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||''},...photos];
-  savePhotos();showToast('📸 Progress photo saved!');tab='photos';render();
+  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||''};
+  photos=[newPhoto,...photos];
+  try{
+    await PhotoDB.save(currentPid,photos);
+    showToast('📸 Progress photo saved!');tab='photos';render();
+  }catch(e){
+    // Save failed — roll back so no phantom badge is awarded
+    photos=photos.filter(p=>p.id!==newPhoto.id);
+    showToast('⚠ Photo could not be saved');
+    console.warn('[RT] addPhoto IDB error',e);
+  }
 }
 function deletePhoto(id){
   confirmDialog(
@@ -1307,14 +1549,14 @@ function getMondayOf(dateStr){
   const day=d.getDay(); // 0=Sun
   const diff=day===0?-6:1-day;
   d.setDate(d.getDate()+diff);
-  return d.toISOString().split('T')[0];
+  return localDateStr(d);
 }
 function getWeekDates(mondayStr){
   const dates=[];
   for(let i=0;i<7;i++){
     const d=new Date(mondayStr+'T12:00:00');
     d.setDate(d.getDate()+i);
-    dates.push(d.toISOString().split('T')[0]);
+    dates.push(localDateStr(d));
   }
   return dates;
 }
@@ -1322,25 +1564,20 @@ function buildWeeklySummary(){
   const td=today();
   const thisMonday=getMondayOf(td);
 
-  // Only show from Monday onwards — if today IS the start of week
-  // Also show on subsequent days until dismissed
-  const dismissed=char.weeklySummaryDismissed||'';
-  if(dismissed===thisMonday)return''; // dismissed this week
-
   // Previous week = Monday before thisMonday
   const prevMonday=new Date(thisMonday+'T12:00:00');
   prevMonday.setDate(prevMonday.getDate()-7);
-  const prevMondayStr=prevMonday.toISOString().split('T')[0];
+  const prevMondayStr=localDateStr(prevMonday);
   const prevWeekDates=getWeekDates(prevMondayStr);
 
-  // Only show if prev week has any data at all, or if it's been at least a week since first log
+  // Only show if prev week has any data
   const prevWeekLogs=logs.filter(l=>prevWeekDates.includes(l.date));
   if(prevWeekLogs.length===0)return'';
 
   // Week before that for comparison
   const prevPrevMonday=new Date(prevMondayStr+'T12:00:00');
   prevPrevMonday.setDate(prevPrevMonday.getDate()-7);
-  const prevPrevDates=getWeekDates(prevPrevMonday.toISOString().split('T')[0]);
+  const prevPrevDates=getWeekDates(localDateStr(prevPrevMonday));
   const prevPrevLogs=logs.filter(l=>prevPrevDates.includes(l.date));
 
   // Calc prev week stats
@@ -1386,8 +1623,7 @@ function buildWeeklySummary(){
   const fmtShort=d=>{const p=d.split('-');return`${parseInt(p[2])} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]}`;};
   const weekLabel=`${fmtShort(prevMondayStr)} – ${fmtShort(weekEnd)}`;
 
-  return`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:9px;position:relative">
-    <button onclick="dismissWeeklySummary()" style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--text5);cursor:pointer;padding:4px;line-height:1;display:flex;align-items:center" title="Dismiss">${IC.x(14)}</button>
+  return`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:16px;margin-bottom:12px;position:relative">
     <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Weekly Recap</div>
     <div style="font-size:9px;color:var(--text5);margin-bottom:10px">${weekLabel}</div>
     <div style="font-size:20px;font-weight:700;color:${headlineColor};margin-bottom:10px">${headline}</div>
@@ -1481,8 +1717,6 @@ function buildNextMilestone(){
 function renderToday(){
   const td=today(),tMin=todayMin(),goal=char.dailyGoalMin||120;
   const goalPct=Math.min(100,Math.round((tMin/goal)*100));
-  const monthMin=logs.filter(l=>l.date.slice(0,7)===td.slice(0,7)).reduce((a,l)=>a+l.dur,0);
-  const yearMin=logs.filter(l=>l.date.slice(0,4)===td.slice(0,4)).reduce((a,l)=>a+l.dur,0);
   const tSess=todayLogs();
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
   const isPaused=!!activeTimer&&!activeTimer.startedAt;
@@ -1528,7 +1762,10 @@ function renderToday(){
         <div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.method}</div>
         <div style="font-size:10px;color:var(--text4);margin-top:1px">${fmtMin(l.dur)}${l.notes?' · '+l.notes.slice(0,45):''}</div>
       </div>
-      <button class="del-btn" data-id="${l.id}" style="margin-top:2px;display:flex;align-items:center">${IC.x(13)}</button>
+      <div style="display:flex;gap:4px;margin-top:2px;flex-shrink:0">
+        <button class="edit-btn" data-id="${l.id}" style="display:flex;align-items:center">${IC.edit(12)}</button>
+        <button class="del-btn" data-id="${l.id}" style="display:flex;align-items:center">${IC.x(13)}</button>
+      </div>
     </div>`}).join('')
     :`<div class="empty">No sessions today yet.<br>Tap <strong>Start Session</strong> to begin.</div>`;
 
@@ -1553,7 +1790,7 @@ function renderToday(){
       </div>
       <span style="font-size:11px;color:var(--accent);font-weight:700">▶</span>
     </button>`:'';
-  const weeklySummary=buildWeeklySummary();
+  const weeklySummary=''; // Weekly Recap moved to Reports tab
   return`
   <div class="coach-card">
     <div style="display:flex;gap:10px;align-items:flex-start">
@@ -1585,22 +1822,14 @@ function renderToday(){
       <span data-live="goal-done">${fmtMin(tMin)} done</span>
       <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go'}</span>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--stat-border)">
-      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
-        <div style="font-size:16px;font-weight:800;color:${tMin>0?'var(--accent)':'var(--text3)'};line-height:1" data-live="today-min">${fmtMin(tMin)}</div>
-        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Today</div>
+    <div class="stats-grid-4" style="grid-template-columns:1fr 1fr;gap:10px">
+      <div style="text-align:center;background:var(--bg-stat);border-radius:10px;padding:14px 4px">
+        <span class="sg-val" style="font-size:clamp(18px,5vw,26px);color:${tMin>0?'var(--accent)':'var(--text3)'}" data-live="today-min">${fmtMin(tMin)}</span>
+        <div style="font-size:9px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.5px">Today</div>
       </div>
-      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
-        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtDur(monthMin)}</div>
-        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Month</div>
-      </div>
-      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
-        <div style="font-size:16px;font-weight:800;color:var(--text1);line-height:1">${fmtDur(yearMin)}</div>
-        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Year</div>
-      </div>
-      <div style="text-align:center;background:var(--bg-stat);border-radius:8px;padding:8px 4px">
-        <div style="font-size:16px;font-weight:800;color:${char.streak>0?'#F59E0B':'var(--text3)'};line-height:1">${char.streak>0?char.streak+'🔥':'—'}</div>
-        <div style="font-size:9px;color:var(--text5);margin-top:3px;text-transform:uppercase;letter-spacing:.5px">Streak</div>
+      <div style="text-align:center;background:var(--bg-stat);border-radius:10px;padding:14px 4px">
+        <span class="sg-val" style="font-size:clamp(18px,5vw,26px);color:${char.streak>0?'#F59E0B':'var(--text3)'}">${char.streak>0?char.streak+'🔥':'—'}</span>
+        <div style="font-size:9px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.5px">Day Streak</div>
       </div>
     </div>
   </div>
@@ -1613,7 +1842,12 @@ function renderToday(){
   </div>
   ${lastSessHtml}
   ${buildNextMilestone()}
-  ${liveSessionCard?`<div class="sec-title">Active Session</div>${liveSessionCard}`:''}`;
+  ${(liveSessionCard||tSess.length)?`
+  <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+    <span>Today's Sessions</span>
+    <span style="font-size:9px;color:var(--text5);font-weight:400;text-transform:none;letter-spacing:0">${tSess.length} logged${tMin>0?' · '+fmtMin(tMin):''}</span>
+  </div>
+  ${sessHtml}`:''}`;
 }
 
 // ── JOURNEY ────────────────────────────────────────────────────────────────────
@@ -2231,8 +2465,19 @@ function openCompareViewer(){
 }
 
 // ── REPORTS ────────────────────────────────────────────────────────────────────
-function repNavPrev(){const firstLog=logs.length?logs[logs.length-1].date.slice(0,7):"2020-01";const cur=`${_repYear}-${String(_repMonth+1).padStart(2,"0")}`;if(cur<=firstLog)return;_repMonth--;if(_repMonth<0){_repMonth=11;_repYear--;}const c=document.getElementById("content");if(c){c.innerHTML=renderReports();attachEvents();}}
-function repNavNext(){const now=new Date();if(_repYear===now.getFullYear()&&_repMonth===now.getMonth())return;_repMonth++;if(_repMonth>11){_repMonth=0;_repYear++;}const c=document.getElementById("content");if(c){c.innerHTML=renderReports();attachEvents();}}
+function repNavPrev(){
+  const firstLog=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
+  const cur=`${_repYear}-${String(_repMonth+1).padStart(2,'0')}`;
+  if(cur<=firstLog)return; // already at or before first log month
+  _repMonth--;if(_repMonth<0){_repMonth=11;_repYear--;}
+  const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}
+}
+function repNavNext(){
+  const now=new Date();
+  if(_repYear===now.getFullYear()&&_repMonth===now.getMonth())return;
+  _repMonth++;if(_repMonth>11){_repMonth=0;_repYear++;}
+  const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}
+}
 function renderReports(){
   const td=today();
   const liveMins=liveTimerTodayMins();
@@ -2344,7 +2589,10 @@ function renderReports(){
             <div style="font-size:11px;color:var(--text2)">${fmtDate(l.date)} · ${fmtMin(l.dur)}</div>
             ${l.notes?`<div style="font-size:10px;color:var(--text4);margin-top:2px;font-style:italic">${htmlEsc(l.notes)}</div>`:''}
           </div>
-          <button class="del-btn" data-id="${l.id}" style="flex-shrink:0;margin-left:8px;display:flex;align-items:center">${IC.x(13)}</button>
+          <div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px">
+            <button class="edit-btn" data-id="${l.id}" style="display:flex;align-items:center">${IC.edit(12)}</button>
+            <button class="del-btn" data-id="${l.id}" style="display:flex;align-items:center">${IC.x(13)}</button>
+          </div>
         </div>`).join('');
       const firstPage=renderRows(sess.slice(0,PAGE));
       const moreBtn=sess.length>PAGE?`<button onclick="(function(){var el=document.getElementById('${uid}-more');el.style.display='block';this.remove();})()" style="width:100%;padding:8px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;margin-top:4px">Show all ${sess.length} sessions ▾</button><div id="${uid}-more" style="display:none">${renderRows(sess.slice(PAGE))}</div>`:'';
@@ -2382,9 +2630,10 @@ function renderReports(){
   const nowD=new Date(),todayYear=nowD.getFullYear(),todayMonth=nowD.getMonth();
   const canGoNext=!(year===todayYear&&month===todayMonth);
   const firstLogDate=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
-  const canGoPrev=(calMonthKey>firstLogDate);
+  const canGoPrev=(`${year}-${String(month+1).padStart(2,'0')}`)>firstLogDate;
   return`<div class="page-title">Reports</div>
   <div class="page-sub">Your restoration journey in numbers.</div>
+  ${buildWeeklySummary()}
   <div class="sg2">
     <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(weekTotal)}</div><div class="sl">This Week</div></div>
     <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(monthTotal)}</div><div class="sl">${isCurrentMonth?'This Month':monthName}</div></div>
@@ -2396,9 +2645,9 @@ function renderReports(){
   <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Activity</div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="repNavPrev()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:DM Sans,sans-serif">‹</button>
+      <button onclick="repNavPrev()" ${!canGoPrev?'disabled':''} style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoPrev?'var(--text2)':'var(--text6)'};cursor:${canGoPrev?'pointer':'default'};font-family:DM Sans,sans-serif;opacity:${canGoPrev?1:0.35}">‹</button>
       <span style="font-size:11px;font-weight:600;color:var(--text2);min-width:100px;text-align:center">${monthName}</span>
-      <button onclick="repNavNext()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:DM Sans,sans-serif">›</button>
+      <button onclick="repNavNext()" ${!canGoNext?'disabled':''} style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoNext?'var(--text2)':'var(--text6)'};cursor:${canGoNext?'pointer':'default'};font-family:DM Sans,sans-serif;opacity:${canGoNext?1:0.35}">›</button>
     </div>
   </div>
   <div class="card">
@@ -2748,13 +2997,13 @@ function renderProfileScreen(){
     <!-- Reminders -->
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Daily Reminder</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Get a browser notification to restore. Works even when the app isn't open.</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Get a notification to restore each day. <strong style="color:var(--text4)">Requires the app to be open</strong> — browser limitations prevent true background notifications on most devices.</div>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <input type="time" id="reminder-time" value="${char.reminderTime||'09:00'}"
           style="flex:1;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 10px;color:var(--accent);font-size:16px;font-weight:700;outline:none;font-family:DM Sans,sans-serif">
         <button id="reminder-btn" class="btn-outline" style="flex:0 0 auto;white-space:nowrap">${char.reminderEnabled?'✓ On':'Set Reminder'}</button>
       </div>
-      ${char.reminderEnabled?`<div style="font-size:10px;color:var(--green)">Reminder set for ${char.reminderTime} daily. <button onclick="cancelReminder()" style="background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline">Cancel</button></div>`:'<div style="font-size:10px;color:var(--text5)">Requires notification permission.</div>'}
+      ${char.reminderEnabled?`<div style="font-size:10px;color:var(--green)">Reminder set for ${time12(char.reminderTime||'09:00')} daily. <button onclick="cancelReminder()" style="background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline">Cancel</button></div>`:'<div style="font-size:10px;color:var(--text5)">Requires notification permission.</div>'}
     </div>
 
     <!-- Feedback -->
@@ -2811,20 +3060,20 @@ function renderProfileScreen(){
 }
 
 // ── BACKUP / RESTORE ───────────────────────────────────────────────────────────
-function exportBackup(){
+async function exportBackup(){
   const backup={
     version:1,
     exportedAt:new Date().toISOString(),
     profiles,
     data:{}
   };
-  profiles.forEach(p=>{
+  for(const p of profiles){
     backup.data[p.id]={
       char:S.get(`rst-${p.id}-char`),
       logs:S.get(`rst-${p.id}-logs`),
-      photos:S.get(`rst-${p.id}-photos`)
+      photos:await PhotoDB.load(p.id) // load from IndexedDB
     };
-  });
+  }
   const json=JSON.stringify(backup,null,2);
   const blob=new Blob([json],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -2844,21 +3093,23 @@ function importBackup(jsonText){
     'Import this backup?',
     `This will restore ${backup.profiles.length} profile${backup.profiles.length!==1?'s':''} from ${backup.exportedAt?.slice(0,10)||'unknown date'}. Your current data will be replaced.`,
     'Import',
-    ()=>{
-      // Write all profile data back to localStorage
-      backup.profiles.forEach(p=>{
+    async ()=>{
+      // Write char and logs to localStorage, photos to IndexedDB
+      for(const p of backup.profiles){
         const d=backup.data[p.id]||{};
         if(d.char)S.set(`rst-${p.id}-char`,d.char);
         if(d.logs)S.set(`rst-${p.id}-logs`,d.logs);
-        if(d.photos)S.set(`rst-${p.id}-photos`,d.photos);
-      });
+        if(d.photos&&Array.isArray(d.photos)&&d.photos.length){
+          await PhotoDB.save(p.id,d.photos);
+        }
+      }
       S.set('rst-profiles',backup.profiles);
       // Switch to first profile
       const firstPid=backup.profiles[0]?.id;
       if(firstPid)S.set('rst-active-pid',firstPid);
       showToast('✅ Backup restored!');
       // Full reload to pick up all new data
-      setTimeout(()=>{loadAll();showProfileScreen=false;tab='today';render();},400);
+      setTimeout(async ()=>{await loadAll();showProfileScreen=false;tab='today';render();},400);
     }
   );
 }
@@ -2872,7 +3123,7 @@ function setReminder(timeStr){
     char.reminderEnabled=true;
     saveChar();
     scheduleReminder();
-    showToast(`✓ Reminder set for ${timeStr} daily`);
+    showToast(`\u2713 Reminder set for ${time12(timeStr)} daily`);
     renderProfileScreen();
   });
 }
@@ -2892,14 +3143,13 @@ function scheduleReminder(){
   if(next<=now)next.setDate(next.getDate()+1);
   const ms=next-now;
   setTimeout(()=>{
-    // Only fire if user hasn't already logged today
-    if(todayMin()<10){
+    // Only fire if user hasn't already logged today and app is open/foregrounded
+    if(todayMin()<10&&document.visibilityState!=='hidden'){
       new Notification('RestoreTrack',{
-        body:`Time to restore! You haven't logged a session today.`,
-        icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">◉</text></svg>'
+        body:`Time to restore! You haven\u2019t logged a session today.`,
+        icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">\u25c9</text></svg>'
       });
     }
-    // Schedule next day
     if(char.reminderEnabled)scheduleReminder();
   },ms);
 }
@@ -3210,6 +3460,11 @@ function attachEvents(){
     });
     pfl.value='';
   });}
+  document.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const id=+b.dataset.id;
+    openEditSessionSheet(id);
+  }));
   document.querySelectorAll('.del-btn').forEach(b=>b.addEventListener('click',e=>{
     e.stopPropagation();
     const id=+b.dataset.id;
@@ -3529,7 +3784,7 @@ function syncPresence(){
     sessionStartedAt:running&&activeTimer.startedAt?new Date(activeTimer.startedAt):null,
     todayMins:todayMin(),
     lastSeen:firebase.firestore.FieldValue.serverTimestamp(),
-    joinedAt:firebase.firestore.FieldValue.serverTimestamp(), // only sets on first write due to merge:true below
+    // joinedAt is intentionally excluded here — it is set ONCE in the join flow and must not be overwritten
     visible:char.communityVisible!==false
   },{merge:true}).catch(()=>{});
 }
@@ -3555,8 +3810,12 @@ function leaveComm(){
   render();
 }
 
+const _reactLocks=new Set();
+let _postSubmitting=false;
 function commPost(text,title){
   if(!db||!fbUID||!fbIsGoogle||!text.trim()){showToast('⚠ Sign in with Google to post');return;}
+  if(_postSubmitting){showToast('⚠ Please wait, posting…');return;}
+  _postSubmitting=true;
   const postData={
     title:title||'',text:text.trim().slice(0,200),uid:fbUID,
     name:char.communityDisplayName||'Anonymous',
@@ -3566,17 +3825,21 @@ function commPost(text,title){
     rf:0,rm:0,rh:0,replyCount:0,type:'post'
   };
   db.collection('posts').add(postData).then(doc=>{
+    _postSubmitting=false;
     // Inject into local cache immediately so it appears without a manual refresh
     const localPost={...postData,id:doc.id,ts:{toMillis:()=>Date.now()}};
     commState.posts=[localPost,...commState.posts];
     showToast('✓ Posted!');
     if(commTab==='posts')refreshCommUI();
-  }).catch(()=>showToast('⚠ Could not post'));
+  }).catch(()=>{_postSubmitting=false;showToast('⚠ Could not post');});
 }
 
 
 function commReact(postId,r){
   if(!db||!fbUID)return;
+  // Per-post lock: ignore taps while a Firestore write for this post is in-flight
+  if(_reactLocks.has(postId))return;
+  _reactLocks.add(postId);
   const stored=JSON.parse(localStorage.getItem('rst-reactions')||'{}');
   // stored[postId] = the reaction type the user has on this post ('fire','muscle','heart') or undefined
   const current=stored[postId]; // what they've already picked
@@ -3587,14 +3850,14 @@ function commReact(postId,r){
     // Tapping same reaction again — remove it
     db.collection('posts').doc(postId).update({
       [field]:firebase.firestore.FieldValue.increment(-1)
-    }).catch(()=>{});
+    }).then(()=>_reactLocks.delete(postId)).catch(()=>_reactLocks.delete(postId));
     delete stored[postId];
     commState.posts=commState.posts.map(p=>p.id===postId?{...p,[field]:Math.max(0,(p[field]||0)-1)}:p);
   } else {
     // Switching to a different reaction (or picking for first time)
     const updates={[field]:firebase.firestore.FieldValue.increment(1)};
     if(prevField)updates[prevField]=firebase.firestore.FieldValue.increment(-1);
-    db.collection('posts').doc(postId).update(updates).catch(()=>{});
+    db.collection('posts').doc(postId).update(updates).then(()=>_reactLocks.delete(postId)).catch(()=>_reactLocks.delete(postId));
     stored[postId]=r;
     commState.posts=commState.posts.map(p=>{
       if(p.id!==postId)return p;
@@ -4688,13 +4951,17 @@ function adminClearCoachQuestions(){
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────────
-loadAll();render();scheduleReminder();
-// Init Firebase if already a community member, or if returning from Google redirect
-if(char.communityEnabled||localStorage.getItem('rst-comm-pending')){
-  initFirebase();
-  // If a session is already running, sync presence once Firebase auth settles
-  if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
-}
+(async ()=>{
+  await loadAll();
+  render();
+  scheduleReminder();
+  // Init Firebase if already a community member, or if returning from Google redirect
+  if(char.communityEnabled||localStorage.getItem('rst-comm-pending')){
+    initFirebase();
+    // If a session is already running, sync presence once Firebase auth settles
+    if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
+  }
+})();
 
 // ── SERVICE WORKER REGISTRATION ───────────────────────────────────────────
 if('serviceWorker' in navigator){
