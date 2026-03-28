@@ -3993,7 +3993,13 @@ function buildUserCard(u,now,isJoined){
   const isMe=u.uid===fbUID;
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
   const timeStr=u.active
-    ?(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now')
+    ?(u.sessionStartedAt
+        ?(()=>{
+            const sm=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
+            const elapsed=Math.max(0,Math.floor((now-sm)/60000));
+            return elapsed>0?fmtDur(elapsed)+' into session':'Active now';
+          })()
+        :(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now'))
     :(ms>0?timeAgo(ms):'Inactive');
   const encourageBtn=isMe?''
     :isJoined
