@@ -194,6 +194,14 @@ function liveTimerTodayMins(){
 }
 
 const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
+// Goal-qualifying minutes — filters retaining if user has opted out
+const todayGoalMin=()=>{
+  const excl=char.countRetainingInGoal===false;
+  const logMins=todayLogs().filter(l=>!excl||l.cat!=='retaining').reduce((a,l)=>a+l.dur,0);
+  const liveIsRetaining=!!(activeTimer&&activeTimer.cat==='retaining');
+  const liveMins=(!excl||!liveIsRetaining)?liveTimerTodayMins():0;
+  return logMins+liveMins;
+};
 // Returns Mon-Sun of the current calendar week (never a rolling 7-day window)
 const thisWeekDays=()=>{
   const d=[];const now=new Date();const dow=now.getDay();
@@ -323,6 +331,7 @@ async function loadProfile(pid){
   if(!char.ciHistory)char.ciHistory=[];
   if(!char.restDays)char.restDays=[];
   if(char.ciGoal===undefined)char.ciGoal=10;
+if(char.countRetainingInGoal===undefined)char.countRetainingInGoal=true;
   if(char.communityEnabled===undefined)char.communityEnabled=false;
   if(char.communityVisible===undefined)char.communityVisible=true;
   // communityDisplayName is always derived from char.name — kept in sync automatically
@@ -463,9 +472,10 @@ function startInterval(){
 }
 function refreshLiveStats(){
   // Update goal bar and today stats inline if on Today tab
-  const tMin=todayMin();
+  const tMin=todayMin();           // all minutes — for stat tile display
+  const tGoalMin=todayGoalMin();   // goal-qualifying minutes — for bar & "to go"
   const goal=char.dailyGoalMin||120;
-  const goalPct=Math.min(100,Math.round((tMin/goal)*100));
+  const goalPct=Math.min(100,Math.round((tGoalMin/goal)*100));
   // Goal bar fill
   const fill=document.querySelector('.goal-fill');
   if(fill){
@@ -474,7 +484,7 @@ function refreshLiveStats(){
   }
   // Goal text
   const goalTexts=document.querySelectorAll('[data-live="goal-text"]');
-  goalTexts.forEach(el=>{el.textContent=goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go';});
+  goalTexts.forEach(el=>{el.textContent=goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go';});
   const goalDone=document.querySelector('[data-live="goal-done"]');
   if(goalDone)goalDone.textContent=fmtMin(tMin)+' done';
   // Today stat tile
@@ -612,11 +622,14 @@ function awardMultiDay(method,catId,startMs,endMs,notes){
   let ngd=char.goalDays;
   // Count goal days hit across the new chunks
   const byDay={};
-  newLogs.forEach(l=>{byDay[l.date]=(byDay[l.date]||0)+l.dur;});
-  Object.entries(byDay).forEach(([d,m])=>{
-    const existing=logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0);
-    if(existing<char.dailyGoalMin&&existing+m>=char.dailyGoalMin)ngd++;
-  });
+  const multiSessionCountsForGoal=char.countRetainingInGoal!==false||catId!=='retaining';
+  if(multiSessionCountsForGoal){
+    newLogs.forEach(l=>{byDay[l.date]=(byDay[l.date]||0)+l.dur;});
+    Object.entries(byDay).forEach(([d,m])=>{
+      const existing=logs.filter(l=>l.date===d&&(char.countRetainingInGoal!==false||l.cat!=='retaining')).reduce((a,l)=>a+l.dur,0);
+      if(existing<char.dailyGoalMin&&existing+m>=char.dailyGoalMin)ngd++;
+    });
+  }
   char={...char,sessions:char.sessions+chunks.length,minutes:char.minutes+totalMins,streak:ns,lastDate:lastDay,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
   const newly=[];
   for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
@@ -646,10 +659,11 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
       ns=gapBroken?1:ns+1;
     }
   }else ns=1;
-  const prevTodayMin=todayMin();
+  const prevTodayMin=todayGoalMin();
   const nm=char.methods.includes(method)?char.methods:[...char.methods,method];
   let ngd=char.goalDays;
-  if(prevTodayMin<char.dailyGoalMin&&(prevTodayMin+totalMins)>=char.dailyGoalMin)ngd++;
+  const sessionCountsForGoal=char.countRetainingInGoal!==false||catId!=='retaining';
+  if(sessionCountsForGoal&&prevTodayMin<char.dailyGoalMin&&(prevTodayMin+totalMins)>=char.dailyGoalMin)ngd++;
   char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
   const newly=[];
   for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
@@ -695,9 +709,12 @@ function rebuildCharFromLogs(){
   char.minutes=logs.reduce((a,l)=>a+l.dur,0);
   // Methods
   char.methods=[...new Set(logs.map(l=>l.method).filter(Boolean))];
-  // Daily goal days — count distinct dates where cumulative mins hit the goal
+  // Daily goal days — count distinct dates where cumulative goal-qualifying mins hit the goal
   const byDate={};
-  logs.forEach(l=>{byDate[l.date]=(byDate[l.date]||0)+l.dur;});
+  logs.forEach(l=>{
+    if(char.countRetainingInGoal!==false||l.cat!=='retaining')
+      byDate[l.date]=(byDate[l.date]||0)+l.dur;
+  });
   char.goalDays=Object.values(byDate).filter(m=>m>=(char.dailyGoalMin||120)).length;
   // lastMethod / lastCat from most recent log
   if(logs.length){char.lastMethod=logs[0].method;char.lastCat=logs[0].cat;}
@@ -1560,8 +1577,8 @@ function buildNextMilestone(){
 
 // ── TODAY ──────────────────────────────────────────────────────────────────────
 function renderToday(){
-  const td=today(),tMin=todayMin(),goal=char.dailyGoalMin||120;
-  const goalPct=Math.min(100,Math.round((tMin/goal)*100));
+  const td=today(),tMin=todayMin(),tGoalMin=todayGoalMin(),goal=char.dailyGoalMin||120;
+  const goalPct=Math.min(100,Math.round((tGoalMin/goal)*100));
   const tSess=todayLogs();
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
   const isPaused=!!activeTimer&&!activeTimer.startedAt;
@@ -1665,7 +1682,7 @@ function renderToday(){
     <div class="goal-bar"><div class="goal-fill ${goalPct>=100?'goal-fill-ok':'goal-fill-warn'}" style="width:${goalPct}%"></div></div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-top:4px">
       <span data-live="goal-done">${fmtMin(tMin)} done</span>
-      <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tMin))+' to go'}</span>
+      <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go'}</span>
     </div>
     <div class="stats-grid-4" style="grid-template-columns:1fr 1fr;gap:10px">
       <div style="text-align:center;background:var(--bg-stat);border-radius:10px;padding:14px 4px">
@@ -1676,6 +1693,14 @@ function renderToday(){
         <span class="sg-val" style="font-size:clamp(18px,5vw,26px);color:${char.streak>0?'#F59E0B':'var(--text3)'}">${char.streak>0?char.streak+'🔥':'—'}</span>
         <div style="font-size:9px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.5px">Day Streak</div>
       </div>
+    </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:7px;margin-top:7px;border-top:1px solid var(--stat-border)">
+      <div style="font-size:10px;color:var(--text5)">Count retaining toward goal</div>
+      <button onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
+        style="background:${char.countRetainingInGoal!==false?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${char.countRetainingInGoal!==false?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;color:${char.countRetainingInGoal!==false?'var(--accent)':'var(--text5)'};cursor:pointer;font-family:DM Sans,sans-serif;transition:all .2s">
+        ${char.countRetainingInGoal!==false?'ON':'OFF'}
+      </button>
     </div>
   </div>
   ${timerBlock}
