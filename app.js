@@ -486,10 +486,10 @@ function refreshLiveStats(){
   const goalTexts=document.querySelectorAll('[data-live="goal-text"]');
   goalTexts.forEach(el=>{el.textContent=goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go';});
   const goalDone=document.querySelector('[data-live="goal-done"]');
-  if(goalDone)goalDone.textContent=fmtMin(tMin)+' done';
+  if(goalDone)goalDone.textContent=fmtMin(tGoalMin)+' done';
   // Today stat tile
   const todayStat=document.querySelector('[data-live="today-min"]');
-  if(todayStat)todayStat.textContent=fmtMin(tMin);
+  if(todayStat)todayStat.textContent=fmtMin(tGoalMin);
 }
 function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
 function beginSession(){
@@ -1681,12 +1681,12 @@ function renderToday(){
     </div>
     <div class="goal-bar"><div class="goal-fill ${goalPct>=100?'goal-fill-ok':'goal-fill-warn'}" style="width:${goalPct}%"></div></div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-top:4px">
-      <span data-live="goal-done">${fmtMin(tMin)} done</span>
+      <span data-live="goal-done">${fmtMin(tGoalMin)} done</span>
       <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go'}</span>
     </div>
     <div class="stats-grid-4" style="grid-template-columns:1fr 1fr;gap:10px">
       <div style="text-align:center;background:var(--bg-stat);border-radius:10px;padding:14px 4px">
-        <span class="sg-val" style="font-size:clamp(18px,5vw,26px);color:${tMin>0?'var(--accent)':'var(--text3)'}" data-live="today-min">${fmtMin(tMin)}</span>
+        <span class="sg-val" style="font-size:clamp(18px,5vw,26px);color:${tGoalMin>0?'var(--accent)':'var(--text3)'}" data-live="today-min">${fmtMin(tGoalMin)}</span>
         <div style="font-size:9px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.5px">Today</div>
       </div>
       <div style="text-align:center;background:var(--bg-stat);border-radius:10px;padding:14px 4px">
@@ -1695,20 +1695,18 @@ function renderToday(){
       </div>
     </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding-top:7px;margin-top:7px;border-top:1px solid var(--stat-border)">
-      <div style="font-size:10px;color:var(--text5)">Count retaining toward goal</div>
-      <button onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
-        style="background:${char.countRetainingInGoal!==false?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${char.countRetainingInGoal!==false?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:3px 12px;font-size:10px;font-weight:700;color:${char.countRetainingInGoal!==false?'var(--accent)':'var(--text5)'};cursor:pointer;font-family:DM Sans,sans-serif;transition:all .2s">
-        ${char.countRetainingInGoal!==false?'ON':'OFF'}
-      </button>
-    </div>
   </div>
   ${timerBlock}
   ${quickLogBtn}
   ${!activeTimer?`<button id="start-session-btn" class="btn-gold" style="margin-bottom:7px">${IC.plus(14)} Start Session</button>`:''}
-  <div style="display:flex;gap:7px;margin-bottom:12px">
-    <button id="log-past-btn" class="btn-ghost" style="flex:1;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px">${IC.edit(13)} Log Past</button>
-    <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:11px 14px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:12px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
+  <div style="display:flex;gap:6px;margin-bottom:12px">
+    <button id="log-past-btn" class="btn-ghost" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 8px">${IC.edit(12)} Log Past</button>
+    <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 12px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:11px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
+    <button onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
+      title="${char.countRetainingInGoal!==false?'Retaining counts toward daily goal — tap to exclude':'Retaining excluded from daily goal — tap to include'}"
+      style="flex:0 0 auto;background:${char.countRetainingInGoal!==false?'var(--bg-stat)':'var(--acc12)'};border:1px solid ${char.countRetainingInGoal!==false?'var(--stat-border)':'var(--acc30)'};border-radius:10px;padding:10px 11px;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:${char.countRetainingInGoal!==false?'var(--text4)':'var(--accent)'}">
+      🔒<span style="font-size:9px">${char.countRetainingInGoal!==false?'Include Retaining':'Exclude Retaining'}</span>
+    </button>
   </div>
   ${lastSessHtml}
   ${buildNextMilestone()}
