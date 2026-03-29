@@ -18,19 +18,14 @@ const ciDesc=(l)=>l.ci==='CI-0'?'Starting point of restoration. No loose skin pr
 const CATS=[
   {id:'manual',label:'Manual',icon:'✋',color:'#F59E0B',
    methods:['MM1 (Manual Method 1)','MM2 (Manual Method 2)','MM3 (Manual Method 3)','MM4 (Manual Method 4)','MM5 (Manual Method 5)','Squeeze-Stretch Method',"André's Method",'O-Rings']},
-   //
   {id:'device',label:'Devices',icon:'⚙',color:'#60A5FA',
-   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD','Stealth Retainer']},
-   //
+   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD']},
   {id:'tape',label:'Taping',icon:'📐',color:'#A78BFA',
    methods:['T-Tape','Cross Tape','Kraven-Tape','Reverse Tape','Canister Method']},
-   //
   {id:'inflation',label:'Inflation',icon:'💨',color:'#34D399',
    methods:['HyperRestore','Foreskinned','Airforce','Priva Air',"Chris' Air Retainer (CAR-1)",'DIY Balloon Method','FIT V4','Pecker Packer']},
-   //
   {id:'retaining',label:'Retaining',icon:'🔒',color:'#F472B6',
-   methods:['TLC Your-Skin-Cone','O-Rings (Retaining)','Mantor Skin2Skin','ManHood','The Phoenix']},
-   //
+   methods:['Your-Skin-Cone','Stealth Retainer','O-Rings (Retaining)','Mantor Skin2Skin','ManHood']},
   {id:'packing',label:'Packing',icon:'📦',color:'#FB923C',
    methods:['TLC Packer','Restore In Comfort (RIC)','Stealth Extended P-Tainer','Pear Gauge','Foam Insert (DIY)']},
   {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
@@ -3998,13 +3993,7 @@ function buildUserCard(u,now,isJoined){
   const isMe=u.uid===fbUID;
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
   const timeStr=u.active
-    ?(u.sessionStartedAt
-        ?(()=>{
-            const sm=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
-            const elapsed=Math.max(0,Math.floor((now-sm)/60000));
-            return elapsed>0?fmtDur(elapsed)+' into session':'Active now';
-          })()
-        :(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now'))
+    ?(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now')
     :(ms>0?timeAgo(ms):'Inactive');
   const encourageBtn=isMe?''
     :isJoined
