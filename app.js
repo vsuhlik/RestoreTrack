@@ -3874,22 +3874,14 @@ function renderCommunity(){
 
 
 // Build active list from Firestore data
+  // Use lastSeen recency as the active signal — more reliable than sessionStartedAt age
+  // lastSeen is kept fresh by the 5-minute heartbeat, so 2 hours is a safe window
   let active=commState.users.filter(u=>{
     if(!u.active)return false;
-    if(u.sessionStartedAt){
-      const startMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
-      return(now-startMs)<24*60*60*1000;
-    }
-    return u.lastSeen&&(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
+    if(!u.lastSeen)return false;
+    const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
+    return(now-seenMs)<2*60*60*1000;
   });
-  // Self-inject: if WE are running a session locally but not yet in the active list,
-  // add ourselves based on local state — bypasses any Firestore sync delay
-  if(running&&fbUID&&!active.find(u=>u.uid===fbUID)){
-    const selfDoc=commState.users.find(u=>u.uid===fbUID);
-    if(selfDoc){
-      active=[{...selfDoc,active:true,sessionStartedAt:{toMillis:()=>activeTimer.startedAt},todayMins:todayMin(),method:activeTimer.method||''},...active];
-    }
-  }
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
     return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
