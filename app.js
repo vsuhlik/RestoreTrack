@@ -3873,16 +3873,23 @@ function renderCommunity(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
 
 
-// Build active list from Firestore data
+  // Build active list from Firestore data
   // Use lastSeen recency as the active signal — more reliable than sessionStartedAt age
   // lastSeen is kept fresh by the 5-minute heartbeat, so 2 hours is a safe window
+  // Active Now: has the app open or checked in within the last 4 hours
   let active=commState.users.filter(u=>{
     if(!u.active)return false;
     if(!u.lastSeen)return false;
     const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
-    // A user with an active session must always appear, regardless of how long it's been running.
-    // The 7-day cap only removes truly ghost/abandoned sessions where the app crashed mid-session.
-    return(now-seenMs)<7*24*60*60*1000;
+    return(now-seenMs)<4*60*60*1000;
+  });
+  // Extended Session: active:true but hasn't opened the app in 4+ hours — T-tape, retaining, etc.
+  // Capped at 7 days to clear genuine ghosts (session started, app never opened again).
+  const extendedSession=commState.users.filter(u=>{
+    if(!u.active||!u.lastSeen)return false;
+    const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
+    const elapsed=now-seenMs;
+    return elapsed>=4*60*60*1000&&elapsed<7*24*60*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
@@ -3961,16 +3968,26 @@ function renderCommunity(){
           <div style="font-size:28px;margin-bottom:8px">◉</div>
           No one restoring right now.<br>${isJoined?'Start a session to be first.':'Join and start a session to appear here.'}
         </div>`;
+    const extendedCards=extendedSession.length
+      ?`<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px">
+          <div style="font-size:12px;font-weight:700;color:var(--text3)">⏳ Extended Session</div>
+          <div style="font-size:10px;color:var(--text5)">${extendedSession.length} user${extendedSession.length!==1?'s':''}</div>
+        </div>
+        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:10px;color:var(--text5);line-height:1.6">
+          T-tape, retaining, or long-wear sessions. These restorers are mid-session but haven't checked the app recently.
+        </div>
+        ${extendedSession.map(u=>buildUserCard(u,now,isJoined)).join('')}`
+      :'';
     const recentCards=recentlyActive.length
       ?`<div class="sec-title" style="margin-top:10px">Recently Active</div>${recentlyActive.map(u=>buildUserCard(u,now,isJoined)).join('')}`
       :'';
-    const totalOnline=active.length+recentlyActive.length;
+    const totalOnline=active.length+extendedSession.length+recentlyActive.length;
     content=`
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700;color:var(--text1)">${active.length>0?`${active.length} Restoring Right Now 🟢`:'Active Now'}</div>
         ${totalOnline>0?`<div style="font-size:10px;color:var(--text5)">${totalOnline} online</div>`:''}
       </div>
-      ${activeCards}${recentCards}`;
+      ${activeCards}${extendedCards}${recentCards}`;
   }
 
   else if(commTab==='posts'){
