@@ -29,7 +29,7 @@ const CATS=[
    methods:['HyperRestore','Foreskinned','Airforce','Priva Air',"Chris' Air Retainer (CAR-1)",'DIY Balloon Method','FIT V4','Pecker Packer']},
    //
   {id:'retaining',label:'Retaining',icon:'🔒',color:'#F472B6',
-   methods:['TLC Your-Skin-Cone','O-Rings (Retaining)','Mantor Skin2Skin','ManHood','The Pheonix']},
+   methods:['TLC Your-Skin-Cone','O-Rings (Retaining)','Mantor Skin2Skin','ManHood','The Phoenix']},
    //
   {id:'packing',label:'Packing',icon:'📦',color:'#FB923C',
    methods:['TLC Packer','Restore In Comfort (RIC)','Stealth Extended P-Tainer','Pear Gauge','Foam Insert (DIY)']},
