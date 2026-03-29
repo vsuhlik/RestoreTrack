@@ -3872,13 +3872,14 @@ function renderCommunity(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
 
 
-  const active=commState.users.filter(u=>{
+  // Build active list from Firestore data
+  // Use lastSeen recency as the active signal — more reliable than sessionStartedAt age
+  // lastSeen is kept fresh by the 5-minute heartbeat, so 2 hours is a safe window
+  let active=commState.users.filter(u=>{
     if(!u.active)return false;
-    if(u.sessionStartedAt){
-      const startMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
-      return(now-startMs)<24*60*60*1000;
-    }
-    return u.lastSeen&&(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
+    if(!u.lastSeen)return false;
+    const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
+    return(now-seenMs)<8*60*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
