@@ -18,14 +18,19 @@ const ciDesc=(l)=>l.ci==='CI-0'?'Starting point of restoration. No loose skin pr
 const CATS=[
   {id:'manual',label:'Manual',icon:'✋',color:'#F59E0B',
    methods:['MM1 (Manual Method 1)','MM2 (Manual Method 2)','MM3 (Manual Method 3)','MM4 (Manual Method 4)','MM5 (Manual Method 5)','Squeeze-Stretch Method',"André's Method",'O-Rings']},
+   //
   {id:'device',label:'Devices',icon:'⚙',color:'#60A5FA',
-   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD']},
+   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD','Stealth Retainer']},
+   //
   {id:'tape',label:'Taping',icon:'📐',color:'#A78BFA',
    methods:['T-Tape','Cross Tape','Kraven-Tape','Reverse Tape','Canister Method']},
+   //
   {id:'inflation',label:'Inflation',icon:'💨',color:'#34D399',
    methods:['HyperRestore','Foreskinned','Airforce','Priva Air',"Chris' Air Retainer (CAR-1)",'DIY Balloon Method','FIT V4','Pecker Packer']},
+   //
   {id:'retaining',label:'Retaining',icon:'🔒',color:'#F472B6',
-   methods:['Your-Skin-Cone','Stealth Retainer','O-Rings (Retaining)','Mantor Skin2Skin','ManHood']},
+   methods:['TLC Your-Skin-Cone','O-Rings (Retaining)','Mantor Skin2Skin','ManHood','The Phoenix']},
+   //
   {id:'packing',label:'Packing',icon:'📦',color:'#FB923C',
    methods:['TLC Packer','Restore In Comfort (RIC)','Stealth Extended P-Tainer','Pear Gauge','Foam Insert (DIY)']},
   {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
@@ -456,6 +461,12 @@ function deleteProfile(){
 let liveTickCount=0;
 function startInterval(){
   stopInterval();liveTickCount=0;
+  // Heartbeat: sync presence to Firestore every 5 minutes while a session is running
+  if(!window._presenceHeartbeat){
+    window._presenceHeartbeat=setInterval(()=>{
+      if(activeTimer&&activeTimer.startedAt)syncPresence();
+    },5*60*1000);
+  }
   timerInterval=setInterval(()=>{
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
@@ -491,7 +502,14 @@ function refreshLiveStats(){
   const todayStat=document.querySelector('[data-live="today-min"]');
   if(todayStat)todayStat.textContent=fmtMin(tGoalMin);
 }
-function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
+function stopInterval(){
+  clearInterval(timerInterval);timerInterval=null;
+  // Only kill the heartbeat if there's no active session
+  if(!activeTimer||!activeTimer.startedAt){
+    clearInterval(window._presenceHeartbeat);
+    window._presenceHeartbeat=null;
+  }
+}
 function beginSession(){
   if(!sheetMethod||!sheetCat)return;
   // Guard: if a session is already running or paused, don't silently overwrite it
@@ -1375,6 +1393,8 @@ function render(){
     if(commTab==='posts')fetchPosts(true);
     // Restart users listener if it was stopped when we left
     if(commState.ready&&!commState.unsubUsers)startCommunityListeners();
+    // Always refresh our own presence when entering the community tab
+    if(commState.ready)syncPresence();
     c.innerHTML=renderCommunity();
     attachCommunityEvents();
     commState.newEncouragements=[];
@@ -3849,7 +3869,9 @@ function renderCommunity(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
 
 
-  const active=commState.users.filter(u=>{
+  const running=!!activeTimer&&!!activeTimer.startedAt;
+  // Build active list from Firestore data
+  let active=commState.users.filter(u=>{
     if(!u.active)return false;
     if(u.sessionStartedAt){
       const startMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
@@ -3857,6 +3879,14 @@ function renderCommunity(){
     }
     return u.lastSeen&&(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
   });
+  // Self-inject: if WE are running a session locally but not yet in the active list,
+  // add ourselves based on local state — bypasses any Firestore sync delay
+  if(running&&fbUID&&!active.find(u=>u.uid===fbUID)){
+    const selfDoc=commState.users.find(u=>u.uid===fbUID);
+    if(selfDoc){
+      active=[{...selfDoc,active:true,sessionStartedAt:{toMillis:()=>activeTimer.startedAt},todayMins:todayMin(),method:activeTimer.method||''},...active];
+    }
+  }
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
     return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
