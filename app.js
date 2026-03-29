@@ -18,14 +18,19 @@ const ciDesc=(l)=>l.ci==='CI-0'?'Starting point of restoration. No loose skin pr
 const CATS=[
   {id:'manual',label:'Manual',icon:'✋',color:'#F59E0B',
    methods:['MM1 (Manual Method 1)','MM2 (Manual Method 2)','MM3 (Manual Method 3)','MM4 (Manual Method 4)','MM5 (Manual Method 5)','Squeeze-Stretch Method',"André's Method",'O-Rings']},
+   //
   {id:'device',label:'Devices',icon:'⚙',color:'#60A5FA',
-   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD']},
+   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD','Stealth Retainer']},
+   //
   {id:'tape',label:'Taping',icon:'📐',color:'#A78BFA',
    methods:['T-Tape','Cross Tape','Kraven-Tape','Reverse Tape','Canister Method']},
+   //
   {id:'inflation',label:'Inflation',icon:'💨',color:'#34D399',
    methods:['HyperRestore','Foreskinned','Airforce','Priva Air',"Chris' Air Retainer (CAR-1)",'DIY Balloon Method','FIT V4','Pecker Packer']},
+   //
   {id:'retaining',label:'Retaining',icon:'🔒',color:'#F472B6',
-   methods:['Your-Skin-Cone','Stealth Retainer','O-Rings (Retaining)','Mantor Skin2Skin','ManHood']},
+   methods:['TLC Your-Skin-Cone','O-Rings (Retaining)','Mantor Skin2Skin','ManHood','The Pheonix']},
+   //
   {id:'packing',label:'Packing',icon:'📦',color:'#FB923C',
    methods:['TLC Packer','Restore In Comfort (RIC)','Stealth Extended P-Tainer','Pear Gauge','Foam Insert (DIY)']},
   {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
@@ -1702,11 +1707,14 @@ function renderToday(){
   <div style="display:flex;gap:6px;margin-bottom:12px">
     <button id="log-past-btn" class="btn-ghost" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 8px">${IC.edit(12)} Log Past</button>
     <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 12px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:11px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
-    <button onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
-      title="${char.countRetainingInGoal!==false?'Retaining counts toward daily goal — tap to exclude':'Retaining excluded from daily goal — tap to include'}"
-      style="flex:0 0 auto;background:${char.countRetainingInGoal!==false?'var(--bg-stat)':'var(--acc12)'};border:1px solid ${char.countRetainingInGoal!==false?'var(--stat-border)':'var(--acc30)'};border-radius:10px;padding:10px 11px;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:${char.countRetainingInGoal!==false?'var(--text4)':'var(--accent)'}">
-      🔒<span style="font-size:9px">${char.countRetainingInGoal!==false?'Include Retaining':'Exclude Retaining'}</span>
-    </button>
+    <div onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
+      style="flex:0 0 auto;display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 2px">
+      <div style="font-size:11px;color:${char.countRetainingInGoal!==false?'var(--text4)':'#c0392b'};white-space:nowrap;line-height:1.3">${char.countRetainingInGoal!==false?'Retaining counts<br>toward goal':'Retaining excluded<br>from goal'}</div>
+      <div style="position:relative;width:38px;height:22px;flex-shrink:0">
+        <div style="width:38px;height:22px;border-radius:11px;background:${char.countRetainingInGoal!==false?'#22a85a':'#c0392b'};transition:background .25s;border:1px solid ${char.countRetainingInGoal!==false?'rgba(34,168,90,.6)':'rgba(192,57,43,.6)'}"></div>
+        <div style="position:absolute;top:2px;left:${char.countRetainingInGoal!==false?'18':'2'}px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .25s"></div>
+      </div>
+    </div>
   </div>
   ${lastSessHtml}
   ${buildNextMilestone()}
