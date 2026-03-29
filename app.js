@@ -461,6 +461,12 @@ function deleteProfile(){
 let liveTickCount=0;
 function startInterval(){
   stopInterval();liveTickCount=0;
+  // Heartbeat: sync presence to Firestore every 5 minutes while a session is running
+  if(!window._presenceHeartbeat){
+    window._presenceHeartbeat=setInterval(()=>{
+      if(activeTimer&&activeTimer.startedAt)syncPresence();
+    },5*60*1000);
+  }
   timerInterval=setInterval(()=>{
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
@@ -496,7 +502,14 @@ function refreshLiveStats(){
   const todayStat=document.querySelector('[data-live="today-min"]');
   if(todayStat)todayStat.textContent=fmtMin(tGoalMin);
 }
-function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
+function stopInterval(){
+  clearInterval(timerInterval);timerInterval=null;
+  // Only kill the heartbeat if there's no active session
+  if(!activeTimer||!activeTimer.startedAt){
+    clearInterval(window._presenceHeartbeat);
+    window._presenceHeartbeat=null;
+  }
+}
 function beginSession(){
   if(!sheetMethod||!sheetCat)return;
   // Guard: if a session is already running or paused, don't silently overwrite it
@@ -1380,6 +1393,8 @@ function render(){
     if(commTab==='posts')fetchPosts(true);
     // Restart users listener if it was stopped when we left
     if(commState.ready&&!commState.unsubUsers)startCommunityListeners();
+    // Always refresh our own presence when entering the community tab
+    if(commState.ready)syncPresence();
     c.innerHTML=renderCommunity();
     attachCommunityEvents();
     commState.newEncouragements=[];
