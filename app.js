@@ -3889,7 +3889,7 @@ function renderCommunity(){
     if(!u.active||!u.lastSeen)return false;
     const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
     const elapsed=now-seenMs;
-    return elapsed>=4*60*60*1000&&elapsed<7*24*60*60*1000;
+    return elapsed>=24*60*60*1000&&elapsed<7*24*60*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
