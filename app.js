@@ -3974,7 +3974,7 @@ function renderCommunity(){
           <div style="font-size:10px;color:var(--text5)">${extendedSession.length} user${extendedSession.length!==1?'s':''}</div>
         </div>
         <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:10px;color:var(--text5);line-height:1.6">
-          T-tape, retaining, or long-wear sessions. These restorers are mid-session but haven't checked the app recently.
+          T-tape, retaining, or long-wear sessions. These restorers are mid-session but haven't checked the app in over 24 hours.
         </div>
         ${extendedSession.map(u=>buildUserCard(u,now,isJoined)).join('')}`
       :'';
