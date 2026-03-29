@@ -1723,11 +1723,14 @@ function renderToday(){
   <div style="display:flex;gap:6px;margin-bottom:12px">
     <button id="log-past-btn" class="btn-ghost" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 8px">${IC.edit(12)} Log Past</button>
     <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 12px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:11px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
-    <button onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
-      title="${char.countRetainingInGoal!==false?'Retaining counts toward daily goal — tap to exclude':'Retaining excluded from daily goal — tap to include'}"
-      style="flex:0 0 auto;background:${char.countRetainingInGoal!==false?'var(--bg-stat)':'var(--acc12)'};border:1px solid ${char.countRetainingInGoal!==false?'var(--stat-border)':'var(--acc30)'};border-radius:10px;padding:10px 11px;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:${char.countRetainingInGoal!==false?'var(--text4)':'var(--accent)'}">
-      🔒<span style="font-size:9px">${char.countRetainingInGoal!==false?'Include Retaining':'Exclude Retaining'}</span>
-    </button>
+    <div onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
+      style="flex:0 0 auto;display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 2px">
+      <div style="font-size:11px;color:${char.countRetainingInGoal!==false?'var(--text4)':'#c0392b'};white-space:nowrap;line-height:1.3">${char.countRetainingInGoal!==false?'Retaining counts<br>toward goal':'Retaining excluded<br>from goal'}</div>
+      <div style="position:relative;width:38px;height:22px;flex-shrink:0">
+        <div style="width:38px;height:22px;border-radius:11px;background:${char.countRetainingInGoal!==false?'#22a85a':'#c0392b'};transition:background .25s;border:1px solid ${char.countRetainingInGoal!==false?'rgba(34,168,90,.6)':'rgba(192,57,43,.6)'}"></div>
+        <div style="position:absolute;top:2px;left:${char.countRetainingInGoal!==false?'18':'2'}px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .25s"></div>
+      </div>
+    </div>
   </div>
   ${lastSessHtml}
   ${buildNextMilestone()}
