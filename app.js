@@ -3880,7 +3880,9 @@ function renderCommunity(){
     if(!u.active)return false;
     if(!u.lastSeen)return false;
     const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
-    return(now-seenMs)<2*60*60*1000;
+    // A user with an active session must always appear, regardless of how long it's been running.
+    // The 7-day cap only removes truly ghost/abandoned sessions where the app crashed mid-session.
+    return(now-seenMs)<7*24*60*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
