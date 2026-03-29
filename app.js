@@ -3879,7 +3879,7 @@ function renderCommunity(){
     if(!u.active)return false;
     if(!u.lastSeen)return false;
     const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
-    return(now-seenMs)<8*60*60*1000;
+    return(now-seenMs)<7*24*60*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
@@ -4016,9 +4016,20 @@ function renderCommunity(){
 function buildUserCard(u,now,isJoined){
   const isMe=u.uid===fbUID;
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
-  const timeStr=u.active
-    ?(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now')
-    :(ms>0?timeAgo(ms):'Inactive');
+  let timeStr;
+if(u.active){
+  if(u.sessionStartedAt){
+    const sessStartMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
+    const elapsedMins=Math.floor((now-sessStartMs)/60000);
+    timeStr=fmtDur(elapsedMins);
+  } else if(u.todayMins>0){
+    timeStr=fmtDur(u.todayMins)+' today';
+  } else {
+    timeStr='Active now';
+  }
+} else {
+  timeStr=ms>0?timeAgo(ms):'Inactive';
+}
   const encourageBtn=isMe?''
     :isJoined
       ?`<button onclick="event.stopPropagation();commEncourage('${u.uid}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>`
