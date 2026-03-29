@@ -18,22 +18,16 @@ const ciDesc=(l)=>l.ci==='CI-0'?'Starting point of restoration. No loose skin pr
 const CATS=[
   {id:'manual',label:'Manual',icon:'✋',color:'#F59E0B',
    methods:['MM1 (Manual Method 1)','MM2 (Manual Method 2)','MM3 (Manual Method 3)','MM4 (Manual Method 4)','MM5 (Manual Method 5)','Squeeze-Stretch Method',"André's Method",'O-Rings']},
-   //
   {id:'device',label:'Devices',icon:'⚙',color:'#60A5FA',
-   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD','Stealth Retainer']},
-   //
+   methods:['DTR','TLC Tugger','TLC-X','CAT II Q','Mantor DS','Mantor SLT','PUD','FMD']},
   {id:'tape',label:'Taping',icon:'📐',color:'#A78BFA',
    methods:['T-Tape','Cross Tape','Kraven-Tape','Reverse Tape','Canister Method']},
-   //
   {id:'inflation',label:'Inflation',icon:'💨',color:'#34D399',
    methods:['HyperRestore','Foreskinned','Airforce','Priva Air',"Chris' Air Retainer (CAR-1)",'DIY Balloon Method','FIT V4','Pecker Packer']},
-   //
   {id:'retaining',label:'Retaining',icon:'🔒',color:'#F472B6',
-   methods:['TLC Your-Skin-Cone','O-Rings (Retaining)','Mantor Skin2Skin','ManHood','The Pheonix']},
-   //
+   methods:['Your-Skin-Cone','Stealth Retainer','O-Rings (Retaining)','Mantor Skin2Skin','ManHood']},
   {id:'packing',label:'Packing',icon:'📦',color:'#FB923C',
    methods:['TLC Packer','Restore In Comfort (RIC)','Stealth Extended P-Tainer','Pear Gauge','Foam Insert (DIY)']},
-   //
   {id:'custom',label:'Custom',icon:'✦',color:'#E879F9',methods:[]}
 ];
 const ACHS=[
@@ -462,12 +456,6 @@ function deleteProfile(){
 let liveTickCount=0;
 function startInterval(){
   stopInterval();liveTickCount=0;
-  // Heartbeat: sync presence to Firestore every 5 minutes while a session is running
-  if(!window._presenceHeartbeat){
-    window._presenceHeartbeat=setInterval(()=>{
-      if(activeTimer&&activeTimer.startedAt)syncPresence();
-    },5*60*1000);
-  }
   timerInterval=setInterval(()=>{
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
@@ -503,14 +491,7 @@ function refreshLiveStats(){
   const todayStat=document.querySelector('[data-live="today-min"]');
   if(todayStat)todayStat.textContent=fmtMin(tGoalMin);
 }
-function stopInterval(){
-  clearInterval(timerInterval);timerInterval=null;
-  // Only kill the heartbeat if there's no active session
-  if(!activeTimer||!activeTimer.startedAt){
-    clearInterval(window._presenceHeartbeat);
-    window._presenceHeartbeat=null;
-  }
-}
+function stopInterval(){clearInterval(timerInterval);timerInterval=null;}
 function beginSession(){
   if(!sheetMethod||!sheetCat)return;
   // Guard: if a session is already running or paused, don't silently overwrite it
@@ -1355,7 +1336,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.1</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1394,8 +1375,6 @@ function render(){
     if(commTab==='posts')fetchPosts(true);
     // Restart users listener if it was stopped when we left
     if(commState.ready&&!commState.unsubUsers)startCommunityListeners();
-    // Always refresh our own presence when entering the community tab
-    if(commState.ready)syncPresence();
     c.innerHTML=renderCommunity();
     attachCommunityEvents();
     commState.newEncouragements=[];
@@ -1723,14 +1702,11 @@ function renderToday(){
   <div style="display:flex;gap:6px;margin-bottom:12px">
     <button id="log-past-btn" class="btn-ghost" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 8px">${IC.edit(12)} Log Past</button>
     <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 12px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:11px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
-    <div onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
-      style="flex:0 0 auto;display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 2px">
-      <div style="font-size:11px;color:${char.countRetainingInGoal!==false?'var(--text4)':'#c0392b'};white-space:nowrap;line-height:1.3">${char.countRetainingInGoal!==false?'Retaining counts<br>toward goal':'Retaining excluded<br>from goal'}</div>
-      <div style="position:relative;width:38px;height:22px;flex-shrink:0">
-        <div style="width:38px;height:22px;border-radius:11px;background:${char.countRetainingInGoal!==false?'#22a85a':'#c0392b'};transition:background .25s;border:1px solid ${char.countRetainingInGoal!==false?'rgba(34,168,90,.6)':'rgba(192,57,43,.6)'}"></div>
-        <div style="position:absolute;top:2px;left:${char.countRetainingInGoal!==false?'18':'2'}px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .25s"></div>
-      </div>
-    </div>
+    <button onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
+      title="${char.countRetainingInGoal!==false?'Retaining counts toward daily goal — tap to exclude':'Retaining excluded from daily goal — tap to include'}"
+      style="flex:0 0 auto;background:${char.countRetainingInGoal!==false?'var(--bg-stat)':'var(--acc12)'};border:1px solid ${char.countRetainingInGoal!==false?'var(--stat-border)':'var(--acc30)'};border-radius:10px;padding:10px 11px;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:${char.countRetainingInGoal!==false?'var(--text4)':'var(--accent)'}">
+      🔒<span style="font-size:9px">${char.countRetainingInGoal!==false?'Include Retaining':'Exclude Retaining'}</span>
+    </button>
   </div>
   ${lastSessHtml}
   ${buildNextMilestone()}
@@ -2858,7 +2834,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.1</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3873,23 +3849,13 @@ function renderCommunity(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
 
 
-  // Build active list from Firestore data
-  // Use lastSeen recency as the active signal — more reliable than sessionStartedAt age
-  // lastSeen is kept fresh by the 5-minute heartbeat, so 2 hours is a safe window
-  // Active Now: has the app open or checked in within the last 4 hours
-  let active=commState.users.filter(u=>{
+  const active=commState.users.filter(u=>{
     if(!u.active)return false;
-    if(!u.lastSeen)return false;
-    const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
-    return(now-seenMs)<4*60*60*1000;
-  });
-  // Extended Session: active:true but hasn't opened the app in 4+ hours — T-tape, retaining, etc.
-  // Capped at 7 days to clear genuine ghosts (session started, app never opened again).
-  const extendedSession=commState.users.filter(u=>{
-    if(!u.active||!u.lastSeen)return false;
-    const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
-    const elapsed=now-seenMs;
-    return elapsed>=24*60*60*1000&&elapsed<7*24*60*60*1000;
+    if(u.sessionStartedAt){
+      const startMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
+      return(now-startMs)<24*60*60*1000;
+    }
+    return u.lastSeen&&(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
@@ -3968,26 +3934,16 @@ function renderCommunity(){
           <div style="font-size:28px;margin-bottom:8px">◉</div>
           No one restoring right now.<br>${isJoined?'Start a session to be first.':'Join and start a session to appear here.'}
         </div>`;
-    const extendedCards=extendedSession.length
-      ?`<div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px">
-          <div style="font-size:12px;font-weight:700;color:var(--text3)">⏳ Extended Session</div>
-          <div style="font-size:10px;color:var(--text5)">${extendedSession.length} user${extendedSession.length!==1?'s':''}</div>
-        </div>
-        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:10px;color:var(--text5);line-height:1.6">
-          T-tape, retaining, or long-wear sessions. These restorers are mid-session but haven't checked the app in over 24 hours.
-        </div>
-        ${extendedSession.map(u=>buildUserCard(u,now,isJoined)).join('')}`
-      :'';
     const recentCards=recentlyActive.length
       ?`<div class="sec-title" style="margin-top:10px">Recently Active</div>${recentlyActive.map(u=>buildUserCard(u,now,isJoined)).join('')}`
       :'';
-    const totalOnline=active.length+extendedSession.length+recentlyActive.length;
+    const totalOnline=active.length+recentlyActive.length;
     content=`
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700;color:var(--text1)">${active.length>0?`${active.length} Restoring Right Now 🟢`:'Active Now'}</div>
         ${totalOnline>0?`<div style="font-size:10px;color:var(--text5)">${totalOnline} online</div>`:''}
       </div>
-      ${activeCards}${extendedCards}${recentCards}`;
+      ${activeCards}${recentCards}`;
   }
 
   else if(commTab==='posts'){
@@ -4037,13 +3993,7 @@ function buildUserCard(u,now,isJoined){
   const isMe=u.uid===fbUID;
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
   const timeStr=u.active
-    ?(u.sessionStartedAt
-        ?(()=>{
-            const sm=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
-            const elapsed=Math.max(0,Math.floor((now-sm)/60000));
-            return elapsed>0?fmtDur(elapsed)+' into session':'Active now';
-          })()
-        :(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now'))
+    ?(u.todayMins>0?fmtDur(u.todayMins)+' today':'Active now')
     :(ms>0?timeAgo(ms):'Inactive');
   const encourageBtn=isMe?''
     :isJoined
