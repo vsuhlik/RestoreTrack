@@ -2372,13 +2372,34 @@ function repNavNext(){
 function renderReports(){
   const td=today();
   const liveMins=liveTimerTodayMins();
-  const wDays=thisWeekDays(),wMins=wDays.map(d=>{
-    const logged=logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0);
-    return logged+(d===td?liveMins:0); // add live time to today's bar
+  const wDays=thisWeekDays();
+  const _fmtWD=d=>{const p=d.split('-');return`${parseInt(p[2])} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]}`;};
+  const weekRangeLabel=`${_fmtWD(wDays[0])} – ${_fmtWD(wDays[6])}`;
+  const wData=wDays.map(d=>{
+    const isT=d===td;
+    const dl=logs.filter(l=>l.date===d);
+    const cm={};
+    dl.forEach(l=>{if(l.cat)cm[l.cat]=(cm[l.cat]||0)+l.dur;});
+    if(isT&&liveMins>0&&activeTimer){const lc=activeTimer.cat||'manual';cm[lc]=(cm[lc]||0)+liveMins;}
+    const total=Object.values(cm).reduce((a,b)=>a+b,0);
+    return{d,total,cm,isT};
   });
-  const maxM=Math.max(...wMins,1);
-  const bars=wMins.map((m,i)=>{const h=Math.max(2,Math.round((m/maxM)*76)),isT=wDays[i]===today();
-    return`<div class="bar-col"><div class="bar-val">${m>0?fmtDur(m):''}</div><div class="bar${isT?' today':''}" style="height:${h}px"></div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(wDays[i])}</div></div>`;
+  const maxM=Math.max(...wData.map(w=>w.total),1);
+  const bars=wData.map(({d,total,cm,isT})=>{
+    const totalH=total>0?Math.max(2,Math.round((total/maxM)*88)):0;
+    let segs='';
+    if(total>0){
+      const ents=Object.entries(cm).sort((a,b)=>b[1]-a[1]);
+      let used=0;
+      ents.forEach(([cid,mins],idx)=>{
+        const c=catFor(cid);
+        const last=idx===ents.length-1;
+        const sh=last?(totalH-used):Math.max(1,Math.round((mins/total)*totalH));
+        used+=sh;
+        segs+=`<div style="height:${sh}px;background:${c.color};width:100%;flex-shrink:0" title="${c.label}: ${fmtDur(mins)}"></div>`;
+      });
+    }
+    return`<div class="bar-col"><div class="bar-val">${total>0?fmtDur(total):''}</div><div style="display:flex;flex-direction:column-reverse;height:${totalH}px;width:100%;border-radius:3px 3px 0 0;overflow:hidden">${segs}</div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(d)}</div></div>`;
   }).join('');
   // Calendar month key — needed for both monthly breakdown and calendar
   const year=_repYear,month=_repMonth;
@@ -2457,7 +2478,7 @@ function renderReports(){
       style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative"
       title="${d}">${dayNum}${noteDot}</div>`;
   }).join('');
-  const weekTotal=wMins.reduce((a,m)=>a+m,0); // already includes live time via wMins
+  const weekTotal=wData.reduce((a,w)=>a+w.total,0);
   const calMonthKey=`${year}-${String(month+1).padStart(2,'0')}`;
   const isCurrentMonth=(calMonthKey===td.slice(0,7));
   const monthTotal=logs.filter(l=>l.date.slice(0,7)===calMonthKey).reduce((a,l)=>a+l.dur,0)+(isCurrentMonth?liveMins:0);
@@ -2531,7 +2552,10 @@ function renderReports(){
     <div class="stat"><div class="sv" style="font-size:13px">${fmtDur(char.minutes)}</div><div class="sl">All Time</div></div>
     <div class="stat"><div class="sv" style="font-size:15px;color:#F59E0B">${char.streak}</div><div class="sl">Best Streak</div></div>
   </div>
-  <div class="sec-title">This Week</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">This Week</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text2)">${weekRangeLabel}</div>
+  </div>
   <div class="card"><div class="bar-wrap">${bars}</div></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Activity</div>
@@ -2613,7 +2637,7 @@ function showDayDetail(dateStr){
         <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:13px;color:var(--text1)">${l.method}</div>
-          <div style="font-size:11px;color:var(--text4);margin-top:2px">${fmtMin(l.dur)}${l.notes?`<span style="color:var(--text3)"> · ${htmlEsc(l.notes)}</span>`:''}</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">${fmtDur(l.dur)}${l.notes?`<span style="color:var(--text3)"> · ${htmlEsc(l.notes)}</span>`:''}</div>
         </div>
       </div>`;
     }).join('')

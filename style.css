@@ -471,7 +471,7 @@ textarea:focus        { border-color: var(--acc30); }
   display: flex;
   align-items: flex-end;
   gap: 5px;
-  height: 120px;
+  height: 150px;
   padding: 0 2px;
 }
 .bar-col {
@@ -490,7 +490,7 @@ textarea:focus        { border-color: var(--acc30); }
 }
 .bar.today { background: linear-gradient(180deg, var(--accent), var(--acc45)); }
 .bar-lbl   { font-size: 10px; color: var(--text4); text-align: center; }
-.bar-val   { font-size: 9px; color: var(--text5); text-align: center; min-height: 10px; max-height: 14px; overflow: hidden; line-height: 1.2; }
+.bar-val   { font-size: 9px; color: var(--text5); text-align: center; min-height: 10px; line-height: 1.2; overflow: visible; }
 
 /* ── CALENDAR ────────────────────────────────────────────────────────────── */
 .cal-grid {
