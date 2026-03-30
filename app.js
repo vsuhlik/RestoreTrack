@@ -97,8 +97,8 @@ const ACHS=[
   {id:'ci10',    icon:'🏆',title:'Fully Restored',     desc:'CI-10 — the journey is complete',                check:c=>(c.ciLevel||0)>=10},
 ];
 const THEMES=[
-  {id:'shadow', name:'Shadow', bg:'#0D0B14',accent:'#C9A84C',text:'#E2DDD0',mid:'#3d2a00'},
   {id:'ivory',  name:'Ivory',  bg:'#F0EDE6',accent:'#7A5C10',text:'#1a1710',mid:'#C8A848'},
+  {id:'shadow', name:'Shadow', bg:'#0D0B14',accent:'#C9A84C',text:'#E2DDD0',mid:'#3d2a00'},
   {id:'forest', name:'Forest', bg:'#0A1409',accent:'#4CAF50',text:'#D0EDD0',mid:'#2d5c10'},
   {id:'ocean',  name:'Ocean',  bg:'#050D18',accent:'#38B4D4',text:'#C8E8F5',mid:'#0a4070'},
   {id:'neon',   name:'Neon',   bg:'#07060E',accent:'#DC00FF',text:'#F0E5FF',mid:'#6600AA'},
