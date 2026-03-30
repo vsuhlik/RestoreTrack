@@ -113,7 +113,7 @@ const THEMES=[
 let profiles=[],currentPid=null,currentTheme='ivory';
 let _repYear=new Date().getFullYear(),_repMonth=new Date().getMonth();
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
-  dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
+  dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
   communityBio:'',communityShareStats:true};
 let logs=[],photos=[];
@@ -452,7 +452,7 @@ function deleteProfile(){
   localStorage.removeItem('rst-comm-pending');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,dayNotes:{}};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,dayNotes:{}};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
   stopInterval();
   showProfileScreen=true;
@@ -1354,7 +1354,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.5</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.1</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2881,7 +2881,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.5</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.1</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2935,6 +2935,7 @@ function renderProfileScreen(){
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Data Backup</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup of all your data — sessions, photos, settings, and progress. Use this to switch devices or reinstall. This is not the same as the CSV export in Reports.</div>
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
         💡 <strong style="color:var(--text3)">Using multiple browsers or the Home Screen app?</strong> Each one stores data separately. Export a backup in one and import it in the other to transfer your profile.
       </div>
       <div style="display:flex;gap:8px">
@@ -2954,7 +2955,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.5';
+    const version='v2.4.1';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
