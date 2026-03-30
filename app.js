@@ -110,7 +110,7 @@ const THEMES=[
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
-let profiles=[],currentPid=null,currentTheme='shadow';
+let profiles=[],currentPid=null,currentTheme='ivory';
 let _repYear=new Date().getFullYear(),_repMonth=new Date().getMonth();
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
   dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
