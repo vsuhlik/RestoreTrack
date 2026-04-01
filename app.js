@@ -844,17 +844,16 @@ function setCILevel(n){
 }
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
-async function addPhoto(ciLevel,dataUrl,note,dateStr){
+async function addPhoto(ciLevel,dataUrl,note,dateStr,silent=false){
   const photoDate=dateStr||today();
   const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||''};
   photos=[newPhoto,...photos];
   try{
     await PhotoDB.save(currentPid,photos);
-    showToast('📸 Progress photo saved!');tab='photos';render();
+    if(!silent){showToast('📸 Progress photo saved!');tab='photos';render();}
   }catch(e){
-    // Save failed — roll back so no phantom badge is awarded
     photos=photos.filter(p=>p.id!==newPhoto.id);
-    showToast('⚠ Photo could not be saved');
+    if(!silent)showToast('⚠ Photo could not be saved');
     console.warn('[RT] addPhoto IDB error',e);
   }
 }
@@ -2192,13 +2191,15 @@ function mountPhotoGuideSheet(){
       if(!isQueued)mountPhotoGuideSheet(); // single photo — back to guide
       // multi — just close, user can restart
     };
-    document.getElementById('photo-confirm-save').onclick=()=>{
+    document.getElementById('photo-confirm-save').onclick=async()=>{
       const note=document.getElementById('photo-note-inp')?.value||'';
       const dateVal=document.getElementById('photo-date-inp')?.value||today();
       if(!pendingPhotoData||!pendingPhotoCI)return;
       addPhoto(pendingPhotoCI,pendingPhotoData,note,dateVal);
 
       if(isQueued&&!isLast){
+		// Save silently — don't render mid-queue or the overlay gets wiped
+      await addPhoto(pendingPhotoCI,pendingPhotoData,note,dateVal,true);
         // Advance to next photo in queue
         const nextIdx=queueIdx+1;
         pendingPhotoData=photoQueue[nextIdx].data;
@@ -2206,7 +2207,8 @@ function mountPhotoGuideSheet(){
         el.remove();
         mountPhotoGuideSheet();
       } else {
-        // Done — clear queue
+		// Last (or only) photo — normal save with toast and render
+	    await addPhoto(pendingPhotoCI,pendingPhotoData,note,dateVal,false);
         photoQueue=[];
         photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
         el.remove();
