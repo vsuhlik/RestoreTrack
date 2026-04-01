@@ -2463,20 +2463,30 @@ function renderReports(){
   const goalDaysSet=new Set();
   calDays.filter(Boolean).forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
   const restDaySet=new Set(char.restDays||[]);
+  // Build per-day minutes map for mini progress bars
+  const dayMinsMap={};
+  logs.filter(l=>l.date.slice(0,7)===calMonthKeyEarly).forEach(l=>{
+    dayMinsMap[l.date]=(dayMinsMap[l.date]||0)+l.dur;
+  });
+  if((calMonthKeyEarly===td.slice(0,7))&&liveMins>0&&activeTimer){
+    dayMinsMap[td]=(dayMinsMap[td]||0)+liveMins;
+  }
   const calDots=calDays.map(d=>{
     if(d===null)return`<div></div>`;
     const dayNum=parseInt(d.split('-')[2]);
     const isGoal=goalDaysSet.has(d),isRest=restDaySet.has(d),isActive=activeDays.has(d),isToday=d===td;
     const dayNote=char.dayNotes&&char.dayNotes[d];
     const noteColor=dayNote?.color||null;
-    // Note color overrides default bg if set; otherwise use standard priority
+    const dayMins=dayMinsMap[d]||0;
+    const barPct=Math.min(100,Math.round((dayMins/(char.dailyGoalMin||120))*100));
     const bg=noteColor?noteColor+'99':isGoal?'rgba(34,168,90,.55)':isRest?'rgba(100,120,200,.4)':isActive?'var(--acc45)':'var(--bg-stat)';
     const border=isToday?'1.5px solid var(--accent)':noteColor?`1px solid ${noteColor}`:'1px solid transparent';
     const textCol=noteColor||isGoal||isRest||isActive?'rgba(255,255,255,.9)':(isToday?'var(--accent)':'var(--text5)');
-    const noteDot=dayNote?`<span style="position:absolute;bottom:2px;right:2px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.8)"></span>`:'';
+    const noteDot=dayNote?`<span style="position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.85)"></span>`:'';
+    const miniBar=dayMins>0?`<div style="position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 3px 3px;background:rgba(0,0,0,.2)"><div style="height:100%;width:${barPct}%;background:${isGoal?'rgba(34,168,90,.9)':'rgba(255,255,255,.55)'};border-radius:0 0 3px 3px;transition:width .3s"></div></div>`:'';
     return`<div onclick="showDayDetail('${d}')"
-      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative"
-      title="${d}">${dayNum}${noteDot}</div>`;
+      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative;overflow:hidden"
+      title="${d}">${dayNum}${noteDot}${miniBar}</div>`;
   }).join('');
   const weekTotal=wData.reduce((a,w)=>a+w.total,0);
   const calMonthKey=`${year}-${String(month+1).padStart(2,'0')}`;
@@ -2639,6 +2649,10 @@ function showDayDetail(dateStr){
           <div style="font-weight:600;font-size:13px;color:var(--text1)">${l.method}</div>
           <div style="font-size:11px;color:var(--text4);margin-top:2px">${fmtDur(l.dur)}${l.notes?`<span style="color:var(--text3)"> · ${htmlEsc(l.notes)}</span>`:''}</div>
         </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;margin-top:2px">
+          <button onclick="document.getElementById('day-detail-ov').remove();openEditSessionSheet(${l.id})" class="edit-btn" style="display:flex;align-items:center">${IC.edit(12)}</button>
+          <button onclick="deleteDaySession(${l.id})" class="del-btn" style="display:flex;align-items:center">${IC.x(13)}</button>
+        </div>
       </div>`;
     }).join('')
     :isRest
@@ -2684,7 +2698,22 @@ const NOTE_COLORS=[
   {hex:'#e91e8c',label:'Pink'},
 ];
 let _noteEditorColor='#3498db'; // default color
-
+function deleteDaySession(id){
+  const entry=logs.find(l=>l.id===id);
+  if(!entry)return;
+  confirmDialog(
+    'Delete this session?',
+    `"${entry.method} · ${fmtMin(entry.dur)}" will be permanently removed. Your stats will be recalculated.`,
+    'Delete',
+    ()=>{
+      logs=logs.filter(l=>l.id!==id);
+      rebuildCharFromLogs();
+      document.getElementById('day-detail-ov')?.remove();
+      showToast('Session deleted');
+      if(tab==='reports'){const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}}
+    }
+  );
+}
 function showDayNoteEditor(dateStr){
   const ex=document.getElementById('note-editor-ov');if(ex)ex.remove();
   const existing=(char.dayNotes&&char.dayNotes[dateStr])||null;
@@ -3400,6 +3429,16 @@ function attachEvents(){
     );
   }));
 }
+
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
 
 // ── COMMUNITY / FIREBASE ───────────────────────────────────────────────────────
 const COMM_AVATARS=[
