@@ -280,7 +280,51 @@ const PhotoDB=(()=>{
     }
   };
 })();
+// ── PHOTO COMPRESSION ─────────────────────────────────────────────────────────
+// Compresses a dataURL to JPEG at target max dimension and quality.
+// Returns a Promise<string> (compressed dataURL).
+async function compressPhoto(dataUrl, maxDim = 1200, quality = 0.72) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else { width = Math.round(width * maxDim / height); height = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl); // fallback: return original if decode fails
+    img.src = dataUrl;
+  });
+}
 
+// Estimates base64 dataURL size in KB
+function dataUrlSizeKB(dataUrl) {
+  return Math.round((dataUrl.length * 3) / 4 / 1024);
+}
+// ── COMPRESS EXISTING UNCOMPRESSED PHOTOS (one-time, runs on load) ─────────────
+async function compressExistingPhotos(pid) {
+  try {
+    const arr = await PhotoDB.load(pid);
+    if (!arr.length) return;
+    let changed = false;
+    const updated = await Promise.all(arr.map(async p => {
+      if (!p.url || !p.url.startsWith('data:')) return p;
+      const sizeKB = dataUrlSizeKB(p.url);
+      if (sizeKB <= 150) return p; // already small enough
+      let compressed = await compressPhoto(p.url, 1200, 0.72);
+      if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(p.url,900,0.60);
+      if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(p.url,700,0.50);
+      changed = true;
+      return { ...p, url: compressed };
+    }));
+    if (changed) await PhotoDB.save(pid, updated);
+  } catch(e) { console.warn('[RT] compressExistingPhotos error', e); }
+}
 // ── MIGRATE PHOTOS: localStorage → IndexedDB (runs once on startup) ───────────
 async function migratePhotosToIDB(){
   const toMigrate=[];
@@ -316,6 +360,7 @@ function showStorageWarning(){
 }
 async function loadAll(){
   await migratePhotosToIDB(); // one-time migration, no-op once localStorage photos are gone
+  if(currentPid) await compressExistingPhotos(currentPid); // compress any oversized existing photos
   profiles=S.get('rst-profiles')||[];
   currentPid=S.get('rst-active-pid');
   // Single profile system — take the first (and only) profile if it exists
@@ -845,25 +890,29 @@ function setCILevel(n){
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
 async function addPhoto(ciLevel,dataUrl,note,dateStr){
   const photoDate=dateStr||today();
-  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||''};
+  // Compress before storing — target ≤150KB with progressive quality fallback
+  let compressed=await compressPhoto(dataUrl,1200,0.72);
+  if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(dataUrl,900,0.60);
+  if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(dataUrl,700,0.50);
+  if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(dataUrl,600,0.42);
+  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:compressed,note:note||''};
   photos=[newPhoto,...photos];
   try{
     await PhotoDB.save(currentPid,photos);
+    recalcAchievements();
     showToast('📸 Progress photo saved!');tab='photos';render();
   }catch(e){
-    // Save failed — roll back so no phantom badge is awarded
     photos=photos.filter(p=>p.id!==newPhoto.id);
     showToast('⚠ Photo could not be saved');
     console.warn('[RT] addPhoto IDB error',e);
   }
 }
+
 function deletePhoto(id){
-  confirmDialog(
-    'Delete this photo?',
-    'This photo will be permanently removed from your timeline. This cannot be undone.',
-    'Delete',
-    ()=>{photos=photos.filter(p=>p.id!==id);savePhotos();render();}
-  );
+  photos=photos.filter(p=>p.id!==id);
+  savePhotos();
+  recalcAchievements();
+  render();
 }
 
 // ── CONFIRM DIALOG ─────────────────────────────────────────────────────────────
@@ -1353,7 +1402,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.1</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.2</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2191,24 +2240,50 @@ function mountPhotoGuideSheet(){
       if(!isQueued)mountPhotoGuideSheet(); // single photo — back to guide
       // multi — just close, user can restart
     };
-    document.getElementById('photo-confirm-save').onclick=()=>{
+    document.getElementById('photo-confirm-save').onclick=async ()=>{
+      const btn=document.getElementById('photo-confirm-save');
+      if(btn){btn.disabled=true;btn.textContent='Saving…';}
       const note=document.getElementById('photo-note-inp')?.value||'';
       const dateVal=document.getElementById('photo-date-inp')?.value||today();
-      if(!pendingPhotoData||!pendingPhotoCI)return;
-      addPhoto(pendingPhotoCI,pendingPhotoData,note,dateVal);
+      if(!pendingPhotoData||!pendingPhotoCI){if(btn)btn.disabled=false;return;}
+
+      // Compress this photo now (works for both single and queue)
+      let comp=await compressPhoto(pendingPhotoData,1200,0.72);
+      if(dataUrlSizeKB(comp)>150)comp=await compressPhoto(pendingPhotoData,900,0.60);
+      if(dataUrlSizeKB(comp)>150)comp=await compressPhoto(pendingPhotoData,700,0.50);
+      if(dataUrlSizeKB(comp)>150)comp=await compressPhoto(pendingPhotoData,600,0.42);
 
       if(isQueued&&!isLast){
-        // Advance to next photo in queue
+        // Stage this photo in memory only — do NOT save to IDB, do NOT call render()
+        // (calling render() here would destroy the guide sheet for the next photo)
+        photoQueue[queueIdx].staged={ci:pendingPhotoCI,date:dateVal,url:comp,note,id:Date.now()};
         const nextIdx=queueIdx+1;
         pendingPhotoData=photoQueue[nextIdx].data;
-        pendingPhotoCI=LEVELS[char.ciLevel||0].ci; // reset to current CI for each
+        pendingPhotoCI=LEVELS[char.ciLevel||0].ci;
         el.remove();
         mountPhotoGuideSheet();
       } else {
-        // Done — clear queue
+        // Last photo (or single photo) — collect all staged + this one, save in one batch
+        const lastPhoto={ci:pendingPhotoCI,date:dateVal,url:comp,note,id:Date.now()};
+        const allNew=isQueued
+          ?[...photoQueue.filter(q=>q.staged).map(q=>q.staged),lastPhoto]
+          :[lastPhoto];
+        photos=[...allNew,...photos];
+        try{
+          await PhotoDB.save(currentPid,photos);
+          recalcAchievements();
+          const count=allNew.length;
+          showToast(`📸 ${count>1?count+' photos saved to timeline!':'Photo saved to timeline!'}`);
+        }catch(e){
+          const newIds=new Set(allNew.map(p=>p.id));
+          photos=photos.filter(p=>!newIds.has(p.id));
+          showToast('⚠ Photo(s) could not be saved');
+          console.warn('[RT] batch photo save error',e);
+        }
         photoQueue=[];
         photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
         el.remove();
+        tab='photos';render();
       }
     };
   }
@@ -2462,21 +2537,32 @@ function renderReports(){
   const goalDaysSet=new Set();
   calDays.filter(Boolean).forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
   const restDaySet=new Set(char.restDays||[]);
+  // Build per-day minutes map for mini progress bars
+  const dayMinsMap={};
+  logs.filter(l=>l.date.slice(0,7)===calMonthKeyEarly).forEach(l=>{
+    dayMinsMap[l.date]=(dayMinsMap[l.date]||0)+l.dur;
+  });
+  if((calMonthKeyEarly===td.slice(0,7))&&liveMins>0&&activeTimer){
+    dayMinsMap[td]=(dayMinsMap[td]||0)+liveMins;
+  }
   const calDots=calDays.map(d=>{
     if(d===null)return`<div></div>`;
     const dayNum=parseInt(d.split('-')[2]);
     const isGoal=goalDaysSet.has(d),isRest=restDaySet.has(d),isActive=activeDays.has(d),isToday=d===td;
     const dayNote=char.dayNotes&&char.dayNotes[d];
     const noteColor=dayNote?.color||null;
-    // Note color overrides default bg if set; otherwise use standard priority
+    const dayMins=dayMinsMap[d]||0;
+    const barPct=Math.min(100,Math.round((dayMins/(char.dailyGoalMin||120))*100));
     const bg=noteColor?noteColor+'99':isGoal?'rgba(34,168,90,.55)':isRest?'rgba(100,120,200,.4)':isActive?'var(--acc45)':'var(--bg-stat)';
     const border=isToday?'1.5px solid var(--accent)':noteColor?`1px solid ${noteColor}`:'1px solid transparent';
     const textCol=noteColor||isGoal||isRest||isActive?'rgba(255,255,255,.9)':(isToday?'var(--accent)':'var(--text5)');
-    const noteDot=dayNote?`<span style="position:absolute;bottom:2px;right:2px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.8)"></span>`:'';
+    const noteDot=dayNote?`<span style="position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.85)"></span>`:'';
+    const miniBar=dayMins>0?`<div style="position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 3px 3px;background:rgba(0,0,0,.2)"><div style="height:100%;width:${barPct}%;background:${isGoal?'rgba(34,168,90,.9)':'rgba(255,255,255,.55)'};border-radius:0 0 3px 3px;transition:width .3s"></div></div>`:'';
     return`<div onclick="showDayDetail('${d}')"
-      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative"
-      title="${d}">${dayNum}${noteDot}</div>`;
+      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative;overflow:hidden"
+      title="${d}">${dayNum}${noteDot}${miniBar}</div>`;
   }).join('');
+  
   const weekTotal=wData.reduce((a,w)=>a+w.total,0);
   const calMonthKey=`${year}-${String(month+1).padStart(2,'0')}`;
   const isCurrentMonth=(calMonthKey===td.slice(0,7));
@@ -2638,6 +2724,10 @@ function showDayDetail(dateStr){
           <div style="font-weight:600;font-size:13px;color:var(--text1)">${l.method}</div>
           <div style="font-size:11px;color:var(--text4);margin-top:2px">${fmtDur(l.dur)}${l.notes?`<span style="color:var(--text3)"> · ${htmlEsc(l.notes)}</span>`:''}</div>
         </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;margin-top:2px">
+          <button onclick="document.getElementById('day-detail-ov').remove();openEditSessionSheet(${l.id})" class="edit-btn" style="display:flex;align-items:center">${IC.edit(12)}</button>
+          <button onclick="deleteDaySession(${l.id})" class="del-btn" style="display:flex;align-items:center">${IC.x(13)}</button>
+        </div>
       </div>`;
     }).join('')
     :isRest
@@ -2683,6 +2773,23 @@ const NOTE_COLORS=[
   {hex:'#e91e8c',label:'Pink'},
 ];
 let _noteEditorColor='#3498db'; // default color
+
+function deleteDaySession(id){
+  const entry=logs.find(l=>l.id===id);
+  if(!entry)return;
+  confirmDialog(
+    'Delete this session?',
+    `"${entry.method} · ${fmtMin(entry.dur)}" will be permanently removed. Your stats will be recalculated.`,
+    'Delete',
+    ()=>{
+      logs=logs.filter(l=>l.id!==id);
+      rebuildCharFromLogs();
+      document.getElementById('day-detail-ov')?.remove();
+      showToast('Session deleted');
+      if(tab==='reports'){const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}}
+    }
+  );
+}
 
 function showDayNoteEditor(dateStr){
   const ex=document.getElementById('note-editor-ov');if(ex)ex.remove();
@@ -2880,7 +2987,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.1</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.2</span></div>
     </div>
 
     <!-- Profile card -->
@@ -2908,18 +3015,6 @@ function renderProfileScreen(){
       <div class="theme-row" style="margin-bottom:0">${chips}</div>
     </div>
 
-    <!-- Reminders -->
-    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Daily Reminder</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Get a notification to restore each day. <strong style="color:var(--text4)">Requires the app to be open</strong> — browser limitations prevent true background notifications on most devices.</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="time" id="reminder-time" value="${char.reminderTime||'09:00'}"
-          style="flex:1;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 10px;color:var(--accent);font-size:16px;font-weight:700;outline:none;font-family:DM Sans,sans-serif">
-        <button id="reminder-btn" class="btn-outline" style="flex:0 0 auto;white-space:nowrap">${char.reminderEnabled?'✓ On':'Set Reminder'}</button>
-      </div>
-      ${char.reminderEnabled?`<div style="font-size:10px;color:var(--green)">Reminder set for ${time12(char.reminderTime||'09:00')} daily. <button onclick="cancelReminder()" style="background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline">Cancel</button></div>`:'<div style="font-size:10px;color:var(--text5)">Requires notification permission.</div>'}
-    </div>
-
     <!-- Feedback -->
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Feedback & Bug Reports</div>
@@ -2929,11 +3024,36 @@ function renderProfileScreen(){
       </button>
     </div>
 
-    <!-- Backup -->
+<!-- Cloud Backup -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">☁ Cloud Backup</div>
+      ${fbIsGoogle && fbUID ? `
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
+          Your data is backed up to your Google account — sessions, settings, and photos. Restore anytime on any device by signing in with the same Google account.
+        </div>
+        ${char.lastCloudBackup ? `<div style="font-size:10px;color:var(--green);margin-bottom:10px">✓ Last backup: ${new Date(char.lastCloudBackup).toLocaleDateString()}</div>` : `<div style="font-size:10px;color:var(--text5);margin-bottom:10px">No cloud backup yet — back up now.</div>`}
+        <div style="background:rgba(212,102,153,.06);border:1px solid rgba(212,102,153,.2);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text3);line-height:1.6">
+          🔒 <strong style="color:var(--text2)">Privacy note:</strong> Your photos are encrypted in transit and stored privately under your Google account. Only you can access them — not other users or the app owner.
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-gold" id="cloud-backup-btn" style="flex:1;padding:10px;font-size:12px">☁ Back Up Now</button>
+          <button class="btn-ghost" id="cloud-restore-btn" style="flex:1;padding:10px;font-size:12px">☁ Restore from Cloud</button>
+        </div>
+      ` : `
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
+          Back up your entire profile — sessions, photos, and progress — to your Google account. Restore instantly on any device.
+        </div>
+        <div style="font-size:10px;color:var(--text5);background:var(--bg-stat);border-radius:8px;padding:9px 12px;margin-bottom:10px;line-height:1.6">
+          Requires joining the Community (free) — this connects your Google account securely.
+        </div>
+        <button class="btn-ghost" onclick="tab='community';showProfileScreen=false;render()" style="width:100%;padding:10px;font-size:12px">Join Community to Enable →</button>
+      `}
+    </div>
+
+    <!-- Local Backup -->
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Data Backup</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup of all your data — sessions, photos, settings, and progress. Use this to switch devices or reinstall. This is not the same as the CSV export in Reports.</div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Local Backup (File)</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup saved as a file on your device. Use this for manual transfers or as an extra copy.</div>
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
         💡 <strong style="color:var(--text3)">Using multiple browsers or the Home Screen app?</strong> Each one stores data separately. Export a backup in one and import it in the other to transfer your profile.
       </div>
@@ -2954,17 +3074,16 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.4.1';
+    const version='v2.4.2';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
   });
-  document.getElementById('reminder-btn')?.addEventListener('click',()=>{
-    const t=document.getElementById('reminder-time')?.value||'09:00';
-    setReminder(t);
-  });
+
   document.getElementById('cancel-p')?.addEventListener('click',()=>{showProfileScreen=false;render();});
   document.getElementById('backup-btn')?.addEventListener('click',exportBackup);
+  document.getElementById('cloud-backup-btn')?.addEventListener('click',cloudBackupSave);
+  document.getElementById('cloud-restore-btn')?.addEventListener('click',cloudBackupRestore);
   document.getElementById('restore-btn')?.addEventListener('click',()=>document.getElementById('restore-file').click());
   document.getElementById('restore-file')?.addEventListener('change',e=>{
     const file=e.target.files[0];if(!file)return;
@@ -2973,7 +3092,113 @@ function renderProfileScreen(){
     reader.readAsText(file);e.target.value='';
   });
 }
+// ── CLOUD BACKUP (FIRESTORE) ───────────────────────────────────────────────────
+// Syncs profile + logs + photos to Firestore under users/{uid}.
+// Photos stored as base64 in subcollection — no Firebase Storage needed.
+// Only available when signed in with Google (fbUID + fbIsGoogle).
 
+async function cloudBackupSave() {
+  if (!db || !fbUID || !fbIsGoogle) {
+    showToast('⚠ Sign in with Google (via Community) to use cloud backup');
+    return;
+  }
+  if (!currentPid) return;
+
+  const btn = document.getElementById('cloud-backup-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Backing up…'; }
+
+  try {
+    // 1. Save profile + logs (single doc, typically <100KB)
+    const charData = S.get(`rst-${currentPid}-char`) || {};
+    const logsData = S.get(`rst-${currentPid}-logs`) || [];
+    await db.collection('user_backups').doc(fbUID).set({
+      char: charData,
+      logs: logsData,
+      pid: currentPid,
+      backedUpAt: firebase.firestore.FieldValue.serverTimestamp(),
+      appVersion: '2.5.0'
+    });
+
+    // 2. Save photos to subcollection (one doc per photo)
+    const photoArr = await PhotoDB.load(currentPid);
+    const photoBatch = db.batch();
+    // Delete old photo docs first — get existing IDs
+    const existing = await db.collection('user_backups').doc(fbUID)
+      .collection('photos').get();
+    existing.docs.forEach(d => photoBatch.delete(d.ref));
+    // Write fresh set
+    for (const p of photoArr) {
+      // Ensure compressed before cloud upload
+        let url = p.url;
+        if (dataUrlSizeKB(url) > 150) url = await compressPhoto(url, 900, 0.60);
+        if (dataUrlSizeKB(url) > 150) url = await compressPhoto(url, 700, 0.50);
+      const ref = db.collection('user_backups').doc(fbUID)
+        .collection('photos').doc(String(p.id));
+      photoBatch.set(ref, { ci: p.ci, date: p.date, note: p.note || '', url });
+    }
+    await photoBatch.commit();
+
+    char.lastCloudBackup = new Date().toISOString();
+    saveChar();
+    showToast(`✅ Cloud backup complete — ${photoArr.length} photos saved`);
+  } catch(e) {
+    console.warn('[RT] cloudBackupSave error', e);
+    showToast('⚠ Cloud backup failed — check your connection');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '☁ Back Up Now'; }
+    renderProfileScreen();
+  }
+}
+
+async function cloudBackupRestore() {
+  if (!db || !fbUID || !fbIsGoogle) {
+    showToast('⚠ Sign in with Google (via Community) to restore from cloud');
+    return;
+  }
+  try {
+    const doc = await db.collection('user_backups').doc(fbUID).get();
+    if (!doc.exists) { showToast('⚠ No cloud backup found for this account'); return; }
+    const data = doc.data();
+
+    confirmDialog(
+      'Restore from Cloud?',
+      `This will replace your current data with your cloud backup from ${data.backedUpAt?.toDate?.().toLocaleDateString() || 'unknown date'}. Your current local data will be overwritten.`,
+      'Restore',
+      async () => {
+        const btn = document.getElementById('cloud-restore-btn');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ Restoring…'; }
+        try {
+          // Restore char + logs
+          const pid = data.pid || currentPid;
+          S.set(`rst-${pid}-char`, data.char);
+          S.set(`rst-${pid}-logs`, data.logs);
+          S.set('rst-active-pid', pid);
+          // Update profiles list if needed
+          if (!profiles.find(p => p.id === pid)) {
+            profiles = [{ id: pid, name: data.char?.name || 'Restorer', createdAt: data.char?.createdAt || today() }];
+            saveProfiles();
+          }
+          // Restore photos from subcollection
+          const photoSnap = await db.collection('user_backups').doc(fbUID)
+            .collection('photos').get();
+          const restoredPhotos = photoSnap.docs.map(d => ({
+            id: parseInt(d.id) || Date.now(),
+            ...d.data()
+          })).sort((a, b) => b.id - a.id);
+          await PhotoDB.save(pid, restoredPhotos);
+          showToast(`✅ Restored — ${restoredPhotos.length} photos recovered`);
+          setTimeout(async () => { await loadAll(); showProfileScreen = false; tab = 'today'; render(); }, 600);
+        } catch(e) {
+          console.warn('[RT] cloudBackupRestore error', e);
+          showToast('⚠ Restore failed — check your connection');
+          if (btn) { btn.disabled = false; btn.textContent = '☁ Restore from Cloud'; }
+        }
+      }
+    );
+  } catch(e) {
+    showToast('⚠ Could not reach cloud backup — check your connection');
+  }
+}
 // ── BACKUP / RESTORE ───────────────────────────────────────────────────────────
 async function exportBackup(){
   const backup={
@@ -3027,46 +3252,6 @@ function importBackup(jsonText){
       setTimeout(async ()=>{await loadAll();showProfileScreen=false;tab='today';render();},400);
     }
   );
-}
-
-// ── REMINDERS ──────────────────────────────────────────────────────────────────
-function setReminder(timeStr){
-  if(!('Notification' in window)){showToast('Notifications not supported in this browser');return;}
-  Notification.requestPermission().then(perm=>{
-    if(perm!=='granted'){showToast('Notification permission denied');return;}
-    char.reminderTime=timeStr;
-    char.reminderEnabled=true;
-    saveChar();
-    scheduleReminder();
-    showToast(`\u2713 Reminder set for ${time12(timeStr)} daily`);
-    renderProfileScreen();
-  });
-}
-function cancelReminder(){
-  char.reminderEnabled=false;
-  saveChar();
-  showToast('Reminder cancelled');
-  renderProfileScreen();
-}
-function scheduleReminder(){
-  if(!char.reminderEnabled||!char.reminderTime)return;
-  if(!('Notification' in window)||Notification.permission!=='granted')return;
-  const [h,m]=char.reminderTime.split(':').map(Number);
-  const now=new Date();
-  const next=new Date();
-  next.setHours(h,m,0,0);
-  if(next<=now)next.setDate(next.getDate()+1);
-  const ms=next-now;
-  setTimeout(()=>{
-    // Only fire if user hasn't already logged today and app is open/foregrounded
-    if(todayMin()<10&&document.visibilityState!=='hidden'){
-      new Notification('RestoreTrack',{
-        body:`Time to restore! You haven\u2019t logged a session today.`,
-        icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">\u25c9</text></svg>'
-      });
-    }
-    if(char.reminderEnabled)scheduleReminder();
-  },ms);
 }
 
 // ── CI SHEET ───────────────────────────────────────────────────────────────────
@@ -4881,7 +5066,6 @@ function adminClearCoachQuestions(){
 (async ()=>{
   await loadAll();
   render();
-  scheduleReminder();
   // Init Firebase if already a community member, or if returning from Google redirect
   if(char.communityEnabled||localStorage.getItem('rst-comm-pending')){
     initFirebase();
@@ -4889,19 +5073,3 @@ function adminClearCoachQuestions(){
     if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
   }
 })();
-
-// ── SERVICE WORKER REGISTRATION ───────────────────────────────────────────
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js').then(reg=>{
-    // Listen for a new SW waiting to activate (= new version downloaded)
-    reg.addEventListener('updatefound',()=>{
-      const nw=reg.installing;
-      nw.addEventListener('statechange',()=>{
-        if(nw.state==='installed'&&navigator.serviceWorker.controller){
-          // New version ready — tell the user
-          showToast('🔄 Update available — close and reopen the app');
-        }
-      });
-    });
-  }).catch(()=>{});
-}
