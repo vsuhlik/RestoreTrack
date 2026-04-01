@@ -1,5 +1,5 @@
 
-// ── CONSTANTS ──────────────────────────────────────────────────────────────────
+ // ── CONSTANTS ──────────────────────────────────────────────────────────────────
 const LEVELS=[
   {ci:'CI-0',desc:'Starting point of restoration. No loose skin present.',soft:'',hard:''},
   {ci:'CI-1',desc:'',soft:'No loose skin on the shaft.',hard:'Shaft skin is very tight, may draw the scrotum up on some men.'},
