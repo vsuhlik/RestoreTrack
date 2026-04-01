@@ -281,7 +281,49 @@ const PhotoDB=(()=>{
     }
   };
 })();
+// ── PHOTO COMPRESSION ─────────────────────────────────────────────────────────
+// Compresses a dataURL to JPEG at target max dimension and quality.
+// Returns a Promise<string> (compressed dataURL).
+async function compressPhoto(dataUrl, maxDim = 1200, quality = 0.72) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else { width = Math.round(width * maxDim / height); height = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl); // fallback: return original if decode fails
+    img.src = dataUrl;
+  });
+}
 
+// Estimates base64 dataURL size in KB
+function dataUrlSizeKB(dataUrl) {
+  return Math.round((dataUrl.length * 3) / 4 / 1024);
+}
+// ── COMPRESS EXISTING UNCOMPRESSED PHOTOS (one-time, runs on load) ─────────────
+async function compressExistingPhotos(pid) {
+  try {
+    const arr = await PhotoDB.load(pid);
+    if (!arr.length) return;
+    let changed = false;
+    const updated = await Promise.all(arr.map(async p => {
+      if (!p.url || !p.url.startsWith('data:')) return p;
+      const sizeKB = dataUrlSizeKB(p.url);
+      if (sizeKB <= 200) return p; // already small enough
+      const compressed = await compressPhoto(p.url, 1200, 0.72);
+      changed = true;
+      return { ...p, url: compressed };
+    }));
+    if (changed) await PhotoDB.save(pid, updated);
+  } catch(e) { console.warn('[RT] compressExistingPhotos error', e); }
+}
 // ── MIGRATE PHOTOS: localStorage → IndexedDB (runs once on startup) ───────────
 async function migratePhotosToIDB(){
   const toMigrate=[];
@@ -316,7 +358,8 @@ function showStorageWarning(){
   document.body.appendChild(el);
 }
 async function loadAll(){
-  await migratePhotosToIDB(); // one-time migration, no-op once localStorage photos are gone
+await migratePhotosToIDB(); // one-time migration, no-op once localStorage photos are gone
+  if(currentPid) await compressExistingPhotos(currentPid); // compress any oversized existing photos
   profiles=S.get('rst-profiles')||[];
   currentPid=S.get('rst-active-pid');
   // Single profile system — take the first (and only) profile if it exists
@@ -844,9 +887,13 @@ function setCILevel(n){
 }
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
-async function addPhoto(ciLevel,dataUrl,note,dateStr,silent=false){
+async function addPhoto(ciLevel,dataUrl,note,dateStr){
   const photoDate=dateStr||today();
-  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:dataUrl,note:note||''};
+  // Compress before storing — target ≤150KB, retry at lower quality if needed
+  let compressed=await compressPhoto(dataUrl,1200,0.72);
+  if(dataUrlSizeKB(compressed)>200)compressed=await compressPhoto(dataUrl,900,0.60);
+  if(dataUrlSizeKB(compressed)>200)compressed=await compressPhoto(dataUrl,700,0.50);
+  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:compressed,note:note||''};
   photos=[newPhoto,...photos];
   try{
     await PhotoDB.save(currentPid,photos);
@@ -2961,11 +3008,36 @@ function renderProfileScreen(){
       </button>
     </div>
 
-    <!-- Backup -->
+<!-- Cloud Backup -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">☁ Cloud Backup</div>
+      ${fbIsGoogle && fbUID ? `
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
+          Your data is backed up to your Google account — sessions, settings, and photos. Restore anytime on any device by signing in with the same Google account.
+        </div>
+        ${char.lastCloudBackup ? `<div style="font-size:10px;color:var(--green);margin-bottom:10px">✓ Last backup: ${new Date(char.lastCloudBackup).toLocaleDateString()}</div>` : `<div style="font-size:10px;color:var(--text5);margin-bottom:10px">No cloud backup yet — back up now.</div>`}
+        <div style="background:rgba(212,102,153,.06);border:1px solid rgba(212,102,153,.2);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text3);line-height:1.6">
+          🔒 <strong style="color:var(--text2)">Privacy note:</strong> Your photos are encrypted in transit and stored privately under your Google account. Only you can access them — not other users or the app owner.
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-gold" id="cloud-backup-btn" style="flex:1;padding:10px;font-size:12px">☁ Back Up Now</button>
+          <button class="btn-ghost" id="cloud-restore-btn" style="flex:1;padding:10px;font-size:12px">☁ Restore from Cloud</button>
+        </div>
+      ` : `
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
+          Back up your entire profile — sessions, photos, and progress — to your Google account. Restore instantly on any device.
+        </div>
+        <div style="font-size:10px;color:var(--text5);background:var(--bg-stat);border-radius:8px;padding:9px 12px;margin-bottom:10px;line-height:1.6">
+          Requires joining the Community (free) — this connects your Google account securely.
+        </div>
+        <button class="btn-ghost" onclick="tab='community';showProfileScreen=false;render()" style="width:100%;padding:10px;font-size:12px">Join Community to Enable →</button>
+      `}
+    </div>
+
+    <!-- Local Backup -->
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Data Backup</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup of all your data — sessions, photos, settings, and progress. Use this to switch devices or reinstall. This is not the same as the CSV export in Reports.</div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Local Backup (File)</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup saved as a file on your device. Use this for manual transfers or as an extra copy.</div>
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
         💡 <strong style="color:var(--text3)">Using multiple browsers or the Home Screen app?</strong> Each one stores data separately. Export a backup in one and import it in the other to transfer your profile.
       </div>
@@ -2975,7 +3047,6 @@ function renderProfileScreen(){
       </div>
       <input type="file" id="restore-file" accept=".json" style="display:none">
     </div>
-
     <button id="cancel-p" style="background:none;border:none;color:var(--text4);font-size:13px;margin-top:4px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:10px">← Back to app</button>
 
     <!-- Delete — buried at the bottom, intentionally low-key until needed -->
@@ -2997,6 +3068,8 @@ function renderProfileScreen(){
   });
   document.getElementById('cancel-p')?.addEventListener('click',()=>{showProfileScreen=false;render();});
   document.getElementById('backup-btn')?.addEventListener('click',exportBackup);
+  document.getElementById('cloud-backup-btn')?.addEventListener('click',cloudBackupSave);
+  document.getElementById('cloud-restore-btn')?.addEventListener('click',cloudBackupRestore);
   document.getElementById('restore-btn')?.addEventListener('click',()=>document.getElementById('restore-file').click());
   document.getElementById('restore-file')?.addEventListener('change',e=>{
     const file=e.target.files[0];if(!file)return;
@@ -3005,7 +3078,112 @@ function renderProfileScreen(){
     reader.readAsText(file);e.target.value='';
   });
 }
+// ── CLOUD BACKUP (FIRESTORE) ───────────────────────────────────────────────────
+// Syncs profile + logs + photos to Firestore under users/{uid}.
+// Photos stored as base64 in subcollection — no Firebase Storage needed.
+// Only available when signed in with Google (fbUID + fbIsGoogle).
 
+async function cloudBackupSave() {
+  if (!db || !fbUID || !fbIsGoogle) {
+    showToast('⚠ Sign in with Google (via Community) to use cloud backup');
+    return;
+  }
+  if (!currentPid) return;
+
+  const btn = document.getElementById('cloud-backup-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Backing up…'; }
+
+  try {
+    // 1. Save profile + logs (single doc, typically <100KB)
+    const charData = S.get(`rst-${currentPid}-char`) || {};
+    const logsData = S.get(`rst-${currentPid}-logs`) || [];
+    await db.collection('user_backups').doc(fbUID).set({
+      char: charData,
+      logs: logsData,
+      pid: currentPid,
+      backedUpAt: firebase.firestore.FieldValue.serverTimestamp(),
+      appVersion: '2.5.0'
+    });
+
+    // 2. Save photos to subcollection (one doc per photo)
+    const photoArr = await PhotoDB.load(currentPid);
+    const photoBatch = db.batch();
+    // Delete old photo docs first — get existing IDs
+    const existing = await db.collection('user_backups').doc(fbUID)
+      .collection('photos').get();
+    existing.docs.forEach(d => photoBatch.delete(d.ref));
+    // Write fresh set
+    for (const p of photoArr) {
+      // Ensure compressed before cloud upload
+      let url = p.url;
+      if (dataUrlSizeKB(url) > 200) url = await compressPhoto(url, 900, 0.60);
+      const ref = db.collection('user_backups').doc(fbUID)
+        .collection('photos').doc(String(p.id));
+      photoBatch.set(ref, { ci: p.ci, date: p.date, note: p.note || '', url });
+    }
+    await photoBatch.commit();
+
+    char.lastCloudBackup = new Date().toISOString();
+    saveChar();
+    showToast(`✅ Cloud backup complete — ${photoArr.length} photos saved`);
+  } catch(e) {
+    console.warn('[RT] cloudBackupSave error', e);
+    showToast('⚠ Cloud backup failed — check your connection');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '☁ Back Up Now'; }
+    renderProfileScreen();
+  }
+}
+
+async function cloudBackupRestore() {
+  if (!db || !fbUID || !fbIsGoogle) {
+    showToast('⚠ Sign in with Google (via Community) to restore from cloud');
+    return;
+  }
+  try {
+    const doc = await db.collection('user_backups').doc(fbUID).get();
+    if (!doc.exists) { showToast('⚠ No cloud backup found for this account'); return; }
+    const data = doc.data();
+
+    confirmDialog(
+      'Restore from Cloud?',
+      `This will replace your current data with your cloud backup from ${data.backedUpAt?.toDate?.().toLocaleDateString() || 'unknown date'}. Your current local data will be overwritten.`,
+      'Restore',
+      async () => {
+        const btn = document.getElementById('cloud-restore-btn');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ Restoring…'; }
+        try {
+          // Restore char + logs
+          const pid = data.pid || currentPid;
+          S.set(`rst-${pid}-char`, data.char);
+          S.set(`rst-${pid}-logs`, data.logs);
+          S.set('rst-active-pid', pid);
+          // Update profiles list if needed
+          if (!profiles.find(p => p.id === pid)) {
+            profiles = [{ id: pid, name: data.char?.name || 'Restorer', createdAt: data.char?.createdAt || today() }];
+            saveProfiles();
+          }
+          // Restore photos from subcollection
+          const photoSnap = await db.collection('user_backups').doc(fbUID)
+            .collection('photos').get();
+          const restoredPhotos = photoSnap.docs.map(d => ({
+            id: parseInt(d.id) || Date.now(),
+            ...d.data()
+          })).sort((a, b) => b.id - a.id);
+          await PhotoDB.save(pid, restoredPhotos);
+          showToast(`✅ Restored — ${restoredPhotos.length} photos recovered`);
+          setTimeout(async () => { await loadAll(); showProfileScreen = false; tab = 'today'; render(); }, 600);
+        } catch(e) {
+          console.warn('[RT] cloudBackupRestore error', e);
+          showToast('⚠ Restore failed — check your connection');
+          if (btn) { btn.disabled = false; btn.textContent = '☁ Restore from Cloud'; }
+        }
+      }
+    );
+  } catch(e) {
+    showToast('⚠ Could not reach cloud backup — check your connection');
+  }
+}
 // ── BACKUP / RESTORE ───────────────────────────────────────────────────────────
 async function exportBackup(){
   const backup={
