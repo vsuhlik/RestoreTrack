@@ -197,6 +197,20 @@ function liveTimerTodayMins(){
   return Math.max(0,Math.floor(msSinceCount/60000));
 }
 
+// Returns minutes of the active session that fall within a specific YYYY-MM-DD date (local timezone)
+function liveTimerMinsForDate(dateStr){
+  if(!activeTimer||!activeTimer.startedAt)return 0;
+  const sessionStartMs=activeTimer.wallStart
+    ?activeTimer.wallStart
+    :Date.now()-(timerSecs*1000);
+  const p=dateStr.split('-');
+  const dateStart=new Date(+p[0],+p[1]-1,+p[2],0,0,0,0).getTime();
+  const dateEnd  =new Date(+p[0],+p[1]-1,+p[2],23,59,59,999).getTime();
+  const overlapStart=Math.max(sessionStartMs,dateStart);
+  const overlapEnd  =Math.min(Date.now(),dateEnd);
+  if(overlapEnd<=overlapStart)return 0;
+  return Math.max(0,Math.floor((overlapEnd-overlapStart)/60000));
+}
 const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
 // Goal-qualifying minutes — filters retaining if user has opted out
 const todayGoalMin=()=>{
@@ -1402,7 +1416,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.2</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.3</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -2454,7 +2468,7 @@ function renderReports(){
     const dl=logs.filter(l=>l.date===d);
     const cm={};
     dl.forEach(l=>{if(l.cat)cm[l.cat]=(cm[l.cat]||0)+l.dur;});
-    if(isT&&liveMins>0&&activeTimer){const lc=activeTimer.cat||'manual';cm[lc]=(cm[lc]||0)+liveMins;}
+    if(activeTimer&&activeTimer.startedAt){const _dlm=liveTimerMinsForDate(d);if(_dlm>0){const lc=activeTimer.cat||'manual';cm[lc]=(cm[lc]||0)+_dlm;}}
     const total=Object.values(cm).reduce((a,b)=>a+b,0);
     return{d,total,cm,isT};
   });
@@ -2534,17 +2548,27 @@ function renderReports(){
     calDays.push(ds);
   }
   const activeDays=new Set(logs.map(l=>l.date));
-  const goalDaysSet=new Set();
-  calDays.filter(Boolean).forEach(d=>{if(logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120))goalDaysSet.add(d);});
+if(activeTimer&&activeTimer.startedAt){
+  const _sMs=activeTimer.wallStart||Date.now()-(timerSecs*1000);
+  let _cur=new Date(_sMs);const _now=new Date();
+  while(_cur<=_now){activeDays.add(localDateStr(_cur));_cur.setDate(_cur.getDate()+1);}
+}  const goalDaysSet=new Set();
+  calDays.filter(Boolean).forEach(d=>{
+  const _logM=logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0);
+  if(_logM+liveTimerMinsForDate(d)>=(char.dailyGoalMin||120))goalDaysSet.add(d);
+});
   const restDaySet=new Set(char.restDays||[]);
   // Build per-day minutes map for mini progress bars
   const dayMinsMap={};
   logs.filter(l=>l.date.slice(0,7)===calMonthKeyEarly).forEach(l=>{
     dayMinsMap[l.date]=(dayMinsMap[l.date]||0)+l.dur;
   });
-  if((calMonthKeyEarly===td.slice(0,7))&&liveMins>0&&activeTimer){
-    dayMinsMap[td]=(dayMinsMap[td]||0)+liveMins;
-  }
+  if(activeTimer&&activeTimer.startedAt){
+  calDays.filter(Boolean).forEach(d=>{
+    const _dlm=liveTimerMinsForDate(d);
+    if(_dlm>0)dayMinsMap[d]=(dayMinsMap[d]||0)+_dlm;
+  });
+}
   const calDots=calDays.map(d=>{
     if(d===null)return`<div></div>`;
     const dayNum=parseInt(d.split('-')[2]);
@@ -2987,7 +3011,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.2</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.3</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3074,7 +3098,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.4.2';
+    const version='v2.4.3';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
