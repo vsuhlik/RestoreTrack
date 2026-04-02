@@ -245,6 +245,62 @@ const S={
   del(k){try{localStorage.removeItem(k);}catch{}},
   usage(){try{let b=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);b+=k.length+(localStorage.getItem(k)||'').length;}return Math.round(b/1024);}catch{return 0;}}
 };
+// ── INDEXEDDB PROFILE DATA STORE ──────────────────────────────────────────────
+// Stores char, logs, profiles, and timer in IndexedDB.
+// IndexedDB has no practical size cap and survives iOS storage pressure.
+// Dual-write strategy: localStorage remains as sync safety net; IDB is primary read source.
+const ProfileDB=(()=>{
+  const DB='rst_profile_data',STORE='data',VER=1;
+  let _db=null;
+  function open(){
+    if(_db)return Promise.resolve(_db);
+    return new Promise((res,rej)=>{
+      const req=indexedDB.open(DB,VER);
+      req.onupgradeneeded=e=>{
+        const db=e.target.result;
+        if(!db.objectStoreNames.contains(STORE))
+          db.createObjectStore(STORE,{keyPath:'k'});
+      };
+      req.onsuccess=e=>{_db=e.target.result;res(_db);};
+      req.onerror=e=>rej(e.target.error);
+    });
+  }
+  return{
+    async get(key){
+      try{
+        const db=await open();
+        return new Promise((res,rej)=>{
+          const tx=db.transaction(STORE,'readonly');
+          const req=tx.objectStore(STORE).get(key);
+          req.onsuccess=e=>res(e.target.result?.v??null);
+          req.onerror=e=>rej(e.target.error);
+        });
+      }catch{return null;}
+    },
+    async set(key,value){
+      try{
+        const db=await open();
+        return new Promise((res,rej)=>{
+          const tx=db.transaction(STORE,'readwrite');
+          tx.objectStore(STORE).put({k:key,v:value});
+          tx.oncomplete=()=>res(true);
+          tx.onerror=e=>rej(e.target.error);
+        });
+      }catch{return false;}
+    },
+    async del(key){
+      try{
+        const db=await open();
+        return new Promise((res,rej)=>{
+          const tx=db.transaction(STORE,'readwrite');
+          tx.objectStore(STORE).delete(key);
+          tx.oncomplete=()=>res(true);
+          tx.onerror=e=>rej(e.target.error);
+        });
+      }catch{return false;}
+    }
+  };
+})();
 // ── INDEXEDDB PHOTO STORE ──────────────────────────────────────────────────────
 // Photos are stored in IndexedDB (no 5 MB cap) instead of localStorage.
 // One record per profile pid: { pid, photos: [...] }
@@ -340,6 +396,25 @@ async function compressExistingPhotos(pid) {
   } catch(e) { console.warn('[RT] compressExistingPhotos error', e); }
 }
 // ── MIGRATE PHOTOS: localStorage → IndexedDB (runs once on startup) ───────────
+// ── MIGRATE PROFILE DATA: localStorage → IndexedDB (runs once on startup) ─────
+async function migrateProfileDataToIDB(){
+  // Collect all localStorage keys that belong to this app's profile data
+  const keys=['rst-profiles'];
+  try{
+    const pids=(S.get('rst-profiles')||[]).map(p=>p.id);
+    pids.forEach(pid=>{
+      keys.push(`rst-${pid}-char`,`rst-${pid}-logs`,`rst-${pid}-timer`);
+    });
+  }catch{}
+  for(const key of keys){
+    try{
+      const already=await ProfileDB.get(key);
+      if(already!==null)continue; // already migrated — skip
+      const val=S.get(key);
+      if(val!==null)await ProfileDB.set(key,val);
+    }catch(e){console.warn('[RT] migrateProfileDataToIDB error',key,e);}
+  }
+}
 async function migratePhotosToIDB(){
   const toMigrate=[];
   try{
@@ -373,10 +448,13 @@ function showStorageWarning(){
   document.body.appendChild(el);
 }
 async function loadAll(){
-  await migratePhotosToIDB(); // one-time migration, no-op once localStorage photos are gone
-  if(currentPid) await compressExistingPhotos(currentPid); // compress any oversized existing photos
-  profiles=S.get('rst-profiles')||[];
-  currentPid=S.get('rst-active-pid');
+  await migrateProfileDataToIDB(); // one-time: moves char/logs/profiles/timer to IDB
+  await migratePhotosToIDB();      // one-time: moves photos to IDB (existing)
+  if(currentPid)await compressExistingPhotos(currentPid);
+  // Read from IDB first, fall back to localStorage
+  profiles=(await ProfileDB.get('rst-profiles'))??S.get('rst-profiles')??[];
+  currentPid=S.get('rst-active-pid'); // tiny key — localStorage is fine here
+
   // Single profile system — take the first (and only) profile if it exists
   if(!currentPid&&profiles.length>0){currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);}
   if(currentPid&&profiles.find(p=>p.id===currentPid)){
@@ -388,7 +466,8 @@ async function loadAll(){
 async function loadProfile(pid){
   const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
   char={...defaults};logs=[];photos=[];
-  const c=S.get(`rst-${pid}-char`);if(c)char={...char,...c};
+  const c=(await ProfileDB.get(`rst-${pid}-char`))??S.get(`rst-${pid}-char`);
+  if(c)char={...char,...c};
   if(!char.customMethods)char.customMethods=[];
   if(char.ciLevel===undefined)char.ciLevel=0;
   if(!char.ciHistory)char.ciHistory=[];
@@ -403,10 +482,11 @@ if(char.countRetainingInGoal===undefined)char.countRetainingInGoal=true;
   if(char.communityBio===undefined)char.communityBio='';
   if(char.communityShareStats===undefined)char.communityShareStats=true;
   if(!char.dayNotes)char.dayNotes={};
-  const l=S.get(`rst-${pid}-logs`);if(l)logs=l;
-  photos=await PhotoDB.load(pid); // load from IndexedDB (migrated from localStorage on startup)
+  const l=(await ProfileDB.get(`rst-${pid}-logs`))??S.get(`rst-${pid}-logs`);
+  if(l)logs=l;
+  photos=await PhotoDB.load(pid);
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
-  const t=S.get(`rst-${pid}-timer`);
+  const t=(await ProfileDB.get(`rst-${pid}-timer`))??S.get(`rst-${pid}-timer`);
   if(t){
     activeTimer=t;sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';
     if(t.startedAt){timerSecs=Math.floor((Date.now()-t.startedAt)/1000)+(t.elapsedOnPause||0);startInterval();}
@@ -416,14 +496,34 @@ if(char.countRetainingInGoal===undefined)char.countRetainingInGoal=true;
   // (handles CI jumps, bulk past sessions, new badges added in updates)
   recalcAchievements();
 }
-function saveChar(){if(!currentPid)return;S.set(`rst-${currentPid}-char`,char);}
-function saveLogs(){if(!currentPid)return;S.set(`rst-${currentPid}-logs`,logs);}
+function saveChar(){
+  if(!currentPid)return;
+  S.set(`rst-${currentPid}-char`,char); // sync localStorage — immediate safety net
+  ProfileDB.set(`rst-${currentPid}-char`,char).catch(e=>console.warn('[RT] IDB saveChar',e));
+}
+function saveLogs(){
+  if(!currentPid)return;
+  S.set(`rst-${currentPid}-logs`,logs);
+  ProfileDB.set(`rst-${currentPid}-logs`,logs).catch(e=>console.warn('[RT] IDB saveLogs',e));
+}
 function savePhotos(){
   if(!currentPid)return Promise.resolve(false);
   return PhotoDB.save(currentPid,photos).catch(e=>{console.warn('[RT] savePhotos error',e);return false;});
 }
-function saveTimer(t){if(!currentPid)return;t?S.set(`rst-${currentPid}-timer`,t):S.del(`rst-${currentPid}-timer`);}
-function saveProfiles(){S.set('rst-profiles',profiles);}
+function saveTimer(t){
+  if(!currentPid)return;
+  if(t){
+    S.set(`rst-${currentPid}-timer`,t);
+    ProfileDB.set(`rst-${currentPid}-timer`,t).catch(e=>console.warn('[RT] IDB saveTimer',e));
+  }else{
+    S.del(`rst-${currentPid}-timer`);
+    ProfileDB.del(`rst-${currentPid}-timer`).catch(()=>{});
+  }
+}
+function saveProfiles(){
+  S.set('rst-profiles',profiles);
+  ProfileDB.set('rst-profiles',profiles).catch(e=>console.warn('[RT] IDB saveProfiles',e));
+}
 
 // ── THEME ──────────────────────────────────────────────────────────────────────
 function applyTheme(id){document.documentElement.setAttribute('data-theme',id||'shadow');}
@@ -501,9 +601,14 @@ function deleteProfile(){
   // Wipe all local data
   S.del(`rst-${currentPid}-char`);
   S.del(`rst-${currentPid}-logs`);
-  S.del(`rst-${currentPid}-photos`); // legacy, may already be empty
+  S.del(`rst-${currentPid}-photos`); // legacy
   S.del(`rst-${currentPid}-timer`);
-  PhotoDB.del(currentPid).catch(()=>{}); // remove from IndexedDB
+  PhotoDB.del(currentPid).catch(()=>{});
+  // Also clean up ProfileDB entries
+  ProfileDB.del(`rst-${currentPid}-char`).catch(()=>{});
+  ProfileDB.del(`rst-${currentPid}-logs`).catch(()=>{});
+  ProfileDB.del(`rst-${currentPid}-timer`).catch(()=>{});
+  ProfileDB.del('rst-profiles').catch(()=>{});
   S.del('rst-profiles');
   S.del('rst-active-pid');
   S.del('rst-reactions');
@@ -1416,7 +1521,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.3</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.4</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -3011,7 +3116,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.3</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.4</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3098,7 +3203,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.4.3';
+    const version='v2.4.4';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -3197,6 +3302,9 @@ async function cloudBackupRestore() {
           S.set(`rst-${pid}-char`, data.char);
           S.set(`rst-${pid}-logs`, data.logs);
           S.set('rst-active-pid', pid);
+          await ProfileDB.set(`rst-${pid}-char`, data.char);
+          await ProfileDB.set(`rst-${pid}-logs`, data.logs);
+          await ProfileDB.set('rst-profiles', profiles);
           // Update profiles list if needed
           if (!profiles.find(p => p.id === pid)) {
             profiles = [{ id: pid, name: data.char?.name || 'Restorer', createdAt: data.char?.createdAt || today() }];
@@ -3261,13 +3369,14 @@ function importBackup(jsonText){
       // Write char and logs to localStorage, photos to IndexedDB
       for(const p of backup.profiles){
         const d=backup.data[p.id]||{};
-        if(d.char)S.set(`rst-${p.id}-char`,d.char);
-        if(d.logs)S.set(`rst-${p.id}-logs`,d.logs);
+        if(d.char){S.set(`rst-${p.id}-char`,d.char);await ProfileDB.set(`rst-${p.id}-char`,d.char);}
+        if(d.logs){S.set(`rst-${p.id}-logs`,d.logs);await ProfileDB.set(`rst-${p.id}-logs`,d.logs);}
         if(d.photos&&Array.isArray(d.photos)&&d.photos.length){
           await PhotoDB.save(p.id,d.photos);
         }
       }
       S.set('rst-profiles',backup.profiles);
+      await ProfileDB.set('rst-profiles',backup.profiles);
       // Switch to first profile
       const firstPid=backup.profiles[0]?.id;
       if(firstPid)S.set('rst-active-pid',firstPid);
