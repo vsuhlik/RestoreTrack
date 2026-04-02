@@ -2961,11 +2961,11 @@ function renderProfileScreen(){
     document.getElementById('root').innerHTML=`<div class="pscreen">
       <div style="text-align:center;margin-bottom:24px;margin-top:8px">
         <div style="font-family:Cinzel,serif;font-size:28px;color:var(--accent);letter-spacing:3px;margin-bottom:12px">◉ RESTORETRACK</div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.9;max-width:300px;margin:0 auto">A restoration tracker made by a restorer, for restorers.<br><span style="color:var(--text5);font-size:11px">Free. Private. No account required.</span></div>
+        <div style="font-size:13px;color:var(--text3);line-height:1.9;max-width:300px;margin:0 auto">Built by restorers, for restorers.<br><span style="color:var(--text5);font-size:11px">Free. Private. No account required.</span></div>
       </div>
 
       <div style="width:100%;background:var(--bg-stat);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        ${[['📊','Track CI progress','CI-0 through CI-10'],['⏱','Log every session','Timer + manual logging'],['📸','Photo journal','Visual progress over time'],['◈','Community','Restore with others']].map(([icon,title,sub])=>`
+        ${[['📊','Track CI progress','CI-0 through CI-10'],['⏱','Precision Logging','Timer + manual logging'],['📸','Photo journal','Visual progress over time'],['👥','Community','Restore with others']].map(([icon,title,sub])=>`
           <div style="display:flex;gap:8px;align-items:flex-start">
             <span style="font-size:16px;flex-shrink:0">${icon}</span>
             <div>
@@ -2977,8 +2977,8 @@ function renderProfileScreen(){
 
       <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:20px;margin-bottom:16px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:12px;text-align:center">Create Your Profile</div>
-        <div style="font-size:11px;color:var(--text4);margin-bottom:12px;text-align:center;line-height:1.6">One profile, one journey. Choose a name — your real name or a nickname.</div>
-        <input class="gold-inp" id="new-name" placeholder="Your name..." maxlength="20" style="text-align:center;font-size:16px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--text4);margin-bottom:12px;text-align:center;line-height:1.6">One profile, one journey.</div>
+        <input class="gold-inp" id="new-name" placeholder="Profile name" maxlength="20" style="text-align:center;font-size:16px;margin-bottom:12px">
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Choose a theme</div>
         <div class="theme-row" style="margin-bottom:0">${chips}</div>
       </div>
