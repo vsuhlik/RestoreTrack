@@ -123,6 +123,8 @@ let logMode='timer',manualStart='',manualEnd='',manualStillActive=false;
 let manualStartDate='',manualEndDate='';
 let sheetCat=null,sheetMethod='',sheetNotes='';
 let currentCoachCTA=null;
+let expandedCIRef=new Set();
+let _editStartCI=0,_editCurrentCI=0,_editGoalCI=10;
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
@@ -474,6 +476,7 @@ async function loadProfile(pid){
   if(!char.restDays)char.restDays=[];
   if(char.ciGoal===undefined)char.ciGoal=10;
 if(char.countRetainingInGoal===undefined)char.countRetainingInGoal=true;
+if(char.startCI===undefined)char.startCI=0;
   if(char.communityEnabled===undefined)char.communityEnabled=false;
   if(char.communityVisible===undefined)char.communityVisible=true;
   // communityDisplayName is always derived from char.name — kept in sync automatically
@@ -535,7 +538,7 @@ function createProfile(name){
   const id='p'+Date.now();
   profiles=[{id,name,createdAt:today()}];
   saveProfiles();currentPid=id;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[]};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[],startCI:0,ciGoal:10,restDays:[]};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -992,17 +995,31 @@ function markRestDay(){
 
 // ── CI LEVEL ───────────────────────────────────────────────────────────────────
 function setCILevel(n){
-  const prev=char.ciLevel||0;if(n===prev)return;
+  const prev=char.ciLevel||0;
+  if(n===prev){showCISheet=false;render();return;}
+  // Badge revocation: if going DOWN, strip CI badges above new level
+  if(n<prev){
+    const revokedIds=ACHS
+      .filter(a=>{
+        if(!a.id.startsWith('ci'))return false;
+        const lvl=parseInt(a.id.slice(2));
+        return!isNaN(lvl)&&lvl>n&&char.achievements.includes(a.id);
+      })
+      .map(a=>a.id);
+    if(revokedIds.length)char.achievements=char.achievements.filter(id=>!revokedIds.includes(id));
+  }
   char.ciLevel=n;
+  // Auto-correct startCI and ciGoal if they're now inconsistent
+  if(n<(char.startCI||0))char.startCI=n;
+  if(n>(char.ciGoal||10))char.ciGoal=Math.min(10,n+1);
   char.ciHistory=[...(char.ciHistory||[]),{ci:n,date:today()}];
+  expandedCIRef.add(n);
   const newly=[];
   for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
   saveChar();
   if(n>prev)showToast(`🎉 ${LEVELS[n].ci} reached!`);
-  if(newly.length){
-    setTimeout(()=>showToast(`🏅 ${newly[0].title} unlocked!`),1800);
-
-  }
+  else showToast(`◑ CI adjusted to ${LEVELS[n].ci}`);
+  if(newly.length){setTimeout(()=>showToast(`🏅 ${newly[0].title} unlocked!`),1800);}
   showCISheet=false;render();
 }
 
@@ -1191,6 +1208,35 @@ function exportCSV(){
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3500);}
 function showSessFlash(msg){const el=document.createElement('div');el.className='sess-flash';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),950);}
 
+// ── JOURNEY ARC SVG (used on Journey tab hero card) ─────────────────────────
+function journeyArcSVG(ci,startCI,ciGoal,goalPct){
+  const cx=120,cy=106,r=85,sw=18;
+  const startDeg=148,totalDeg=244,segCount=10,gap=1.6;
+  const segDeg=totalDeg/segCount;
+  let paths='';
+  for(let i=0;i<segCount;i++){
+    const s=startDeg+i*segDeg+gap/2;
+    const e=startDeg+(i+1)*segDeg-gap/2;
+    const filled=i<ci;
+    const isLast=i===ci-1;
+    paths+=`<path d="${arcD(cx,cy,r,s,e)}" stroke="${filled?'var(--accent)':'var(--stat-border,#444)'}" stroke-width="${sw}" fill="none" stroke-linecap="round" opacity="${filled?(isLast?'1':'0.82'):'0.22'}"/>`;
+  }
+  // Goal marker dot on the arc
+  const toR=d=>d*Math.PI/180;
+  if(ciGoal>0&&ciGoal<=10){
+    const gd=startDeg+ciGoal*segDeg;
+    const gx=(cx+r*Math.cos(toR(gd))).toFixed(1);
+    const gy=(cy+r*Math.sin(toR(gd))).toFixed(1);
+    paths+=`<circle cx="${gx}" cy="${gy}" r="5.5" fill="var(--bg)" stroke="${ci>=ciGoal?'var(--green)':'var(--accent)'}" stroke-width="2.5"/>`;
+  }
+  const subtitle=goalPct>=100?'🏆 Goal Reached!':goalPct+'% to Goal';
+  return`<svg viewBox="0 0 240 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:240px;display:block;margin:0 auto">
+    ${paths}
+    <text x="${cx}" y="100" text-anchor="middle" font-family="Cinzel,serif" font-size="50" font-weight="900" fill="var(--accent)">${ci}</text>
+    <text x="${cx}" y="120" text-anchor="middle" font-family="Cinzel,serif" font-size="12" font-weight="600" fill="var(--text3)">${LEVELS[ci].ci}</text>
+    <text x="${cx}" y="140" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" font-weight="600" fill="${goalPct>=100?'var(--green)':'var(--text4)'}">${subtitle}</text>
+  </svg>`;
+}
 // ── CI RING SVG ────────────────────────────────────────────────────────────────
 function arcD(cx,cy,r,startDeg,endDeg){
   const toR=d=>d*Math.PI/180;
@@ -1521,7 +1567,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.5</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.6</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1909,194 +1955,133 @@ function renderToday(){
 }
 
 // ── JOURNEY ────────────────────────────────────────────────────────────────────
+// ── JOURNEY ────────────────────────────────────────────────────────────────────
 function renderJourney(){
   const ci=char.ciLevel||0;
+  const startCI=char.startCI!==undefined?char.startCI:0;
+  const ciGoal=char.ciGoal||10;
   const ciHistory=char.ciHistory||[];
 
-  // CI stage strip — horizontal scroll, current highlighted
-  const stageStrip=LEVELS.map((l,i)=>{
-    const done=i<ci,active=i===ci;
-    return`<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 2px" onclick="showCISheet=true;render()">
-      <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:Cinzel,serif;
-        background:${active?'var(--accent)':done?'var(--acc18)':'var(--bg-stat)'};
-        border:${active?'2px solid var(--accent)':done?'1px solid var(--acc30)':'1px solid var(--stat-border)'};
-        color:${active?'var(--bg)':done?'var(--accent)':'var(--text5)'};
-        box-shadow:${active?'0 0 0 3px var(--acc18)':'none'}">${i}</div>
-      <div style="font-size:8px;color:${active?'var(--accent)':done?'var(--text4)':'var(--text6)'};text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">${done&&!active?'✓':active?'▲':''}</div>
-    </div>`;
-  }).join('');
+  // Auto-seed accordion open to current CI if untouched
+  if(expandedCIRef.size===0)expandedCIRef.add(ci);
 
-  // Current stage info
+  // Onboarding: never set CI and no sessions yet
+  const isOnboarding=!ciHistory.length&&char.sessions===0&&ci===0;
+
+  // Progress percentage toward goal
+  const goalPct=ciGoal>startCI
+    ?Math.min(100,Math.round(((ci-startCI)/(ciGoal-startCI))*100))
+    :(ci>=ciGoal?100:0);
+
+  // ── TIER 1: Hero card ────────────────────────────────────────────────────────
+  const heroCard=`<div class="card card-gold" style="padding:20px 14px 16px;margin-bottom:10px;text-align:center">
+    ${isOnboarding?`
+      <div style="padding:10px 0 6px">
+        <div style="font-size:38px;margin-bottom:10px;opacity:.65">◉</div>
+        <div style="font-family:Cinzel,serif;font-size:15px;color:var(--accent);margin-bottom:8px;letter-spacing:1px">Begin Your Journey</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.85;margin-bottom:18px">
+          Set your <strong style="color:var(--text1)">Start CI</strong>, <strong style="color:var(--text1)">Current CI</strong>,<br>and <strong style="color:var(--text1)">Goal CI</strong> to track progress accurately.
+        </div>
+        <button class="ci-set-btn" id="update-ci-btn" style="font-size:13px;padding:8px 24px">⊕ Set Your CI Levels</button>
+      </div>
+    `:`
+      <div style="display:flex;flex-direction:column;align-items:center">
+        ${journeyArcSVG(ci,startCI,ciGoal,goalPct)}
+        <button class="ci-set-btn" id="update-ci-btn" style="margin-top:8px">✎ Update CI</button>
+      </div>
+    `}
+  </div>`;
+
+  // ── TIER 2: Milestone stepper + live CI descriptions ─────────────────────────
   const curr=LEVELS[ci];
   const next=ci<10?LEVELS[ci+1]:null;
+  const leftFill=ci>startCI;
+  const rightFill=ci>=ciGoal&&ciGoal>startCI;
 
-  // Cumulative hours line
-  const totalHrs=(char.minutes/60);
-  const hrLabel=totalHrs<1?`${char.minutes} minutes`:totalHrs<24?`${totalHrs.toFixed(1)} hours`:`${Math.floor(totalHrs/24)} days, ${Math.round(totalHrs%24)} hours`;
-  const cumulativeLine=char.minutes>0?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 14px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
-    You've dedicated <strong style="color:var(--accent)">${hrLabel}</strong> to restoration${char.streak>1?` — currently on a <strong style="color:#F59E0B">${char.streak}-day streak</strong>`:''}.
+  const stepper=`<div class="card" style="padding:16px;margin-bottom:10px">
+    <div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <!-- Background track -->
+      <div style="position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);height:3px;background:var(--bg-stat);border-radius:2px;z-index:0"></div>
+      <!-- Left fill: start → current (accent) -->
+      ${leftFill?`<div style="position:absolute;left:16px;width:calc(50% - 20px);top:50%;transform:translateY(-50%);height:3px;background:var(--accent);border-radius:2px;z-index:0"></div>`:''}
+      <!-- Right fill: current → goal (green, only when reached) -->
+      ${rightFill?`<div style="position:absolute;left:calc(50% + 20px);right:16px;top:50%;transform:translateY(-50%);height:3px;background:var(--green);border-radius:2px;z-index:0"></div>`:''}
+
+      <!-- Start node -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex-shrink:0">
+        <div style="width:32px;height:32px;border-radius:50%;background:${leftFill?'var(--acc12)':'var(--bg-stat)'};border:2px solid ${leftFill?'var(--acc30)':'var(--stat-border)'};display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:10px;font-weight:700;color:${leftFill?'var(--accent)':'var(--text4)'}">${startCI}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">Start</div>
+        <div style="font-family:Cinzel,serif;font-size:8px;color:var(--text5);margin-top:1px;white-space:nowrap">CI-${startCI}</div>
+      </div>
+
+      <!-- Current node (highlighted) -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex-shrink:0">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:14px;font-weight:900;color:var(--bg);box-shadow:0 0 0 5px var(--acc18)">${ci}</div>
+        <div style="font-size:8px;color:var(--accent);margin-top:5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">Now</div>
+        <div style="font-family:Cinzel,serif;font-size:8px;color:var(--accent);margin-top:1px;white-space:nowrap">${LEVELS[ci].ci}</div>
+      </div>
+
+      <!-- Goal node -->
+      <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex-shrink:0">
+        <div style="width:32px;height:32px;border-radius:50%;background:${rightFill?'var(--green)':'var(--bg-stat)'};border:2px solid ${rightFill?'var(--green)':'var(--acc30)'};display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:10px;font-weight:700;color:${rightFill?'#fff':'var(--accent)'}">${ciGoal}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">${rightFill?'Done!':'Goal'}</div>
+        <div style="font-family:Cinzel,serif;font-size:8px;color:${rightFill?'var(--green)':'var(--text5)'};margin-top:1px;white-space:nowrap">CI-${ciGoal}</div>
+      </div>
+    </div>
+
+    <!-- CI descriptions: current + next -->
+    <div style="border-top:1px solid var(--stat-border);padding-top:12px">
+      <div style="display:flex;align-items:flex-start;gap:10px${next?';margin-bottom:10px':''}">
+        <span style="font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;min-width:38px">${LEVELS[ci].ci}</span>
+        <div style="font-size:11px;color:var(--text2);line-height:1.7;flex:1">${ciDesc(curr)}</div>
+      </div>
+      ${next?`
+      <div style="display:flex;align-items:flex-start;gap:10px;padding-top:9px;border-top:1px dashed var(--stat-border)">
+        <span style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;font-weight:500;flex-shrink:0;min-width:38px;padding-top:2px">Next</span>
+        <div style="font-size:10px;color:var(--text4);line-height:1.65;flex:1">${ciDesc(next)}</div>
+      </div>`:`
+      <div style="text-align:center;padding:8px 0 2px;border-top:1px dashed var(--stat-border)">
+        <span style="font-size:12px;color:var(--green)">🏆 Fully Restored — Journey Complete</span>
+      </div>`}
+    </div>
+  </div>`;
+
+  // Cumulative stats line
+  const cumulativeLine=char.minutes>0?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:9px 14px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
+    <strong style="color:var(--accent)">${fmtDur(char.minutes)}</strong> logged across <strong style="color:var(--text1)">${char.sessions}</strong> session${char.sessions!==1?'s':''}${char.streak>1?` · <strong style="color:#F59E0B">${char.streak}-day streak 🔥</strong>`:''}
   </div>`:'';
 
-  // CI bracket stats — how long at each level
-  function bracketStats(levelIdx){
-    if(!ciHistory.length)return null;
-    // Find when this level started (most recent entry for this level)
-    const entries=ciHistory.filter(h=>h.ci===levelIdx);
-    if(!entries.length&&levelIdx!==0)return null;
-    // Determine date range for this CI level
-    let startDate,endDate;
-    if(levelIdx===0){
-      // CI-0 is from start until first CI change
-      startDate=profiles[0]?.createdAt||null;
-      const firstChange=ciHistory[0];
-      endDate=firstChange&&firstChange.ci>0?firstChange.date:null;
-    } else {
-      const entry=entries[entries.length-1];
-      startDate=entry?.date||null;
-      // End is when they moved to next level
-      const nextChange=ciHistory.find(h=>h.ci>levelIdx&&h.date>=startDate);
-      endDate=levelIdx===ci?null:nextChange?.date||null;
-    }
-    if(!startDate)return null;
-    const start=new Date(startDate+'T12:00:00');
-    const end=endDate?new Date(endDate+'T12:00:00'):new Date();
-    const days=Math.round((end-start)/86400000);
-    // Sessions logged during this period
-    const sessInRange=logs.filter(l=>{
-      const d=new Date(l.date+'T12:00:00');
-      return d>=start&&d<=end;
-    });
-    return{days,sessions:sessInRange.length,hours:Math.floor(sessInRange.reduce((a,l)=>a+l.dur,0)/60)};
-  }
-
-  // CI accordion reference — tap to expand
+  // ── TIER 3: CI Reference accordion ──────────────────────────────────────────
   const refGuide=LEVELS.map((l,i)=>{
     const isActive=i===ci;
-    const stats=bracketStats(i);
-    const statsLine=stats&&(stats.sessions>0||stats.days>0)?`
-      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
-        ${stats.days>0?`<span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:12px;padding:2px 8px;font-size:9px;color:var(--text4)">📅 ${stats.days}d at this level</span>`:''}
-        ${stats.sessions>0?`<span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:12px;padding:2px 8px;font-size:9px;color:var(--text4)">◉ ${stats.sessions} sessions</span>`:''}
-        ${stats.hours>0?`<span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:12px;padding:2px 8px;font-size:9px;color:var(--text4)">⏱ ${stats.hours}h logged</span>`:''}
-      </div>`:'';
+    const isExpanded=expandedCIRef.has(i);
     return`<div style="border-bottom:1px solid var(--stat-border);${i===LEVELS.length-1?'border-bottom:none':''}">
-      <button onclick="(function(){var d=document.getElementById('ci-ref-${i}');var open=d.style.display!=='none';document.querySelectorAll('.ci-ref-body').forEach(x=>x.style.display='none');d.style.display=open?'none':'block';})()"
-        style="width:100%;display:flex;align-items:center;gap:8px;padding:9px 0;background:none;border:none;cursor:pointer;text-align:left;font-family:DM Sans,sans-serif">
+      <button onclick="toggleCIRef(${i})"
+        style="width:100%;display:flex;align-items:center;gap:8px;padding:9px 0;background:none;border:none;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
         <div style="font-family:Cinzel,serif;font-size:11px;font-weight:700;color:${isActive?'var(--accent)':'var(--text4)'};width:36px;flex-shrink:0">${l.ci}</div>
-        <div style="flex:1;font-size:11px;color:${isActive?'var(--text2)':'var(--text4)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          ${i===0?'Starting point':l.soft?l.soft.slice(0,45)+(l.soft.length>45?'…':''):''}
+        <div style="flex:1;font-size:11px;color:${isActive?'var(--text2)':'var(--text4)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${i===0?'Starting point — no loose skin present':l.soft?l.soft.slice(0,50)+(l.soft.length>50?'…':''):''}
         </div>
-        ${isActive?`<span style="font-size:9px;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:2px 7px;color:var(--accent);flex-shrink:0">YOU ◀</span>`:''}
-        <span style="font-size:10px;color:var(--text5);flex-shrink:0">▾</span>
+        ${isActive?`<span style="font-size:9px;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:2px 7px;color:var(--accent);flex-shrink:0">YOU</span>`:''}
+        <span style="font-size:11px;color:var(--text5);flex-shrink:0;display:inline-block;transform:rotate(${isExpanded?'180':'0'}deg);transition:transform .2s">▾</span>
       </button>
-      <div id="ci-ref-${i}" class="ci-ref-body" style="display:${isActive?'block':'none'};padding:0 0 10px 44px">
+      ${isExpanded?`<div style="padding:0 0 10px 44px">
         <div style="font-size:11px;color:var(--text2);line-height:1.7">${ciDesc(l)}</div>
-        ${statsLine}
-      </div>
+      </div>`:''}
     </div>`;
   }).join('');
 
-  // ── CI Goal ──
-  const ciGoal=char.ciGoal||10;
-  const goalLevels=Math.max(0,ciGoal-ci);
-  const goalPct=ciGoal>0?Math.min(100,Math.round((ci/ciGoal)*100)):100;
-  const goalCard=`
-    <div class="card" style="padding:14px;margin-bottom:9px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);margin-bottom:4px">Restoration Goal</div>
-          <div style="display:flex;align-items:baseline;gap:8px">
-            <span style="font-family:Cinzel,serif;font-size:18px;font-weight:900;color:var(--text3)">${LEVELS[ci].ci}</span>
-            <span style="font-size:12px;color:var(--text5)">→</span>
-            <span style="font-family:Cinzel,serif;font-size:18px;font-weight:900;color:var(--accent)">${LEVELS[Math.min(ciGoal,10)].ci}</span>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:22px;font-weight:800;color:var(--accent);font-family:Cinzel,serif">${goalPct}%</div>
-          <div style="font-size:9px;color:var(--text5)">${goalLevels>0?goalLevels+' level'+(goalLevels!==1?'s':'')+' to go':'Goal reached! 🎉'}</div>
-        </div>
-      </div>
-      <div style="height:8px;background:var(--bg-stat);border-radius:4px;overflow:hidden;margin-bottom:10px">
-        <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acc18),var(--accent));width:${goalPct}%;transition:width .6s"></div>
-      </div>
-      <div style="font-size:10px;color:var(--text4);margin-bottom:8px">Set your target CI level:</div>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        ${LEVELS.slice(1).map((l,i)=>{const g=i+1;return`<button onclick="char.ciGoal=${g};saveChar();tab='journey';render()"
-          style="background:${ciGoal===g?'var(--accent)':'var(--bg-stat)'};border:1px solid ${ciGoal===g?'var(--accent)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:10px;font-weight:600;color:${ciGoal===g?'var(--bg)':'var(--text4)'};cursor:pointer;font-family:Cinzel,serif;${g<=ci?'opacity:.5;':''}">${l.ci}</button>`;}).join('')}
-      </div>
-    </div>`;
-
-  // ── Journey Timeline ──
-  const joinDate=profiles[0]?.createdAt||today();
-  const joinMs=new Date(joinDate+'T12:00:00').getTime();
-  const monthsRestoring=Math.floor((Date.now()-joinMs)/2592000000);
-  const daysRestoring=Math.floor((Date.now()-joinMs)/86400000);
-
-  // Build timeline from ciHistory
-  const timelineEntries=[];
-  if(ciHistory.length>0){
-    // Starting entry
-    timelineEntries.push({ci:0,date:joinDate,label:'Started at CI-0',icon:'🌱'});
-    ciHistory.forEach(h=>{
-      const lvl=LEVELS[Math.min(h.ci,10)];
-      timelineEntries.push({ci:h.ci,date:h.date,label:`Reached ${lvl.ci}`,icon:h.ci>=10?'🏆':h.ci>=5?'⭐':h.ci>=3?'✨':'🌿'});
-    });
-  }
-
-  const timelineHtml=timelineEntries.length>=2?`
-    <div class="sec-title">Your Journey</div>
-    <div class="card" style="padding:12px">
-      <div style="font-size:11px;color:var(--text4);margin-bottom:12px">
-        Restoring for <strong style="color:var(--text2)">${monthsRestoring>0?monthsRestoring+' month'+(monthsRestoring!==1?'s':''):daysRestoring+' day'+(daysRestoring!==1?'s':'')}</strong>
-        · <strong style="color:var(--text2)">${char.sessions}</strong> sessions
-        · <strong style="color:var(--text2)">${fmtDur(char.minutes)}</strong>
-      </div>
-      ${timelineEntries.map((e,i)=>`
-        <div style="display:flex;gap:10px;align-items:flex-start;${i<timelineEntries.length-1?'margin-bottom:4px':''}">
-          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
-            <div style="width:28px;height:28px;border-radius:50%;background:${e.ci===ci?'var(--accent)':e.ci===0?'var(--bg-stat)':'var(--acc12)'};border:${e.ci===ci?'2px solid var(--accent)':'1px solid var(--acc30)'};display:flex;align-items:center;justify-content:center;font-size:12px">${e.icon}</div>
-            ${i<timelineEntries.length-1?`<div style="width:1px;flex:1;min-height:14px;background:var(--stat-border);margin:3px 0"></div>`:''}
-          </div>
-          <div style="flex:1;padding-top:4px;${i<timelineEntries.length-1?'padding-bottom:8px':''}">
-            <div style="font-size:12px;font-weight:600;color:${e.ci===ci?'var(--accent)':'var(--text2)'}">${e.label}</div>
-            <div style="font-size:10px;color:var(--text5);margin-top:2px">${fmtDate(e.date)}</div>
-          </div>
-        </div>`).join('')}
-    </div>`:'';
-
-  return`
-  <div class="card card-gold" style="padding:18px 14px 16px">
-    <div class="ci-ring-wrap" style="margin-bottom:10px">${ciRingSVG()}</div>
-    <div style="overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px">
-      <div style="display:flex;gap:4px;justify-content:space-between;min-width:max-content;width:100%;padding:4px 0">${stageStrip}</div>
-    </div>
-  </div>
-
-  <div class="card" style="padding:14px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-      <div>
-        <div style="font-family:Cinzel,serif;font-size:22px;font-weight:900;color:var(--accent);line-height:1">${curr.ci}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.7">${ciDesc(curr)}</div>
-      </div>
-      <button class="ci-set-btn" id="update-ci-btn2" style="flex-shrink:0;margin-left:12px;margin-top:2px">Update</button>
-    </div>
-    ${next?`<div style="border-top:1px solid var(--stat-border);padding-top:10px;display:flex;align-items:flex-start;gap:8px">
-      <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:1px;padding-top:2px;flex-shrink:0;width:36px">Next</div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:var(--text4)">${next.ci}</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:4px;line-height:1.65">${ciDesc(next)}</div>
-      </div>
-    </div>`:'<div style="border-top:1px solid var(--stat-border);padding-top:10px;text-align:center;font-size:11px;color:var(--accent)">🏆 Journey Complete</div>'}
-  </div>
-
-  ${goalCard}
-  ${cumulativeLine}
-  ${timelineHtml}
-
-  <div class="sec-title">CI Reference</div>
-  <div class="card" style="padding:4px 12px">${refGuide}</div>`;
+  return heroCard+stepper+cumulativeLine+`
+    <div class="sec-title">CI Reference</div>
+    <div class="card" style="padding:4px 12px">${refGuide}</div>`;
 }
 
+function toggleCIRef(i){
+  if(expandedCIRef.has(i))expandedCIRef.delete(i);
+  else expandedCIRef.add(i);
+  const c=document.getElementById('content');
+  if(c&&tab==='journey'){c.innerHTML=renderJourney();attachEvents();}
+}
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
 let compareA=null,compareB=null;
 let expandedEras=new Set(); // tracks which era keys are expanded
@@ -3116,7 +3101,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.5</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.6</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3203,7 +3188,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.4.5';
+    const version='v2.4.6';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -3388,24 +3373,146 @@ function importBackup(jsonText){
 }
 
 // ── CI SHEET ───────────────────────────────────────────────────────────────────
+// ── CI SHEET (multi-value editor: Start / Current / Goal) ──────────────────────
 function mountCISheet(){
   const ex=document.getElementById('ci-ov');if(ex)ex.remove();
-  const ci=char.ciLevel||0;
+  _editStartCI=char.startCI!==undefined?char.startCI:0;
+  _editCurrentCI=char.ciLevel||0;
+  _editGoalCI=Math.max(char.ciGoal||10,char.ciLevel||0);
+  renderCISheet();
+}
+
+function renderCISheet(){
+  const ex=document.getElementById('ci-ov');if(ex)ex.remove();
+
+  // Live validation
+  let error='';
+  if(_editCurrentCI<_editStartCI)error=`Current CI (${_editCurrentCI}) can't be below Start CI (${_editStartCI}).`;
+  else if(_editGoalCI<=_editStartCI)error=`Goal CI must be above Start CI (${_editStartCI}).`;
+  else if(_editGoalCI<_editCurrentCI)error=`Goal CI can't be below Current CI (${_editCurrentCI}).`;
+  const valid=!error;
+
+  // Reusable grid builder
+  const ciGrid=(section,selected,min,max)=>Array.from({length:max-min+1},(_,idx)=>{
+    const val=min+idx;
+    const isSel=val===selected;
+    let dis=false;
+    if(section==='start'&&val>_editCurrentCI)dis=true;
+    if(section==='current'&&val<_editStartCI)dis=true;
+    if(section==='goal'&&(val<=_editStartCI||val<_editCurrentCI))dis=true;
+    return`<button onclick="${dis?'':(`editCIVal('${section}',${val})`)}"
+      style="padding:9px 2px;border-radius:8px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:${dis?'not-allowed':'pointer'};text-align:center;
+      background:${isSel?'var(--accent)':'var(--bg-stat)'};
+      border:1px solid ${isSel?'var(--accent)':'var(--stat-border)'};
+      color:${isSel?'var(--bg)':'var(--text3)'};
+      opacity:${dis?'0.22':'1'};transition:all .15s">${val}</button>`;
+  }).join('');
+
   const el=document.createElement('div');el.className='overlay';el.id='ci-ov';
-  el.innerHTML=`<div class="sheet">
+  el.innerHTML=`<div class="sheet" style="max-height:90vh">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:4px">Update CI Level</div>
-    <div style="font-size:11px;color:var(--text4);margin-bottom:14px">Assess your current coverage and select your CI level. Be honest — this is your personal record, and accuracy helps more than optimism.</div>
-    <div class="ci-select-grid">
-      ${LEVELS.map((l,i)=>`<div class="ci-sel-btn${ci===i?' active':''}" onclick="setCILevel(${i})">${l.ci}</div>`).join('')}
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);text-align:center;margin-bottom:4px">Set CI Levels</div>
+    <div style="font-size:11px;color:var(--text4);text-align:center;margin-bottom:16px;line-height:1.6">Start, Current, and Goal define your journey arc.</div>
+
+    <!-- Start CI -->
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4)">Start CI</div>
+        <span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:2px 10px;font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--text3)">CI-${_editStartCI}</span>
+        <span style="font-size:10px;color:var(--text5)">Where you began</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+        ${ciGrid('start',_editStartCI,0,9)}
+      </div>
     </div>
-    <div style="margin-top:10px;padding:10px;background:var(--bg-stat);border-radius:8px;font-size:10px;color:var(--text4);line-height:1.7">
-      <strong style="color:var(--text3)">CI levels are a community standard, not a medical measurement.</strong> They're a helpful way to track general progress. When in doubt, round down — you'll feel better when you advance than if you set expectations too high.
+
+    <!-- Current CI -->
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent)">Current CI</div>
+        <span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:2px 10px;font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent)">CI-${_editCurrentCI}</span>
+        <span style="font-size:10px;color:var(--text5)">Where you are now</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+        ${ciGrid('current',_editCurrentCI,0,10)}
+      </div>
     </div>
-    <button class="btn-ghost" id="ci-cancel" style="margin-top:12px;width:100%">Cancel</button>
+
+    <!-- Goal CI -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4)">Goal CI</div>
+        <span style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:20px;padding:2px 10px;font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent)">CI-${_editGoalCI}</span>
+        <span style="font-size:10px;color:var(--text5)">Your target</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+        ${ciGrid('goal',_editGoalCI,1,10)}
+      </div>
+    </div>
+
+    ${error?`<div style="background:rgba(200,50,50,.07);border:1px solid rgba(200,50,50,.25);border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:#c0392b;line-height:1.5">⚠ ${error}</div>`:''}
+    <div style="font-size:10px;color:var(--text5);line-height:1.6;margin-bottom:14px">Honest assessment beats optimism — you'll feel better advancing than missing a target you set too high.</div>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" id="ci-cancel" style="flex:0 0 76px">Cancel</button>
+      <button class="btn-gold" id="ci-save" style="flex:1" ${!valid?'disabled':''}>✓ Save</button>
+    </div>
   </div>`;
   document.getElementById('root').appendChild(el);
   document.getElementById('ci-cancel').onclick=()=>{showCISheet=false;render();};
+  document.getElementById('ci-save')?.addEventListener('click',saveCILevels);
+}
+
+function editCIVal(section,val){
+  if(section==='start'){
+    _editStartCI=val;
+    // Auto-lift current if it would fall below start
+    if(_editCurrentCI<val)_editCurrentCI=val;
+    // Auto-lift goal if it would become invalid
+    if(_editGoalCI<=val)_editGoalCI=Math.min(10,val+1);
+  } else if(section==='current'){
+    _editCurrentCI=val;
+    // Auto-lift goal if it would fall below current
+    if(_editGoalCI<val)_editGoalCI=Math.min(10,val+1);
+    if(_editGoalCI<=_editStartCI)_editGoalCI=Math.min(10,_editStartCI+1);
+  } else if(section==='goal'){
+    _editGoalCI=val;
+  }
+  renderCISheet();
+}
+
+function saveCILevels(){
+  const prev=char.ciLevel||0;
+  const newCI=_editCurrentCI;
+  const changed=newCI!==prev||_editStartCI!==(char.startCI||0)||_editGoalCI!==(char.ciGoal||10);
+  // Revoke CI badges if current is going down
+  if(newCI<prev){
+    const revokedIds=ACHS
+      .filter(a=>{
+        if(!a.id.startsWith('ci'))return false;
+        const lvl=parseInt(a.id.slice(2));
+        return!isNaN(lvl)&&lvl>newCI&&char.achievements.includes(a.id);
+      })
+      .map(a=>a.id);
+    if(revokedIds.length){
+      char.achievements=char.achievements.filter(id=>!revokedIds.includes(id));
+    }
+  }
+  char.startCI=_editStartCI;
+  char.ciLevel=newCI;
+  char.ciGoal=_editGoalCI;
+  if(newCI!==prev){
+    char.ciHistory=[...(char.ciHistory||[]),{ci:newCI,date:today()}];
+    expandedCIRef.add(newCI);
+  }
+  const newly=[];
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
+  saveChar();
+  if(newCI>prev)showToast(`🎉 ${LEVELS[newCI].ci} reached!`);
+  else if(newCI<prev)showToast(`◑ CI adjusted to ${LEVELS[newCI].ci}`);
+  else if(changed)showToast('✓ CI levels saved');
+  if(newly.length){setTimeout(()=>showToast(`🏅 ${newly[0].title} unlocked!`),1800);}
+  showCISheet=false;render();
 }
 
 // ── MANUAL TIME HELPERS ────────────────────────────────────────────────────────
