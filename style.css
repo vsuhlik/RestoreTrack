@@ -562,6 +562,11 @@ textarea:focus        { border-color: var(--acc30); }
   from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+@keyframes enc-burst{
+  0%{opacity:0;transform:scale(0) rotate(-20deg) translateY(0)}
+  45%{opacity:1;transform:scale(1.35) rotate(12deg) translateY(-28px)}
+  100%{opacity:0;transform:scale(.4) rotate(38deg) translateY(-95px)}
+}
 
 /* ── SESSION FLASH ───────────────────────────────────────────────────────── */
 .sess-flash {

@@ -137,6 +137,15 @@ const fmtDateLong=s=>{if(!s)return'';const p=s.split('-');return`${p[1]}/${p[2]}
 const time12=t=>{if(!t)return'';try{const [h,m]=t.split(':').map(Number);return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(2000,0,1,h,m));}catch{return t;}};
 // Alias used inside setReminder toast
 const fmtTime12=time12;
+function fmtWallStart(ms){
+  if(!ms)return'';
+  const d=new Date(ms);
+  const dStr=localDateStr(d);
+  const tStr=d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',hour12:true});
+  return dStr===today()
+    ?`Started ${tStr}`
+    :`Started ${tStr} · ${new Date(dStr+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}`;
+}
 const htmlEsc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 // ── LUCIDE ICONS (inline SVG — consistent, theme-colored, crisp at any size) ──
@@ -702,7 +711,7 @@ function stopSession(){
   if(timerSecs<120){
     shortSessionDialog(
       timerSecs,
-      ()=>{showStopSheet=true;render();}, // save anyway
+      ()=>{if(activeTimer)activeTimer={...activeTimer,_forceSave:true};showStopSheet=true;render();}, // save anyway
       ()=>{                                 // discard
         stopInterval();activeTimer=null;timerSecs=0;
         sheetMethod='';sheetCat=null;sheetNotes='';
@@ -726,7 +735,7 @@ function commitSession(notes){
   const n=notes||sheetNotes||'';
   // If we have a real start timestamp, split across days accurately
   // wallStart survives stopSession() which nulls startedAt
-  if(activeTimer&&activeTimer.wallStart){
+  if(activeTimer&&activeTimer.wallStart&&!activeTimer._forceSave){
     awardMultiDay(method,catId,activeTimer.wallStart,Date.now(),n);
   } else {
     const finalMins=Math.max(1,Math.round(timerSecs/60));
@@ -856,11 +865,13 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
   saveChar();saveLogs();
   showSessFlash(`✓ ${fmtMin(totalMins)}`);
   if(newly.length){
-    showToast(`🏅 ${newly[0].title} — milestone reached!`);
-
+    showToast(`🏅 ${newly[0].title} unlocked!`);
   }
-  else if(ns>1)showToast(`${fmtMin(totalMins)} logged · ${ns}-day streak 🔥`);
-  else showToast(`${fmtMin(totalMins)} logged · Session #${char.sessions}`);
+  else if(ns>=365)showToast(`🔥 ${ns}-day streak. You are extraordinary.`);
+  else if(ns>=100)showToast(`💎 ${ns}-day streak. ${fmtMin(totalMins)} added.`);
+  else if(ns>=30)showToast(`🔥 ${ns} days straight. ${fmtMin(totalMins)}. Remarkable.`);
+  else if(ns>1)showToast(`${fmtMin(totalMins)} · ${ns}-day streak 🔥`);
+  else showToast(getSessionQuip(totalMins));
 }
 
 // ── ACHIEVEMENT RECALC ────────────────────────────────────────────────────────
@@ -1220,6 +1231,35 @@ function exportCSV(){
 // ── UI HELPERS ─────────────────────────────────────────────────────────────────
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3500);}
 function showSessFlash(msg){const el=document.createElement('div');el.className='sess-flash';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),950);}
+function showEncourageBurst(avatar){
+  const pool=[avatar||'👊','💪','✨','🌱','⚡','🔥'];
+  for(let i=0;i<7;i++)setTimeout(()=>{
+    const el=document.createElement('div');
+    el.textContent=pool[i%pool.length];
+    const l=8+Math.random()*84,fs=16+Math.random()*20,dur=.8+Math.random()*.5;
+    el.style.cssText=`position:fixed;font-size:${fs}px;left:${l}%;top:${35+Math.random()*25}%;pointer-events:none;z-index:500;animation:enc-burst ${dur}s ease forwards`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),(dur*1000)+200);
+  },i*95);
+}
+const SESSION_QUIPS=[
+  m=>`${m} of mechanotransduction complete 🧬`,
+  m=>`Keratinocytes: activated. ${m} locked in`,
+  m=>`+${m} permanent gains 💎`,
+  m=>`Biology doing its thing — ${m} in`,
+  m=>`${m} your future self will notice`,
+  m=>`Quiet consistency. ${m} done ✓`,
+  m=>`Tension applied. Mitosis triggered. ${m}`,
+  m=>`${m} in the permanent column — forever`,
+  m=>`Cells heard you. ${m} done 🌱`,
+  m=>`Keep showing up. ${m} today`,
+  m=>`${m} — consistency beats intensity`,
+  m=>`${m} closer. One session at a time`,
+];
+function getSessionQuip(totalMins){
+  const fn=SESSION_QUIPS[char.sessions%SESSION_QUIPS.length];
+  return fn(fmtMin(totalMins));
+}
 
 // ── JOURNEY ARC SVG (used on Journey tab hero card) ─────────────────────────
 function journeyArcSVG(ci,startCI,ciGoal,goalPct){
@@ -1840,7 +1880,8 @@ function renderToday(){
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div class="live-dot"></div>
       <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--green)">Session Active</div>
-      <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method}</div></div>
+      <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method}</div>
+      <div style="font-size:9px;color:var(--text5);margin-top:2px">${fmtWallStart(activeTimer.wallStart)}</div></div>
       <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtLive(timerSecs)}</div>
     </div>
     <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop Session</button>
@@ -2917,8 +2958,7 @@ if(activeTimer&&activeTimer.startedAt){
     if(!histByMethod[l.method])histByMethod[l.method]={cat:l.cat,sessions:[]};
     histByMethod[l.method].sessions.push(l);
   });
-  const histHtml=Object.keys(histByMethod).length
-    ?Object.entries(histByMethod).map(([method,{cat:catId,sessions:sess}])=>{
+  const _buildHCard=([method,{cat:catId,sessions:sess}])=>{
       const cat=catFor(catId);
       const totalMins=sess.reduce((a,l)=>a+l.dur,0);
       const latest=sess[0];
@@ -2949,23 +2989,22 @@ if(activeTimer&&activeTimer.startedAt){
         </button>
         <div id="${uid}" style="display:none;padding:0 10px 8px">${firstPage}${moreBtn}</div>
       </div>`;
-    }).join('')
+  };
+  const _histSorted=Object.entries(histByMethod).sort((a,b)=>b[1].sessions[0].date.localeCompare(a[1].sessions[0].date)||b[1].sessions[0].id-a[1].sessions[0].id);
+  const histHtml=_histSorted.length
+    ?_histSorted.slice(0,3).map(_buildHCard).join('')+(_histSorted.length>3
+      ?`<div id="hist-rest" style="display:none">${_histSorted.slice(3).map(_buildHCard).join('')}</div><button onclick="document.getElementById('hist-rest').style.display='block';this.remove()" style="width:100%;padding:10px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;margin-bottom:7px">Show ${_histSorted.length-3} more method${_histSorted.length-3!==1?'s':''} ▾</button>`:'')
     :`<div class="empty">No sessions logged yet.</div>`;
 
   // ── CI PROGRESSION CHART ──
 
   // Notes viewer — sessions that have notes, full text
-  const notedLogs=logs.filter(l=>l.notes&&l.notes.trim().length>0).slice(0,30);
-  const notesHtml=notedLogs.length?notedLogs.map(l=>{const cat=catFor(l.cat);return`
-    <div style="padding:9px 0;border-bottom:1px solid var(--stat-border)">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
-        <span style="font-size:13px">${cat.icon}</span>
-        <span style="font-size:11px;font-weight:600;color:var(--text2)">${l.method}</span>
-        <span style="font-size:10px;color:var(--text5);margin-left:auto">${fmtDate(l.date)} · ${fmtMin(l.dur)}</span>
-        <button class="edit-btn" data-id="${l.id}" style="display:flex;align-items:center;flex-shrink:0">${IC.edit(12)}</button>
-      </div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${htmlEsc(l.notes)}</div>
-    </div>`}).join(''):`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
+  const _allNotes=logs.filter(l=>l.notes&&l.notes.trim().length>0);
+  const _buildNote=l=>{const cat=catFor(l.cat);return`<div style="padding:9px 0;border-bottom:1px solid var(--stat-border)"><div style="display:flex;align-items:center;gap:7px;margin-bottom:4px"><span style="font-size:13px">${cat.icon}</span><span style="font-size:11px;font-weight:600;color:var(--text2)">${l.method}</span><span style="font-size:10px;color:var(--text5);margin-left:auto">${fmtDate(l.date)} · ${fmtMin(l.dur)}</span><button class="edit-btn" data-id="${l.id}" style="display:flex;align-items:center;flex-shrink:0">${IC.edit(12)}</button></div><div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${htmlEsc(l.notes)}</div></div>`;};
+  const notesHtml=_allNotes.length
+    ?_allNotes.slice(0,3).map(_buildNote).join('')+(_allNotes.length>3
+      ?`<div id="notes-rest" style="display:none">${_allNotes.slice(3).map(_buildNote).join('')}</div><button onclick="document.getElementById('notes-rest').style.display='block';this.remove()" style="width:100%;padding:9px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;margin-top:4px">View all ${_allNotes.length} notes ▾</button>`:'')
+    :`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
 
   const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthName=`${monthNames[month]} ${year}`;
