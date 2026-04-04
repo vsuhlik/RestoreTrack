@@ -155,7 +155,7 @@ const IC={
   settings:(s=15)=>IC._s('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',s),
   user:    (s=15)=>IC._s('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',s),
   today:   (s=18)=>IC._s('<circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>',s,1.6),
-  journey: (s=18)=>IC._s('<path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M12 8v4l2 2"/>',s,1.6),
+  journey: (s=18)=>IC._s('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',s,1.6),
   photos:  (s=18)=>IC._s('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',s,1.6),
   reports: (s=18)=>IC._s('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',s,1.6),
   badges:  (s=18)=>IC._s('<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>',s,1.6),
@@ -473,6 +473,7 @@ async function loadProfile(pid){
   if(!char.customMethods)char.customMethods=[];
   if(char.ciLevel===undefined)char.ciLevel=0;
   if(!char.ciHistory)char.ciHistory=[];
+  if(!char.startDate)char.startDate=char.ciHistory&&char.ciHistory.length?char.ciHistory[0].date:today();
   if(!char.restDays)char.restDays=[];
   if(char.ciGoal===undefined)char.ciGoal=10;
 if(char.countRetainingInGoal===undefined)char.countRetainingInGoal=true;
@@ -538,7 +539,7 @@ function createProfile(name){
   const id='p'+Date.now();
   profiles=[{id,name,createdAt:today()}];
   saveProfiles();currentPid=id;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[],startCI:0,ciGoal:10,restDays:[]};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[],startCI:0,ciGoal:10,restDays:[],startDate:today()};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -1210,28 +1211,35 @@ function showSessFlash(msg){const el=document.createElement('div');el.className=
 
 // ── JOURNEY ARC SVG (used on Journey tab hero card) ─────────────────────────
 function journeyArcSVG(ci,startCI,ciGoal,goalPct){
-  const cx=120,cy=106,r=85,sw=18;
-  const startDeg=148,totalDeg=244,segCount=10,gap=1.6;
+  const cx=120,cy=106,r=85;
+  const swTrack=20,swFill=13;
+  const startDeg=148,totalDeg=244,segCount=10;
+  const gapT=2.8,gapF=1.6;
   const segDeg=totalDeg/segCount;
-  let paths='';
-  for(let i=0;i<segCount;i++){
-    const s=startDeg+i*segDeg+gap/2;
-    const e=startDeg+(i+1)*segDeg-gap/2;
-    const filled=i<ci;
-    const isLast=i===ci-1;
-    paths+=`<path d="${arcD(cx,cy,r,s,e)}" stroke="${filled?'var(--accent)':'var(--stat-border,#444)'}" stroke-width="${sw}" fill="none" stroke-linecap="round" opacity="${filled?(isLast?'1':'0.82'):'0.22'}"/>`;
-  }
-  // Goal marker dot on the arc
   const toR=d=>d*Math.PI/180;
+  let trackPaths='',fillPaths='';
+  for(let i=0;i<segCount;i++){
+    // Track arc (wider — creates the groove/slot)
+    const st=startDeg+i*segDeg+gapT/2,et=startDeg+(i+1)*segDeg-gapT/2;
+    // Fill arc (narrower — sits inside the groove)
+    const sf=startDeg+i*segDeg+gapF/2,ef=startDeg+(i+1)*segDeg-gapF/2;
+    const filled=i<ci,isLast=i===ci-1;
+    trackPaths+=`<path d="${arcD(cx,cy,r,st,et)}" stroke="var(--bg-stat)" stroke-width="${swTrack}" fill="none" stroke-linecap="round" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(0 -1px 2px rgba(255,255,255,0.05))"/>`;
+    if(filled){
+      fillPaths+=`<path d="${arcD(cx,cy,r,sf,ef)}" stroke="var(--accent)" stroke-width="${swFill}" fill="none" stroke-linecap="round" opacity="${isLast?'1':'0.86'}" style="filter:drop-shadow(0 0 7px var(--accent)) drop-shadow(0 2px 4px rgba(0,0,0,0.4))"/>`;
+    }
+  }
+  // Goal marker dot
   if(ciGoal>0&&ciGoal<=10){
     const gd=startDeg+ciGoal*segDeg;
     const gx=(cx+r*Math.cos(toR(gd))).toFixed(1);
     const gy=(cy+r*Math.sin(toR(gd))).toFixed(1);
-    paths+=`<circle cx="${gx}" cy="${gy}" r="5.5" fill="var(--bg)" stroke="${ci>=ciGoal?'var(--green)':'var(--accent)'}" stroke-width="2.5"/>`;
+    fillPaths+=`<circle cx="${gx}" cy="${gy}" r="6" fill="var(--bg)" stroke="${ci>=ciGoal?'var(--green)':'var(--accent)'}" stroke-width="2.5" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4))"/>`;
   }
   const subtitle=goalPct>=100?'🏆 Goal Reached!':goalPct+'% to Goal';
   return`<svg viewBox="0 0 240 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:240px;display:block;margin:0 auto">
-    ${paths}
+    ${trackPaths}
+    ${fillPaths}
     <text x="${cx}" y="100" text-anchor="middle" font-family="Cinzel,serif" font-size="50" font-weight="900" fill="var(--accent)">${ci}</text>
     <text x="${cx}" y="120" text-anchor="middle" font-family="Cinzel,serif" font-size="12" font-weight="600" fill="var(--text3)">${LEVELS[ci].ci}</text>
     <text x="${cx}" y="140" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" font-weight="600" fill="${goalPct>=100?'var(--green)':'var(--text4)'}">${subtitle}</text>
@@ -1567,7 +1575,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.6</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.7</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1954,8 +1962,271 @@ function renderToday(){
   ${sessHtml}`:''}`;
 }
 
-// ── JOURNEY ────────────────────────────────────────────────────────────────────
-// ── JOURNEY ────────────────────────────────────────────────────────────────────
+// ── CI JOURNEY TIMELINE ────────────────────────────────────────────────────────
+function fmtJourneyDuration(startDateStr){
+  if(!startDateStr)return'0 Days';
+  const start=new Date(startDateStr+'T12:00:00'),now=new Date();
+  let yr=now.getFullYear()-start.getFullYear();
+  let mo=now.getMonth()-start.getMonth();
+  let d=now.getDate()-start.getDate();
+  if(d<0){mo--;d+=new Date(now.getFullYear(),now.getMonth(),0).getDate();}
+  if(mo<0){yr--;mo+=12;}
+  const wk=Math.floor(d/7),rd=d%7;
+  const p=[];
+  if(yr>0)p.push(yr+(yr===1?' Year':' Years'));
+  if(mo>0)p.push(mo+(mo===1?' Month':' Months'));
+  if(wk>0)p.push(wk+(wk===1?' Week':' Weeks'));
+  if(rd>0||p.length===0)p.push(rd+(rd===1?' Day':' Days'));
+  return p.join(', ');
+}
+
+function renderCITimeline(){
+  const ci=char.ciLevel||0;
+  const startCI=char.startCI!==undefined?char.startCI:0;
+  const startDate=char.startDate||today();
+  const ciGoal=char.ciGoal||10;
+  const rawHistory=char.ciHistory||[];
+
+  // Build forward-progress-only nodes, preserving original ciHistory index
+  const raw=[{ci:startCI,date:startDate,isStart:true,histIdx:-1}];
+  rawHistory.forEach((h,i)=>raw.push({ci:h.ci,date:h.date,histIdx:i}));
+  const fwd=[raw[0]];
+  for(let i=1;i<raw.length;i++){
+    if(raw[i].ci>fwd[fwd.length-1].ci)fwd.push(raw[i]);
+  }
+  // Reconcile with actual current CI — pop entries above it (user corrected down)
+  while(fwd.length>1&&fwd[fwd.length-1].ci>ci)fwd.pop();
+  // Ensure last fwd node matches actual current ci
+  if(fwd[fwd.length-1].ci<ci){
+    // Find the real history entry for current ci if it exists
+    const real=rawHistory.find(h=>h.ci===ci);
+    fwd.push(real
+      ?{ci,date:real.date,histIdx:rawHistory.indexOf(real)}
+      :{ci,date:today(),histIdx:-2}
+    );
+  }
+
+  // ── Summary stats ──
+  const durationStr=fmtJourneyDuration(startDate);
+  const ciGained=ci-startCI;
+  const curEntry=fwd[fwd.length-1];
+  const daysAtCur=curEntry&&curEntry.date
+    ?Math.max(0,Math.round((Date.now()-new Date(curEntry.date+'T12:00:00').getTime())/86400000)):0;
+  const daysAtCurStr=daysAtCur>=365
+    ?(Math.round(daysAtCur/365*10)/10)+'yr'
+    :daysAtCur>=60?Math.round(daysAtCur/30.4)+'mo':daysAtCur+'d';
+  const milestonesCount=Math.max(0,fwd.length-1);
+
+  const summaryHtml=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px">
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
+        <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1">${ciGained>=0?'+':''}${ciGained}</div>
+        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">CI Gained</div>
+      </div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
+        <div style="font-size:10px;font-weight:700;color:var(--accent);line-height:1.4">${durationStr}</div>
+        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Journey Duration</div>
+      </div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
+        <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1">${daysAtCurStr}</div>
+        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">At ${LEVELS[Math.min(ci,10)].ci}</div>
+      </div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
+        <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1">${milestonesCount}</div>
+        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Milestone${milestonesCount!==1?'s':''}</div>
+      </div>
+    </div>`;
+
+  // ── Horizontal stepper ──
+  const CIRC_H=44,BADGE_H=16,LINE_MT=BADGE_H+CIRC_H/2-1;
+  const NODE_W=68,LINE_W=20;
+  const isGoalReached=ci>=ciGoal;
+  const allNodes=[...fwd,{ci:ciGoal,date:null,isGoal:true}];
+
+  const fmtND=d=>{
+    if(!d)return'';
+    try{return new Date(d+'T12:00:00').toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});}
+    catch{return'';}
+  };
+
+  const stepperHtml=allNodes.map((n,i)=>{
+    const isGoalNode=!!n.isGoal;
+    const isStartNode=!!n.isStart;
+    // Current = last node before the goal
+    const isCurrent=!isGoalNode&&i===allNodes.length-2;
+    // Editable = has a real histIdx, is not start, not current, not goal
+    const isEditable=!isGoalNode&&!isStartNode&&!isCurrent&&n.histIdx>=0;
+    const hasLine=i<allNodes.length-1;
+
+    const sz=isCurrent?42:32;
+    let cBg,cBdr,cTxt,cShadow='none';
+    if(isGoalNode){
+      cBg=isGoalReached?'var(--green)':'var(--bg-stat)';
+      cBdr=isGoalReached?'var(--green)':'var(--acc30)';
+      cTxt=isGoalReached?'#fff':'var(--accent)';
+    }else if(isCurrent){
+      cBg='var(--accent)';cBdr='var(--accent)';cTxt='var(--bg)';
+      cShadow='0 0 0 5px var(--acc12)';
+    }else{
+      cBg='var(--acc12)';cBdr='var(--acc30)';cTxt='var(--accent)';
+    }
+
+    const innerTxt=isGoalNode?(isGoalReached?'🏆':String(ciGoal)):String(n.ci);
+    const fSz=isGoalNode&&isGoalReached?'14':(isCurrent?'13':'10');
+
+    const mainLabel=isGoalNode
+      ?(isGoalReached?'Reached!':'Goal')
+      :isStartNode?'Start':LEVELS[Math.min(n.ci,10)].ci;
+    const subLabel=isGoalNode
+      ?(isGoalReached?fmtND(curEntry.date||today()):`${ciGoal-ci} lvl${(ciGoal-ci)!==1?'s':''} away`)
+      :fmtND(n.date);
+
+    const nextIsGoal=i===allNodes.length-2;
+    const lineClr=nextIsGoal&&!isGoalReached?'var(--stat-border)':'var(--acc30)';
+
+    // Badge row: NOW label for current, edit button for editable progress nodes
+    const editBtnStyle=`background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--text4);cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1.4;transition:all .15s`;
+    const badgeContent=isCurrent
+      ?`<span style="font-size:7px;font-weight:800;letter-spacing:.4px;color:var(--bg);background:var(--accent);border-radius:6px;padding:2px 6px;white-space:nowrap">NOW</span>`
+      :isGoalReached&&isGoalNode
+        ?`<span style="font-size:7px;font-weight:800;letter-spacing:.4px;color:var(--bg);background:var(--green);border-radius:6px;padding:2px 6px;white-space:nowrap">DONE</span>`
+        :isEditable
+          ?`<button onclick="editTimelineNode(${n.histIdx})" title="Edit milestone"
+              style="${editBtnStyle}"
+              onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text4)'">✎</button>`
+          :isStartNode
+            ?`<button onclick="editStartDate()" title="Edit start date"
+                style="${editBtnStyle}"
+                onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
+                onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text4)'">✎</button>`
+            :'';
+
+    return`<div style="flex-shrink:0;width:${NODE_W}px;display:flex;flex-direction:column;align-items:center">
+        <div style="height:${BADGE_H}px;display:flex;align-items:center;justify-content:center">
+          ${badgeContent}
+        </div>
+        <div style="height:${CIRC_H}px;display:flex;align-items:center;justify-content:center">
+          <div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${cBg};border:2px solid ${cBdr};display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:${fSz}px;font-weight:700;color:${cTxt};box-shadow:${cShadow};line-height:1;transition:all .3s">${innerTxt}</div>
+        </div>
+        <div style="font-size:9px;font-weight:700;color:${isCurrent?'var(--accent)':isGoalNode?(isGoalReached?'var(--green)':'var(--text4)'):'var(--text3)'};margin-top:5px;text-align:center;white-space:nowrap">${mainLabel}</div>
+        <div style="font-size:8px;color:var(--text5);margin-top:1px;text-align:center;white-space:nowrap">${subLabel}</div>
+      </div>
+      ${hasLine?`<div style="flex-shrink:0;width:${LINE_W}px;height:2px;background:${lineClr};margin-top:${LINE_MT}px;align-self:flex-start;border-radius:1px"></div>`:''}`;
+  }).join('');
+
+  // Start date — formatted nicely for the header
+  const startFmt=startDate?new Date(startDate+'T12:00:00').toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'}):'—';
+
+  return`<div class="card" style="padding:16px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">CI Journey</div>
+        <div style="font-size:9px;color:var(--text5);margin-top:1px">${LEVELS[startCI].ci} → ${LEVELS[ciGoal].ci}</div>
+      </div>
+      <button onclick="editStartDate()" title="Edit journey start date"
+        style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:5px 10px;font-size:10px;color:var(--text4);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;transition:all .2s"
+        onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text4)'">
+        <span>Since ${startFmt}</span><span>✎</span>
+      </button>
+    </div>
+    ${summaryHtml}
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 8px">
+      <div style="display:flex;align-items:flex-start;padding:0 2px;width:max-content">
+        ${stepperHtml}
+      </div>
+    </div>
+  </div>`;
+}
+
+function editTimelineNode(histIdx){
+  const entry=(char.ciHistory||[])[histIdx];
+  if(!entry)return;
+  const ex=document.getElementById('timeline-edit-ov');if(ex)ex.remove();
+  window._tlEditCI=entry.ci;
+  const ciGrid=Array.from({length:10},(_,i)=>i+1).map(v=>{
+    const isSel=v===entry.ci;
+    return`<button onclick="window._tlEditCI=${v};document.querySelectorAll('#timeline-edit-ov .tlci-btn').forEach(b=>{const s=+b.dataset.v===${v};b.style.background=s?'var(--accent)':'var(--bg-stat)';b.style.borderColor=s?'var(--accent)':'var(--stat-border)';b.style.color=s?'var(--bg)':'var(--text3)';})"
+      class="tlci-btn" data-v="${v}"
+      style="padding:9px 2px;border-radius:8px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;text-align:center;background:${isSel?'var(--accent)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--accent)':'var(--stat-border)'};color:${isSel?'var(--bg)':'var(--text3)'}">${v}</button>`;
+  }).join('');
+  const el=document.createElement('div');el.className='overlay';el.id='timeline-edit-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:5px">Edit Milestone</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:14px">Correct the CI level or date for this recorded milestone.</div>
+    <div class="sec-title">CI Level Reached</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:16px">${ciGrid}</div>
+    <div class="sec-title">Date Reached</div>
+    <input type="date" id="tl-date-inp" value="${entry.date}" max="${today()}"
+      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 14px;color:var(--accent);font-size:15px;font-weight:700;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:16px">
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" onclick="document.getElementById('timeline-edit-ov').remove()" style="flex:0 0 76px">Cancel</button>
+      <button onclick="confirmDialog('Delete milestone?','This entry will be removed from your CI history. This cannot be undone.','Delete',()=>{deleteTimelineNode(${histIdx})})"
+        style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px 14px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">🗑</button>
+      <button class="btn-gold" onclick="saveTimelineNode(${histIdx})" style="flex:1">✓ Save</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
+
+function saveTimelineNode(histIdx){
+  const dateVal=document.getElementById('tl-date-inp')?.value;
+  if(!dateVal||!char.ciHistory[histIdx])return;
+  char.ciHistory[histIdx]={...char.ciHistory[histIdx],ci:window._tlEditCI||char.ciHistory[histIdx].ci,date:dateVal};
+  char.ciHistory.sort((a,b)=>a.date.localeCompare(b.date));
+  saveChar();
+  document.getElementById('timeline-edit-ov')?.remove();
+  showToast('✓ Milestone updated');
+  const c=document.getElementById('content');
+  if(c&&tab==='journey'){c.innerHTML=renderJourney();attachEvents();}
+}
+
+function deleteTimelineNode(histIdx){
+  if(histIdx<0||histIdx>=char.ciHistory.length)return;
+  char.ciHistory.splice(histIdx,1);
+  saveChar();
+  document.getElementById('timeline-edit-ov')?.remove();
+  showToast('Milestone removed');
+  const c=document.getElementById('content');
+  if(c&&tab==='journey'){c.innerHTML=renderJourney();attachEvents();}
+}
+
+function editStartDate(){
+  const ex=document.getElementById('start-date-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='start-date-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:6px">Edit Start Date</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:14px">
+      The date you began your restoration journey — used as the anchor for your entire CI timeline.
+    </div>
+    <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Start Date</div>
+    <input type="date" id="sd-inp" value="${char.startDate||today()}" max="${today()}"
+      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 14px;color:var(--accent);font-size:15px;font-weight:700;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:16px">
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" onclick="document.getElementById('start-date-ov').remove()" style="flex:0 0 80px">Cancel</button>
+      <button class="btn-gold" onclick="saveStartDate()" style="flex:1">✓ Save</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+  document.getElementById('sd-inp')?.focus();
+}
+
+function saveStartDate(){
+  const val=document.getElementById('sd-inp')?.value;
+  if(!val)return;
+  char.startDate=val;
+  saveChar();
+  document.getElementById('start-date-ov')?.remove();
+  showToast('✓ Start date updated');
+  const c=document.getElementById('content');
+  if(c&&tab==='journey'){c.innerHTML=renderJourney();attachEvents();}
+}
+
 function renderJourney(){
   const ci=char.ciLevel||0;
   const startCI=char.startCI!==undefined?char.startCI:0;
@@ -1992,59 +2263,8 @@ function renderJourney(){
     `}
   </div>`;
 
-  // ── TIER 2: Milestone stepper + live CI descriptions ─────────────────────────
-  const curr=LEVELS[ci];
-  const next=ci<10?LEVELS[ci+1]:null;
-  const leftFill=ci>startCI;
-  const rightFill=ci>=ciGoal&&ciGoal>startCI;
-
-  const stepper=`<div class="card" style="padding:16px;margin-bottom:10px">
-    <div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <!-- Background track -->
-      <div style="position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);height:3px;background:var(--bg-stat);border-radius:2px;z-index:0"></div>
-      <!-- Left fill: start → current (accent) -->
-      ${leftFill?`<div style="position:absolute;left:16px;width:calc(50% - 20px);top:50%;transform:translateY(-50%);height:3px;background:var(--accent);border-radius:2px;z-index:0"></div>`:''}
-      <!-- Right fill: current → goal (green, only when reached) -->
-      ${rightFill?`<div style="position:absolute;left:calc(50% + 20px);right:16px;top:50%;transform:translateY(-50%);height:3px;background:var(--green);border-radius:2px;z-index:0"></div>`:''}
-
-      <!-- Start node -->
-      <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex-shrink:0">
-        <div style="width:32px;height:32px;border-radius:50%;background:${leftFill?'var(--acc12)':'var(--bg-stat)'};border:2px solid ${leftFill?'var(--acc30)':'var(--stat-border)'};display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:10px;font-weight:700;color:${leftFill?'var(--accent)':'var(--text4)'}">${startCI}</div>
-        <div style="font-size:8px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">Start</div>
-        <div style="font-family:Cinzel,serif;font-size:8px;color:var(--text5);margin-top:1px;white-space:nowrap">CI-${startCI}</div>
-      </div>
-
-      <!-- Current node (highlighted) -->
-      <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex-shrink:0">
-        <div style="width:40px;height:40px;border-radius:50%;background:var(--accent);border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:14px;font-weight:900;color:var(--bg);box-shadow:0 0 0 5px var(--acc18)">${ci}</div>
-        <div style="font-size:8px;color:var(--accent);margin-top:5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">Now</div>
-        <div style="font-family:Cinzel,serif;font-size:8px;color:var(--accent);margin-top:1px;white-space:nowrap">${LEVELS[ci].ci}</div>
-      </div>
-
-      <!-- Goal node -->
-      <div style="display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex-shrink:0">
-        <div style="width:32px;height:32px;border-radius:50%;background:${rightFill?'var(--green)':'var(--bg-stat)'};border:2px solid ${rightFill?'var(--green)':'var(--acc30)'};display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:10px;font-weight:700;color:${rightFill?'#fff':'var(--accent)'}">${ciGoal}</div>
-        <div style="font-size:8px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap">${rightFill?'Done!':'Goal'}</div>
-        <div style="font-family:Cinzel,serif;font-size:8px;color:${rightFill?'var(--green)':'var(--text5)'};margin-top:1px;white-space:nowrap">CI-${ciGoal}</div>
-      </div>
-    </div>
-
-    <!-- CI descriptions: current + next -->
-    <div style="border-top:1px solid var(--stat-border);padding-top:12px">
-      <div style="display:flex;align-items:flex-start;gap:10px${next?';margin-bottom:10px':''}">
-        <span style="font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;min-width:38px">${LEVELS[ci].ci}</span>
-        <div style="font-size:11px;color:var(--text2);line-height:1.7;flex:1">${ciDesc(curr)}</div>
-      </div>
-      ${next?`
-      <div style="display:flex;align-items:flex-start;gap:10px;padding-top:9px;border-top:1px dashed var(--stat-border)">
-        <span style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;font-weight:500;flex-shrink:0;min-width:38px;padding-top:2px">Next</span>
-        <div style="font-size:10px;color:var(--text4);line-height:1.65;flex:1">${ciDesc(next)}</div>
-      </div>`:`
-      <div style="text-align:center;padding:8px 0 2px;border-top:1px dashed var(--stat-border)">
-        <span style="font-size:12px;color:var(--green)">🏆 Fully Restored — Journey Complete</span>
-      </div>`}
-    </div>
-  </div>`;
+// ── TIER 2: CI Journey Timeline ──────────────────────────────────────────────
+  const timeline=renderCITimeline();
 
   // Cumulative stats line
   const cumulativeLine=char.minutes>0?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:9px 14px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
@@ -2071,7 +2291,7 @@ function renderJourney(){
     </div>`;
   }).join('');
 
-  return heroCard+stepper+cumulativeLine+`
+  return heroCard+timeline+cumulativeLine+`
     <div class="sec-title">CI Reference</div>
     <div class="card" style="padding:4px 12px">${refGuide}</div>`;
 }
@@ -3101,7 +3321,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.6</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.7</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3188,7 +3408,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.4.6';
+    const version='v2.4.7';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;

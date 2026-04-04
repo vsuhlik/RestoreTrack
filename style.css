@@ -53,7 +53,7 @@ body {
   min-height: 100vh;
   max-width: 480px;
   margin: 0 auto;
-  padding-bottom: 70px;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ── HEADER ──────────────────────────────────────────────────────────────── */
@@ -517,9 +517,13 @@ textarea:focus        { border-color: var(--acc30); }
   max-width: 480px;
   margin: 0 auto;
   z-index: 20;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 .nav-btn {
   flex: 1;
+  min-width: 0;
   padding: 6px 2px 5px;
   background: none;
   border: none;
@@ -533,6 +537,7 @@ textarea:focus        { border-color: var(--acc30); }
   font-family: 'DM Sans', sans-serif;
   color: var(--text5);
   transition: color .2s;
+  overflow: hidden;
 }
 .nav-btn.active { color: var(--accent); }
 .nav-icon       { font-size: 17px; line-height: 1.2; }
