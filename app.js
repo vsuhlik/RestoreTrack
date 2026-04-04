@@ -1160,13 +1160,24 @@ function openPhotoViewer(photo,eraPhotos){
     const p=photos.find(x=>x.id===photoId);if(!p)return;
     const editArea=document.getElementById('viewer-edit-area');
     if(!editArea)return;
+    const currentCINum=parseInt((p.ci||'CI-0').replace('CI-',''))||0;
+    const ciGrid=LEVELS.map((l,i)=>{
+      const isSel=i===currentCINum;
+      return`<button
+        onclick="(function(v){document.querySelectorAll('.vw-ci-btn').forEach(b=>{const s=b.dataset.ci===v;b.style.background=s?'var(--acc12)':'var(--bg-stat)';b.style.borderColor=s?'var(--acc30)':'var(--stat-border)';b.style.color=s?'var(--accent)':'var(--text3)';});document.getElementById('edit-photo-ci').value=v;})('${l.ci}')"
+        class="vw-ci-btn" data-ci="${l.ci}"
+        style="padding:7px 2px;border-radius:7px;font-family:Cinzel,serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;background:${isSel?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--acc30)':'var(--stat-border)'};color:${isSel?'var(--accent)':'var(--text3)'}">${l.ci}</button>`;
+    }).join('');
     editArea.innerHTML=`
       <div style="margin-top:12px;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:10px;padding:12px;width:100%">
+        <input type="hidden" id="edit-photo-ci" value="${p.ci||'CI-0'}">
+        <div style="font-size:10px;color:var(--text4);margin-bottom:7px;text-transform:uppercase;letter-spacing:.8px">CI Level</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px">${ciGrid}</div>
         <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Date</div>
         <input type="date" id="edit-photo-date" value="${p.date}" max="${today()}"
           style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:7px;padding:7px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px">
         <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Caption</div>
-        <input type="text" id="edit-photo-note" value="${p.note||''}" placeholder="Add a caption..."
+        <input type="text" id="edit-photo-note" value="${htmlEsc(p.note||'')}" placeholder="Add a caption..."
           style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:7px 10px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px">
         <div style="display:flex;gap:7px">
           <button class="btn-ghost" onclick="document.getElementById('viewer-edit-area').innerHTML=''" style="flex:0 0 70px;padding:8px">Cancel</button>
@@ -1179,7 +1190,8 @@ function openPhotoViewer(photo,eraPhotos){
   window.saveViewerEdit=(photoId)=>{
     const dateVal=document.getElementById('edit-photo-date')?.value||'';
     const noteVal=document.getElementById('edit-photo-note')?.value||'';
-    photos=photos.map(p=>p.id===photoId?{...p,date:dateVal||p.date,note:noteVal}:p);
+    const ciVal=document.getElementById('edit-photo-ci')?.value||null;
+    photos=photos.map(p=>p.id===photoId?{...p,date:dateVal||p.date,note:noteVal,...(ciVal?{ci:ciVal}:{})}:p);
     savePhotos();
     // Refresh the viewer content to show updated values
     el.innerHTML=buildContent(era[idx],idx);
@@ -2237,7 +2249,7 @@ function renderJourney(){
   if(expandedCIRef.size===0)expandedCIRef.add(ci);
 
   // Onboarding: never set CI and no sessions yet
-  const isOnboarding=!ciHistory.length&&char.sessions===0&&ci===0;
+  const isOnboarding=!ciHistory.length&&char.sessions===0&&ci===0&&!char.ciSetupDone;
 
   // Progress percentage toward goal
   const goalPct=ciGoal>startCI
@@ -2251,9 +2263,7 @@ function renderJourney(){
         <div style="font-size:38px;margin-bottom:10px;opacity:.65">◉</div>
         <div style="font-family:Cinzel,serif;font-size:15px;color:var(--accent);margin-bottom:8px;letter-spacing:1px">Begin Your Journey</div>
         <div style="font-size:12px;color:var(--text3);line-height:1.85;margin-bottom:18px">
-          Set your <strong style="color:var(--text1)">Start CI</strong>, <strong style="color:var(--text1)">Current CI</strong>,<br>and <strong style="color:var(--text1)">Goal CI</strong> to track progress accurately.
-        </div>
-        <button class="ci-set-btn" id="update-ci-btn" style="font-size:13px;padding:8px 24px">⊕ Set Your CI Levels</button>
+        <button class="ci-set-btn" id="update-ci-btn" style="font-size:13px;padding:8px 24px">Set Your CI Levels</button>
       </div>
     `:`
       <div style="display:flex;flex-direction:column;align-items:center">
@@ -2952,6 +2962,7 @@ if(activeTimer&&activeTimer.startedAt){
         <span style="font-size:13px">${cat.icon}</span>
         <span style="font-size:11px;font-weight:600;color:var(--text2)">${l.method}</span>
         <span style="font-size:10px;color:var(--text5);margin-left:auto">${fmtDate(l.date)} · ${fmtMin(l.dur)}</span>
+        <button class="edit-btn" data-id="${l.id}" style="display:flex;align-items:center;flex-shrink:0">${IC.edit(12)}</button>
       </div>
       <div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${htmlEsc(l.notes)}</div>
     </div>`}).join(''):`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
@@ -3727,6 +3738,7 @@ function saveCILevels(){
   }
   const newly=[];
   for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
+char.ciSetupDone=true;
   saveChar();
   if(newCI>prev)showToast(`🎉 ${LEVELS[newCI].ci} reached!`);
   else if(newCI<prev)showToast(`◑ CI adjusted to ${LEVELS[newCI].ci}`);
