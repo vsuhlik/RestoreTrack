@@ -517,10 +517,15 @@ textarea:focus        { border-color: var(--acc30); }
   max-width: 480px;
   margin: 0 auto;
   z-index: 20;
+  
+  /* NEW: Forces padding to stay inside the screen bounds */
+  box-sizing: border-box; 
+  
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
 }
+
 .nav-btn {
   flex: 1;
   min-width: 0;
@@ -537,7 +542,7 @@ textarea:focus        { border-color: var(--acc30); }
   font-family: 'DM Sans', sans-serif;
   color: var(--text5);
   transition: color .2s;
-  overflow: hidden;
+  /* Removed: overflow: hidden; */
 }
 .nav-btn.active { color: var(--accent); }
 .nav-icon       { font-size: 17px; line-height: 1.2; }
