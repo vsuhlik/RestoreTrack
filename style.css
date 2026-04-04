@@ -517,21 +517,11 @@ textarea:focus        { border-color: var(--acc30); }
   max-width: 480px;
   margin: 0 auto;
   z-index: 20;
-  box-sizing: border-box;
-  
-  /* FIXED: Added an 8px baseline padding so it never touches the glass */
-  padding-left: calc(8px + env(safe-area-inset-left, 0px));
-  padding-right: calc(8px + env(safe-area-inset-right, 0px));
-  /* Removed padding-bottom from here */
 }
 
 .nav-btn {
   flex: 1;
-  min-width: 0;
-  
-  /* FIXED: Moved safe-area inset to the button's bottom padding (5px base + safe area) */
-  padding: 6px 2px calc(5px + env(safe-area-inset-bottom, 0px));
-  
+  padding: 6px 2px 5px;
   background: none;
   border: none;
   cursor: pointer;
@@ -545,6 +535,7 @@ textarea:focus        { border-color: var(--acc30); }
   color: var(--text5);
   transition: color .2s;
 }
+
 .nav-btn.active { color: var(--accent); }
 .nav-icon       { font-size: 17px; line-height: 1.2; }
 
