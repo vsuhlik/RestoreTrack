@@ -865,6 +865,66 @@ textarea:focus        { border-color: var(--acc30); }
   margin: 0 auto;
 }
 
+/* ── MASTER GAUGE (Journey Tab) ─────────────────────────────────────────── */
+.journey-tab {
+  animation: journeyFadeIn .3s ease;
+}
+@keyframes journeyFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.gauge-stats-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 16px 4px 4px;
+  border-top: 1px solid var(--stat-border);
+  margin-top: 16px;
+}
+.gauge-stat {
+  flex: 1;
+  text-align: center;
+}
+.gauge-stat-val {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text1);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.gauge-stat-div {
+  width: 1px;
+  height: 32px;
+  background: var(--stat-border);
+  flex-shrink: 0;
+}
+.gauge-stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text5);
+  font-weight: 600;
+}
+.gauge-fill-anim {
+  animation: gaugeFadeIn .9s ease;
+}
+@keyframes gaugeFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.milestone-pulse-ring {
+  animation: msPulse 2.5s ease-in-out infinite;
+}
+@keyframes msPulse {
+  0%, 100% { opacity: 0.1; }
+  50%       { opacity: 0.35; }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── DIVIDER ─────────────────────────────────────────────────────────────── */
 .divider {
   width: 100%;
