@@ -1939,15 +1939,38 @@ function renderToday(){
     </div>`:'';
   const lastMethod=char.lastMethod||null;
   const lastCat=char.lastCat||null;
-  const quickLogBtn=lastMethod&&lastCat&&!activeTimer?`
-    <button id="quick-start-btn" style="width:100%;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:7px;text-align:left;transition:border-color .2s">
-      <span style="font-size:18px">${catFor(lastCat).icon}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600;color:var(--accent)">Quick Start</div>
-        <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lastMethod}</div>
-      </div>
-      <span style="font-size:11px;color:var(--accent);font-weight:700">▶</span>
-    </button>`:'';
+  const secondLog=logs.find(l=>l.method&&l.method!==lastMethod);
+  const secondMethod=secondLog?.method||null;
+  const secondCat=secondLog?.cat||null;
+  const quickLogBtn=lastMethod&&lastCat&&!activeTimer?(
+    secondMethod&&secondCat
+    ?`<div style="display:flex;gap:7px;margin-bottom:7px">
+        <button id="quick-start-btn" style="flex:1;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:10px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;text-align:left;transition:border-color .2s;min-width:0">
+          <span style="font-size:16px;flex-shrink:0">${catFor(lastCat).icon}</span>
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div style="font-size:11px;font-weight:600;color:var(--accent)">Quick Start</div>
+            <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lastMethod}</div>
+          </div>
+          <span style="font-size:11px;color:var(--accent);font-weight:700;flex-shrink:0">▶</span>
+        </button>
+        <button id="quick-start-btn-2" data-method="${htmlEsc(secondMethod)}" data-cat="${htmlEsc(secondCat)}" style="flex:1;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:10px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;text-align:left;transition:border-color .2s;min-width:0">
+          <span style="font-size:16px;flex-shrink:0">${catFor(secondCat).icon}</span>
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div style="font-size:11px;font-weight:600;color:var(--accent)">Quick Start</div>
+            <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${secondMethod}</div>
+          </div>
+          <span style="font-size:11px;color:var(--accent);font-weight:700;flex-shrink:0">▶</span>
+        </button>
+      </div>`
+    :`<button id="quick-start-btn" style="width:100%;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:7px;text-align:left;transition:border-color .2s">
+        <span style="font-size:18px">${catFor(lastCat).icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--accent)">Quick Start</div>
+          <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lastMethod}</div>
+        </div>
+        <span style="font-size:11px;color:var(--accent);font-weight:700">▶</span>
+      </button>`
+  ):'';
   const weeklySummary=''; // Weekly Recap moved to Reports tab
   return`
   <div class="coach-card">
@@ -4142,6 +4165,13 @@ function attachEvents(){
   document.getElementById('quick-start-btn')?.addEventListener('click',()=>{
     if(!char.lastMethod||!char.lastCat)return;
     sheetMethod=char.lastMethod;sheetCat=char.lastCat;sheetNotes='';
+    beginSession();
+  });
+  document.getElementById('quick-start-btn-2')?.addEventListener('click',function(){
+    const method=this.dataset.method;
+    const cat=this.dataset.cat;
+    if(!method||!cat)return;
+    sheetMethod=method;sheetCat=cat;sheetNotes='';
     beginSession();
   });
   document.getElementById('start-session-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
