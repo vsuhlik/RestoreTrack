@@ -1642,7 +1642,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.5.1</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.5.2</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1782,7 +1782,6 @@ function buildWeeklySummary(){
   const timeRatio=weeklyGoal?totalMins/weeklyGoal:0;
   let headline='',headlineColor='var(--text1)';
   if(sessions===0){return'';}
-  else if(timeRatio>=1){headline='Goal-level time logged.';headlineColor='var(--green)';}
   else if(timeRatio>=.7){headline='A strong time-under-tension week.';headlineColor='var(--green)';}
   else if(totalMins>=240){headline='Meaningful time logged.';headlineColor='var(--accent)';}
   else{headline='Every comfortable hour counts.';headlineColor='var(--text2)';}
@@ -3035,19 +3034,31 @@ function renderReports(){
     </div>`;
   }).join('');
 
-  // Method breakdown — SELECTED MONTH
-  const monthLogs=logs.filter(l=>l.date.slice(0,7)===calMonthKeyEarly);
-  const monthMethodTotals={};
-  monthLogs.forEach(l=>{
+  // Method breakdown — THIS WEEK (matches the "This Week" bar graph above it, so the colors line up)
+  const weekLogs=logs.filter(l=>wDays.includes(l.date));
+  const weekMethodTotals={};
+  weekLogs.forEach(l=>{
     if(!l.method)return;
-    if(!monthMethodTotals[l.method])monthMethodTotals[l.method]={mins:0,cat:l.cat};
-    monthMethodTotals[l.method].mins+=l.dur;
+    if(!weekMethodTotals[l.method])weekMethodTotals[l.method]={mins:0,cat:l.cat};
+    weekMethodTotals[l.method].mins+=l.dur;
   });
-  const usedMonthMethods=Object.entries(monthMethodTotals).sort((a,b)=>b[1].mins-a[1].mins);
-  const totMonthM=usedMonthMethods.reduce((a,[,v])=>a+v.mins,0)||1;
-  const catBarsMonth=usedMonthMethods.map(([method,{mins,cat}])=>{
+  let weekLiveMins=0;
+  if(activeTimer&&activeTimer.startedAt){
+    wDays.forEach(d=>{
+      const _dlm=liveTimerMinsForDate(d);
+      if(_dlm>0){
+        weekLiveMins+=_dlm;
+        const lm=activeTimer.method||'Session';
+        if(!weekMethodTotals[lm])weekMethodTotals[lm]={mins:0,cat:activeTimer.cat||'manual'};
+        weekMethodTotals[lm].mins+=_dlm;
+      }
+    });
+  }
+  const usedWeekMethods=Object.entries(weekMethodTotals).sort((a,b)=>b[1].mins-a[1].mins);
+  const totWeekM=usedWeekMethods.reduce((a,[,v])=>a+v.mins,0)||1;
+  const catBarsWeek=usedWeekMethods.map(([method,{mins,cat}])=>{
     const c=catFor(cat);
-    const p=Math.round((mins/totMonthM)*100);
+    const p=Math.round((mins/totWeekM)*100);
     return`<div style="margin-bottom:9px">
       <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
         <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${method}</span>
@@ -3172,28 +3183,29 @@ if(activeTimer&&activeTimer.startedAt){
   const canGoNext=!(year===todayYear&&month===todayMonth);
   const firstLogDate=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
   const canGoPrev=(`${year}-${String(month+1).padStart(2,'0')}`)>firstLogDate;
-  const longestSession=logs.reduce((longest,log)=>Math.max(longest,Number(log.dur)||0),0);
-  const longWearCount=logs.filter(log=>(Number(log.dur)||0)>=8*60).length;
-  const timePerspective=logs.length
-    ?`<div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,var(--bg-card),var(--acc6))">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin-bottom:6px">Time over tally</div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.65">Your progress is evaluated by comfortable time under tension, not by how many sessions you log. ${longWearCount?`You have ${longWearCount} long-wear log${longWearCount===1?'':'s'}${longestSession?`, including one lasting ${fmtDur(longestSession)}`:''}.`:longestSession?`Your longest logged wear is ${fmtDur(longestSession)}.`:''}</div>
-      </div>`:'';
   return`<div class="page-title">Reports</div>
-  <div class="page-sub">Your restoration journey in time, patterns, and progress.</div>
   ${buildWeeklySummary()}
-  ${timePerspective}
-  <div class="sg2">
-    <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(weekTotal)}</div><div class="sl">This Week</div></div>
-    <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(monthTotal)}</div><div class="sl">${isCurrentMonth?'This Month':monthName}</div></div>
-    <div class="stat"><div class="sv" style="font-size:13px">${fmtDur(char.minutes)}</div><div class="sl">All Time</div></div>
-    <div class="stat"><div class="sv" style="font-size:15px;color:#F59E0B">${char.streak}</div><div class="sl">Current Streak</div></div>
-  </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">This Week</div>
     <div style="font-size:11px;font-weight:600;color:var(--text2)">${weekRangeLabel}</div>
   </div>
   <div class="card"><div class="bar-wrap">${bars}</div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
+    <div style="font-size:10px;color:var(--accent);font-weight:600">This Week</div>
+  </div>
+  <div class="card">
+    ${catBarsWeek||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions logged this week.</div>`}
+    ${weekLogs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${weekLogs.length} sessions · ${fmtDur(weekLogs.reduce((a,l)=>a+l.dur,0)+weekLiveMins)} total</div>`:''}
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
+    <div style="font-size:10px;color:var(--text4);font-weight:600">All Time</div>
+  </div>
+  <div class="card">
+    ${catBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions yet.</div>`}
+    ${logs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${logs.length} sessions · ${fmtDur(logs.reduce((a,l)=>a+l.dur,0))} total</div>`:''}
+  </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Activity</div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -3212,22 +3224,9 @@ if(activeTimer&&activeTimer.startedAt){
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.6);border:1px solid var(--text4);vertical-align:middle;margin-right:3px"></span>Has note</span>
     </div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
-    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
-    <div style="font-size:10px;color:var(--accent);font-weight:600">${monthName}</div>
-  </div>
-  <div class="card">
-    ${catBarsMonth||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions logged in ${monthName}.</div>`}
-    ${monthLogs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${monthLogs.length} sessions · ${fmtDur(monthLogs.reduce((a,l)=>a+l.dur,0))} total</div>`:''}
-  </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
-    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
-    <div style="font-size:10px;color:var(--text4);font-weight:600">All Time</div>
-  </div>
-  <div class="card">
-    ${catBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions yet.</div>`}
-    ${logs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${logs.length} sessions · ${fmtDur(logs.reduce((a,l)=>a+l.dur,0))} total</div>`:''}
-  </div>
+  <div class="sec-title">Session History</div>${histHtml}
+  <div class="sec-title">Session Notes</div>
+  <div class="card" style="padding:8px 12px">${notesHtml}</div>
   <div class="sec-title">Export Data</div>
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -3237,10 +3236,7 @@ if(activeTimer&&activeTimer.startedAt){
       </div>
       <button class="btn-outline" id="export-btn" style="flex-shrink:0">📊 Export</button>
     </div>
-  </div>
-  <div class="sec-title">Session Notes</div>
-  <div class="card" style="padding:8px 12px">${notesHtml}</div>
-  <div class="sec-title">Session History</div>${histHtml}`;
+  </div>`;
 }
 function showDayDetail(dateStr){
   const ex=document.getElementById('day-detail-ov');if(ex)ex.remove();
@@ -3513,9 +3509,15 @@ function renderProfileScreen(){
 
       <button class="btn-gold" id="create-btn" style="width:100%;padding:14px;font-size:15px;letter-spacing:1px">Begin Your Journey</button>
 
-      <div style="margin-top:18px;text-align:center">
-        <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.7">Restoring from another device or browser?<br>Each browser and the Home Screen app store data separately — use a backup to transfer.</div>
-        <button class="btn-ghost" id="restore-btn" style="padding:8px 20px;font-size:12px">⬆ Import Backup</button>
+      <div style="margin-top:18px;text-align:center;width:100%">
+        <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.7">Already have a profile — new phone, new browser, or reinstalled the app?</div>
+        <button class="btn-ghost" id="cloud-restore-onboard-btn" style="padding:9px 20px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-bottom:14px">
+          <svg width="13" height="13" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.66h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          ☁ Restore from Cloud
+        </button>
+        <div style="font-size:9px;color:var(--text5);margin-bottom:14px;line-height:1.6">Only works if you backed up with this Google account before, from Profile → Cloud Backup.</div>
+        <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.7">Or transfer manually using a backup file:</div>
+        <button class="btn-ghost" id="restore-btn" style="padding:8px 20px;font-size:12px">⬆ Import Backup File</button>
         <input type="file" id="restore-file" accept=".json" style="display:none">
       </div>
     </div>`;
@@ -3525,6 +3527,7 @@ function renderProfileScreen(){
       createProfile(n);
     };
     document.getElementById('new-name').onkeydown=e=>{if(e.key==='Enter'){const n=e.target.value.trim();if(n)createProfile(n);}};
+    document.getElementById('cloud-restore-onboard-btn').addEventListener('click',onboardingCloudRestore);
     document.getElementById('restore-btn').addEventListener('click',()=>document.getElementById('restore-file').click());
     document.getElementById('restore-file').addEventListener('change',e=>{
       const file=e.target.files[0];if(!file)return;
@@ -3539,7 +3542,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.5.1</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.5.2</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3626,7 +3629,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.5.1';
+    const version='v2.5.2';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -3752,6 +3755,66 @@ async function cloudBackupRestore() {
     );
   } catch(e) {
     showToast('⚠ Could not reach cloud backup — check your connection');
+  }
+}
+// ── ONBOARDING CLOUD RESTORE (new device, existing account) ───────────────────
+function onboardingCloudRestore(){
+  _onboardingRestorePending=true;
+  if(!db)initFirebase();
+  const tryLogin=()=>{
+    if(!fbAuth){setTimeout(tryLogin,300);return;}
+    const provider=new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account'});
+    fbAuth.signInWithPopup(provider).then(result=>{
+      fbUID=result.user.uid;fbIsGoogle=true;
+      restoreFromCloudOnboarding();
+    }).catch(e=>{
+      if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'){
+        localStorage.setItem('rst-onboarding-restore-pending','1');
+        fbAuth.signInWithRedirect(provider);
+      } else {
+        _onboardingRestorePending=false;
+        if(e.code!=='auth/popup-closed-by-user')showToast('⚠ Sign-in failed. Try again.');
+      }
+    });
+  };
+  tryLogin();
+}
+
+async function restoreFromCloudOnboarding(){
+  showToast('☁ Checking for a cloud backup…');
+  try{
+    const doc=await db.collection('user_backups').doc(fbUID).get();
+    if(!doc.exists){
+      _onboardingRestorePending=false;
+      showToast('⚠ No cloud backup found for this Google account.');
+      return;
+    }
+    const data=doc.data();
+    const pid=data.pid||('p'+Date.now());
+    S.set(`rst-${pid}-char`,data.char);
+    S.set(`rst-${pid}-logs`,data.logs);
+    S.set('rst-active-pid',pid);
+    await ProfileDB.set(`rst-${pid}-char`,data.char);
+    await ProfileDB.set(`rst-${pid}-logs`,data.logs);
+    const restoredProfiles=[{id:pid,name:data.char?.name||'Restorer',createdAt:data.char?.createdAt||today()}];
+    profiles=restoredProfiles;
+    S.set('rst-profiles',restoredProfiles);
+    await ProfileDB.set('rst-profiles',restoredProfiles);
+    const photoSnap=await db.collection('user_backups').doc(fbUID).collection('photos').get();
+    const restoredPhotos=photoSnap.docs.map(d=>({id:parseInt(d.id)||Date.now(),...d.data()})).sort((a,b)=>b.id-a.id);
+    await PhotoDB.save(pid,restoredPhotos);
+    showToast(`✅ Welcome back! Restored ${restoredPhotos.length} photos and your full history.`);
+    setTimeout(async ()=>{
+      await loadAll();
+      showProfileScreen=false;tab='today';render();
+      if(char.communityEnabled)startCommunityListeners();
+      _onboardingRestorePending=false;
+    },600);
+  }catch(e){
+    _onboardingRestorePending=false;
+    console.warn('[RT] restoreFromCloudOnboarding error',e);
+    showToast('⚠ Could not restore — check your connection and try again');
   }
 }
 // ── BACKUP / RESTORE ───────────────────────────────────────────────────────────
@@ -4282,6 +4345,7 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 }
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
+let _onboardingRestorePending=false; // true while a fresh-install "Restore from Cloud" sign-in is in flight
 let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
 let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
 
@@ -4332,8 +4396,16 @@ function initFirebase(){
         finaliseJoin();
         return;
       }
+      if(result&&result.user&&localStorage.getItem('rst-onboarding-restore-pending')){
+        localStorage.removeItem('rst-onboarding-restore-pending');
+        fbUID=result.user.uid;fbIsGoogle=true;
+        _onboardingRestorePending=true;
+        restoreFromCloudOnboarding();
+        return;
+      }
     }).catch(()=>{});
     fbAuth.onAuthStateChanged(user=>{
+      if(_onboardingRestorePending||localStorage.getItem('rst-onboarding-restore-pending'))return;
       if(user){
         const isGoogle=user.providerData.some(p=>p.providerId==='google.com');
         if(!isGoogle&&fbIsGoogle)return;
@@ -4888,7 +4960,12 @@ function showConversationSheet(otherUID,otherUser={}){
   const messageRef=db.collection('conversations').doc(cid).collection('messages');
   const unsubscribe=messageRef.orderBy('ts','asc').limit(100).onSnapshot(snap=>{
     const thread=document.getElementById('message-thread');if(!thread)return;
-    const messages=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(message=>!isCommunityBlocked(message.senderUID));
+    const nowMs=Date.now();
+    const messages=snap.docs.map(doc=>({id:doc.id,...doc.data()}))
+      .filter(message=>!isCommunityBlocked(message.senderUID))
+      // A message the server hasn't confirmed yet has no real timestamp —
+      // treat it as "right now" so it sorts to the bottom, not the top.
+      .sort((a,b)=>(a.ts?.toMillis?a.ts.toMillis():nowMs)-(b.ts?.toMillis?b.ts.toMillis():nowMs));
     thread.innerHTML=messages.length?messages.map(message=>{
       const mine=message.senderUID===fbUID;
       const stamp=message.ts?.toDate?message.ts.toDate().toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Sending…';
@@ -4896,7 +4973,7 @@ function showConversationSheet(otherUID,otherUser={}){
         ${mine?`<button onclick="deleteMessage('${cid}','${message.id}')" title="Delete message" style="background:none;border:none;color:var(--text5);font-size:11px;cursor:pointer;padding:2px;flex-shrink:0">✕</button>`:''}
         <div style="max-width:82%;background:${mine?'var(--acc18)':'var(--bg-card)'};border:1px solid ${mine?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:7px 9px"><div style="font-size:12px;color:var(--text2);line-height:1.45;white-space:pre-wrap;word-break:break-word">${htmlEsc(message.text||'')}</div><div style="font-size:8px;color:var(--text5);text-align:right;margin-top:3px">${stamp}</div></div>
       </div>`;
-    }).join(''):`<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text5);font-size:11px;line-height:1.6">No messages yet.<br>Say hello when you’re ready.</div>`;
+    }).join(''):`<div data-empty-state style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text5);font-size:11px;line-height:1.6">No messages yet.<br>Say hello when you’re ready.</div>`;
     thread.scrollTop=thread.scrollHeight;
     markConversationRead(cid);
   },error=>{console.warn('[RT] message thread listener error',error?.code,error?.message);showToast('Could not load messages');});
