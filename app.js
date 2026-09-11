@@ -114,7 +114,8 @@ let _repYear=new Date().getFullYear(),_repMonth=new Date().getMonth();
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
   dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
-  communityBio:'',communityShareStats:true};
+  communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},
+  communityEncouragementReadAt:0};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -476,7 +477,7 @@ async function loadAll(){
   }
 }
 async function loadProfile(pid){
-  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[]};
+  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0};
   char={...defaults};logs=[];photos=[];
   const c=(await ProfileDB.get(`rst-${pid}-char`))??S.get(`rst-${pid}-char`);
   if(c)char={...char,...c};
@@ -495,6 +496,10 @@ if(char.startCI===undefined)char.startCI=0;
   if(!char.communityAvatar)char.communityAvatar='🌱';
   if(char.communityBio===undefined)char.communityBio='';
   if(char.communityShareStats===undefined)char.communityShareStats=true;
+  if(char.communityMessagesEnabled===undefined)char.communityMessagesEnabled=true;
+  if(!Array.isArray(char.communityBlockedUsers))char.communityBlockedUsers=[];
+  if(!char.communityBlockedProfiles||typeof char.communityBlockedProfiles!=='object')char.communityBlockedProfiles={};
+  if(!char.communityEncouragementReadAt)char.communityEncouragementReadAt=0;
   if(!char.dayNotes)char.dayNotes={};
   const l=(await ProfileDB.get(`rst-${pid}-logs`))??S.get(`rst-${pid}-logs`);
   if(l)logs=l;
@@ -549,7 +554,7 @@ function createProfile(name){
   const id='p'+Date.now();
   profiles=[{id,name,createdAt:today()}];
   saveProfiles();currentPid=id;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[],startCI:0,ciGoal:10,restDays:[],startDate:today()};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[],startCI:0,ciGoal:10,restDays:[],startDate:today(),communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -629,7 +634,7 @@ function deleteProfile(){
   localStorage.removeItem('rst-comm-pending');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,dayNotes:{}};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0,dayNotes:{}};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
   stopInterval();
   showProfileScreen=true;
@@ -734,6 +739,9 @@ function commitSession(notes){
   const method=activeTimer?activeTimer.method:sheetMethod;
   const catId=activeTimer?activeTimer.cat:sheetCat;
   const n=notes||sheetNotes||'';
+  const completedMins=activeTimer&&activeTimer.wallStart
+    ?Math.max(1,Math.round((Date.now()-activeTimer.wallStart)/60000))
+    :Math.max(1,Math.round(timerSecs/60));
   // If we have a real start timestamp, split across days accurately
   // wallStart survives stopSession() which nulls startedAt
   if(activeTimer&&activeTimer.wallStart&&!activeTimer._forceSave){
@@ -744,6 +752,7 @@ function commitSession(notes){
   }
   stopInterval();activeTimer=null;timerSecs=0;sheetMethod='';sheetCat=null;sheetNotes='';
   saveTimer(null);showStopSheet=false;
+  recordCommunityActivity('session_completed',{method,cat:catId,duration:completedMins});
   syncPresence();
   render();
 }
@@ -759,7 +768,7 @@ function logManual(method,catId,totalMins,notes,dateStr,startMs,endMs){
         'Duplicate session?',
         `You already have a ${method} session on ${checkDate} (${fmtMin(dup.dur)}). Add another anyway?`,
         'Add Anyway',
-        ()=>{awardSession(method,catId,totalMins,notes||'',checkDate);showSessionSheet=false;render();}
+        ()=>{awardSession(method,catId,totalMins,notes||'',checkDate);if(checkDate===today())recordCommunityActivity('session_completed',{method,cat:catId,duration:totalMins});showSessionSheet=false;render();}
       );
       return;
     }
@@ -768,6 +777,7 @@ function logManual(method,catId,totalMins,notes,dateStr,startMs,endMs){
     awardMultiDay(method,catId,startMs,endMs,notes||'');
   } else {
     awardSession(method,catId,totalMins,notes||'',checkDate);
+    if(checkDate===today())recordCommunityActivity('session_completed',{method,cat:catId,duration:totalMins});
   }
   showSessionSheet=false;render();
 }
@@ -1031,6 +1041,7 @@ function setCILevel(n){
   const newly=[];
   for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
   saveChar();
+  if(n>prev)recordCommunityActivity('ci_reached',{ci:n});
   if(n>prev)showToast(`🎉 ${LEVELS[n].ci} reached!`);
   else showToast(`◑ CI adjusted to ${LEVELS[n].ci}`);
   if(newly.length){setTimeout(()=>showToast(`🏅 ${newly[0].title} unlocked!`),1800);}
@@ -1511,7 +1522,9 @@ function coachBrainMatch(question){
     for(const kw of entry.keywords){
       if(q.includes(kw))score+=kw.split(' ').length;
     }
-    if(score>bestScore){bestScore=score;bestExtEntry=entry;bestTopic=null;}
+    // Extended data is the maintained, source-reviewed layer. Let it supersede
+    // an equally specific built-in match rather than leaving old copy in place.
+    if(score>=bestScore&&score>0){bestScore=score;bestExtEntry=entry;bestTopic=null;}
   }
   if(bestScore===0){
     // No match — give a helpful fallback
@@ -1629,7 +1642,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.8</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.4.9</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -1666,15 +1679,13 @@ function render(){
     commTab=localStorage.getItem('rst-comm-tab')||'live';
     setLastSeen(commTab);
     if(commTab==='posts')fetchPosts(true);
+    if(commTab==='activity'&&!commState.activityLoaded)fetchCommunityActivity();
     // Restart users listener if it was stopped when we left
     if(commState.ready&&!commState.unsubUsers)startCommunityListeners();
     // Always refresh our own presence when entering the community tab
     if(commState.ready)syncPresence();
     c.innerHTML=renderCommunity();
     attachCommunityEvents();
-    commState.newEncouragements=[];
-    const badge=document.querySelector('.enc-badge');
-    if(badge)badge.remove();
     if(!commState.ready)initFirebase();
   } else {
     // Leaving community tab — stop users listener to save reads
@@ -1751,29 +1762,30 @@ function buildWeeklySummary(){
   const bestDayName=bestDay.mins>0?new Date(bestDay.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'}):'';
 
   // Comparison to week before
-  const prevSessions=prevPrevLogs.length;
   const prevTotalMins=prevPrevLogs.reduce((a,l)=>a+l.dur,0);
+  const prevActiveDays=new Set(prevPrevLogs.map(l=>l.date)).size;
   let compLine='';
   if(prevPrevLogs.length===0){
     compLine='First full week tracked — great start.';
-  } else if(sessions>prevSessions){
-    compLine=`Up from ${prevSessions} session${prevSessions!==1?'s':''} the week before. Keep building.`;
-  } else if(sessions===prevSessions){
-    const timeDiff=totalMins-prevTotalMins;
-    compLine=timeDiff>5?`Same sessions as the previous week but ${fmtDur(timeDiff)} more time.`:
-              timeDiff<-5?`Same sessions as the previous week but ${fmtDur(Math.abs(timeDiff))} less time.`:
-              'Consistent with the previous week.';
   } else {
-    compLine=`Down from ${prevSessions} session${prevSessions!==1?'s':''} the week before. This week is a new start.`;
+    const timeDiff=totalMins-prevTotalMins;
+    compLine=timeDiff>5?`${fmtDur(timeDiff)} more time under tension than the week before.`:
+      timeDiff<-5?`${fmtDur(Math.abs(timeDiff))} less time than the week before — no judgment, just a useful signal.`:
+      activeDays>prevActiveDays?`The same total time, spread across more days.`:
+      activeDays<prevActiveDays?`The same total time in fewer, longer wear periods.`:
+      'A steady week by time under tension.';
   }
 
-  // Headline — honest, based on actual data
+  // A long-wear method may create one log for several days. Grade the recap by
+  // accumulated time, never by the number of times someone pressed Stop.
+  const weeklyGoal=(char.dailyGoalMin||120)*7;
+  const timeRatio=weeklyGoal?totalMins/weeklyGoal:0;
   let headline='',headlineColor='var(--text1)';
   if(sessions===0){return'';}
-  else if(sessions>=6){headline='Strong week.';headlineColor='var(--green)';}
-  else if(sessions>=4){headline='Solid week.';headlineColor='var(--accent)';}
-  else if(sessions>=2){headline='Getting there.';headlineColor='var(--accent)';}
-  else{headline='A start is a start.';headlineColor='var(--text2)';}
+  else if(timeRatio>=1){headline='Goal-level time logged.';headlineColor='var(--green)';}
+  else if(timeRatio>=.7){headline='A strong time-under-tension week.';headlineColor='var(--green)';}
+  else if(totalMins>=240){headline='Meaningful time logged.';headlineColor='var(--accent)';}
+  else{headline='Every comfortable hour counts.';headlineColor='var(--text2)';}
 
   // Format the week range label
   const weekEnd=prevWeekDates[6];
@@ -1787,7 +1799,7 @@ function buildWeeklySummary(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
         <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${sessions}</div>
-        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Session${sessions!==1?'s':''}</div>
+        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Log entr${sessions===1?'y':'ies'}</div>
       </div>
       <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
         <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${fmtDur(totalMins)}</div>
@@ -1802,7 +1814,8 @@ function buildWeeklySummary(){
         <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Goal days hit</div>
       </div>
     </div>
-    ${bestDayName?`<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Best day: <strong style="color:var(--text2)">${bestDayName}</strong> — ${fmtDur(bestDay.mins)}</div>`:''}
+    ${bestDayName?`<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Most time logged: <strong style="color:var(--text2)">${bestDayName}</strong> — ${fmtDur(bestDay.mins)}</div>`:''}
+    <div style="font-size:10px;color:var(--text5);line-height:1.5;margin-bottom:6px">This recap measures time under tension. One multi-day tape session can be just as meaningful as many shorter logs.</div>
     <div style="font-size:11px;color:var(--text4);line-height:1.6;border-top:1px solid var(--stat-border);padding-top:8px">${compLine}</div>
   </div>`;
 }
@@ -1871,6 +1884,19 @@ function buildNextMilestone(){
 }
 
 // ── TODAY ──────────────────────────────────────────────────────────────────────
+function getMostUsedMethodEntries(limit=3){
+  const methods={};
+  logs.forEach((log,index)=>{
+    if(!log.method||!log.cat)return;
+    if(!methods[log.method])methods[log.method]={method:log.method,cat:log.cat,minutes:0,lastIndex:index};
+    methods[log.method].minutes+=Number(log.dur)||0;
+    methods[log.method].lastIndex=Math.min(methods[log.method].lastIndex,index);
+  });
+  return Object.values(methods)
+    .sort((a,b)=>b.minutes-a.minutes||a.lastIndex-b.lastIndex)
+    .slice(0,limit);
+}
+
 function renderToday(){
   const td=today(),tMin=todayMin(),tGoalMin=todayGoalMin(),goal=char.dailyGoalMin||120;
   const goalPct=Math.min(100,Math.round((tGoalMin/goal)*100));
@@ -1937,40 +1963,20 @@ function renderToday(){
         <div style="font-size:10px;color:var(--text4);margin-top:1px">${fmtDate(lastLog.date)} · ${fmtMin(lastLog.dur)}</div>
       </div>
     </div>`:'';
-  const lastMethod=char.lastMethod||null;
-  const lastCat=char.lastCat||null;
-  const secondLog=logs.find(l=>l.method&&l.method!==lastMethod);
-  const secondMethod=secondLog?.method||null;
-  const secondCat=secondLog?.cat||null;
-  const quickLogBtn=lastMethod&&lastCat&&!activeTimer?(
-    secondMethod&&secondCat
-    ?`<div style="display:flex;gap:7px;margin-bottom:7px">
-        <button id="quick-start-btn" style="flex:1;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:10px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;text-align:left;transition:border-color .2s;min-width:0">
-          <span style="font-size:16px;flex-shrink:0">${catFor(lastCat).icon}</span>
-          <div style="flex:1;min-width:0;overflow:hidden">
-            <div style="font-size:11px;font-weight:600;color:var(--accent)">Quick Start</div>
-            <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lastMethod}</div>
-          </div>
-          <span style="font-size:11px;color:var(--accent);font-weight:700;flex-shrink:0">▶</span>
-        </button>
-        <button id="quick-start-btn-2" data-method="${htmlEsc(secondMethod)}" data-cat="${htmlEsc(secondCat)}" style="flex:1;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:10px 10px;display:flex;align-items:center;gap:7px;cursor:pointer;text-align:left;transition:border-color .2s;min-width:0">
-          <span style="font-size:16px;flex-shrink:0">${catFor(secondCat).icon}</span>
-          <div style="flex:1;min-width:0;overflow:hidden">
-            <div style="font-size:11px;font-weight:600;color:var(--accent)">Quick Start</div>
-            <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${secondMethod}</div>
-          </div>
-          <span style="font-size:11px;color:var(--accent);font-weight:700;flex-shrink:0">▶</span>
-        </button>
-      </div>`
-    :`<button id="quick-start-btn" style="width:100%;background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:7px;text-align:left;transition:border-color .2s">
-        <span style="font-size:18px">${catFor(lastCat).icon}</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:600;color:var(--accent)">Quick Start</div>
-          <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lastMethod}</div>
+  // Favour time under tension, rather than raw log count. This keeps long-wear
+  // methods such as T-tape prominent even when they create fewer entries.
+  const quickMethods=getMostUsedMethodEntries(3);
+  const quickLogBtn=quickMethods.length&&!activeTimer?`
+    <div style="display:grid;grid-template-columns:repeat(${quickMethods.length},minmax(0,1fr));gap:7px;margin-bottom:7px">
+      ${quickMethods.map((entry,i)=>`<button class="quick-start-btn" data-method="${htmlEsc(entry.method)}" data-cat="${htmlEsc(entry.cat)}" style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left;transition:border-color .2s;min-width:0">
+        <span style="font-size:16px;flex-shrink:0">${catFor(entry.cat).icon}</span>
+        <div style="flex:1;min-width:0;overflow:hidden">
+          <div style="font-size:10px;font-weight:600;color:var(--accent)">${i===0?'Quick Start':'Quick Start'}</div>
+          <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${htmlEsc(entry.method)}</div>
         </div>
-        <span style="font-size:11px;color:var(--accent);font-weight:700">▶</span>
-      </button>`
-  ):'';
+        <span style="font-size:10px;color:var(--accent);font-weight:700;flex-shrink:0">▶</span>
+      </button>`).join('')}
+    </div>`:'';
   const weeklySummary=''; // Weekly Recap moved to Reports tab
   return`
   <div class="coach-card">
@@ -3166,14 +3172,22 @@ if(activeTimer&&activeTimer.startedAt){
   const canGoNext=!(year===todayYear&&month===todayMonth);
   const firstLogDate=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
   const canGoPrev=(`${year}-${String(month+1).padStart(2,'0')}`)>firstLogDate;
+  const longestSession=logs.reduce((longest,log)=>Math.max(longest,Number(log.dur)||0),0);
+  const longWearCount=logs.filter(log=>(Number(log.dur)||0)>=8*60).length;
+  const timePerspective=logs.length
+    ?`<div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,var(--bg-card),var(--acc6))">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin-bottom:6px">Time over tally</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.65">Your progress is evaluated by comfortable time under tension, not by how many sessions you log. ${longWearCount?`You have ${longWearCount} long-wear log${longWearCount===1?'':'s'}${longestSession?`, including one lasting ${fmtDur(longestSession)}`:''}.`:longestSession?`Your longest logged wear is ${fmtDur(longestSession)}.`:''}</div>
+      </div>`:'';
   return`<div class="page-title">Reports</div>
-  <div class="page-sub">Your restoration journey in numbers.</div>
+  <div class="page-sub">Your restoration journey in time, patterns, and progress.</div>
   ${buildWeeklySummary()}
+  ${timePerspective}
   <div class="sg2">
     <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(weekTotal)}</div><div class="sl">This Week</div></div>
     <div class="stat"><div class="sv" style="font-size:15px">${fmtDur(monthTotal)}</div><div class="sl">${isCurrentMonth?'This Month':monthName}</div></div>
     <div class="stat"><div class="sv" style="font-size:13px">${fmtDur(char.minutes)}</div><div class="sl">All Time</div></div>
-    <div class="stat"><div class="sv" style="font-size:15px;color:#F59E0B">${char.streak}</div><div class="sl">Best Streak</div></div>
+    <div class="stat"><div class="sv" style="font-size:15px;color:#F59E0B">${char.streak}</div><div class="sl">Current Streak</div></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">This Week</div>
@@ -3525,7 +3539,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.8</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.4.9</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3612,7 +3626,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.4.8';
+    const version='v2.4.9';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -4162,18 +4176,13 @@ function mountStopSheet(){
 
 // ── EVENTS ─────────────────────────────────────────────────────────────────────
 function attachEvents(){
-  document.getElementById('quick-start-btn')?.addEventListener('click',()=>{
-    if(!char.lastMethod||!char.lastCat)return;
-    sheetMethod=char.lastMethod;sheetCat=char.lastCat;sheetNotes='';
-    beginSession();
-  });
-  document.getElementById('quick-start-btn-2')?.addEventListener('click',function(){
+  document.querySelectorAll('.quick-start-btn').forEach(btn=>btn.addEventListener('click',function(){
     const method=this.dataset.method;
     const cat=this.dataset.cat;
     if(!method||!cat)return;
     sheetMethod=method;sheetCat=cat;sheetNotes='';
     beginSession();
-  });
+  }));
   document.getElementById('start-session-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
   document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;render();});
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
@@ -4274,7 +4283,25 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
 let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
-let commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{},broadcast:null};
+let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
+
+function isCommunityBlocked(uid){return!!uid&&(char.communityBlockedUsers||[]).includes(uid);}
+function conversationIdFor(uidA,uidB){return[uidA,uidB].sort().join('_');}
+function communityUnreadEncouragements(){
+  const seenAt=Number(char.communityEncouragementReadAt)||0;
+  return(commState.encouragements||[]).filter(e=>(e.ms||0)>seenAt);
+}
+function updateCommunityNotificationBadge(){
+  const hasUnread=communityUnreadEncouragements().length>0||commState.conversations.some(c=>(c.unreadBy||[]).includes(fbUID));
+  const navComm=document.querySelector('[data-tab="community"] .nav-icon');
+  if(!navComm)return;
+  let badge=navComm.querySelector('.enc-badge');
+  if(hasUnread&&!badge){
+    badge=document.createElement('span');badge.className='enc-badge';
+    badge.style.cssText='position:absolute;top:-2px;right:-4px;width:8px;height:8px;border-radius:50%;background:#e74c3c;border:1.5px solid var(--bg-nav)';
+    navComm.appendChild(badge);
+  }else if(!hasUnread&&badge)badge.remove();
+}
 
 // ── NEW-POST BADGE TRACKING ─────────────────────────────────────────────────
 function getLastSeen(tabKey){return parseInt(localStorage.getItem(`rst-lastseen-${tabKey}`)||'0');}
@@ -4440,6 +4467,7 @@ function startCommunityListeners(){
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts){commState.unsubPosts();commState.unsubPosts=null;}
   if(commState.unsubEncourage)commState.unsubEncourage();
+  if(commState.unsubConversations)commState.unsubConversations();
 
   // ── Real-time: active users only (last 7 days — keeps read count low)
   const userCutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-7*86400000));
@@ -4447,7 +4475,7 @@ function startCommunityListeners(){
     .where('lastSeen','>',userCutoff)
     .orderBy('lastSeen','desc').limit(60)
     .onSnapshot(snap=>{
-      commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false&&!u.banned);
+      commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false&&!u.banned&&!isCommunityBlocked(u.uid));
       // Check if current user is banned (community_users doc may have been updated)
       const myDoc=snap.docs.find(d=>d.id===fbUID);
       if(myDoc?.data()?.banned){
@@ -4468,35 +4496,45 @@ function startCommunityListeners(){
 
   // ── Manual fetch: posts loaded on demand, not streamed
   fetchPosts(true);
+  if(commTab==='activity'&&!commState.activityLoaded)fetchCommunityActivity();
 
-  // ── Real-time: encouragements (only our own — tiny read cost)
-  const encCutoff=firebase.firestore.Timestamp.now();
+  // ── Encouragement inbox. The initial result restores unread messages sent
+  // while the app was closed; later additions behave like a live notification.
+  commState.encouragementListenerReady=false;
   commState.unsubEncourage=db.collection('community_users').doc(fbUID)
     .collection('encouragements')
-    .where('ts','>',encCutoff)
     .orderBy('ts','desc').limit(10)
     .onSnapshot(snap=>{
+      const isInitial=!commState.encouragementListenerReady;
+      commState.encouragements=snap.docs.map(doc=>{
+        const d=doc.data();
+        return{id:doc.id,from:d.fromName||'Someone',avatar:d.fromAvatar||'👊',fromUID:d.fromUID||'',ms:d.ts?.toMillis?d.ts.toMillis():0};
+      }).filter(e=>!isCommunityBlocked(e.fromUID));
+      commState.encouragementListenerReady=true;
       snap.docChanges().forEach(change=>{
-        if(change.type==='added'){
+        if(!isInitial&&change.type==='added'){
           const d=change.doc.data();
           const from=d.fromName||'Someone';
           const avatar=d.fromAvatar||'👊';
-          commState.newEncouragements.unshift({from,avatar,ts:Date.now()});
-          if(commState.newEncouragements.length>5)commState.newEncouragements.pop();
-          showToast(`${avatar} ${from} encouraged you!`);
-          const navComm=document.querySelector('[data-tab="community"] .nav-icon');
-          if(navComm&&tab!=='community'){
-            if(!navComm.querySelector('.enc-badge')){
-              const badge=document.createElement('span');
-              badge.className='enc-badge';
-              badge.style.cssText='position:absolute;top:-2px;right:-4px;width:8px;height:8px;border-radius:50%;background:#e74c3c;border:1.5px solid var(--bg-nav)';
-              navComm.appendChild(badge);
-            }
-          }
-          if(tab==='community')refreshCommUI();
+          if(!isCommunityBlocked(d.fromUID))showToast(`${avatar} ${from} encouraged you!`);
         }
       });
+      updateCommunityNotificationBadge();
+      if(tab==='community')refreshCommUI();
     },()=>{});
+
+  commState.unsubConversations=db.collection('conversations')
+    .where('participants','array-contains',fbUID).limit(30)
+    .onSnapshot(snap=>{
+      commState.conversations=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(c=>{
+        const other=(c.participants||[]).find(id=>id!==fbUID);
+        return!isCommunityBlocked(other);
+      }).sort((a,b)=>(b.updatedAt?.toMillis?b.updatedAt.toMillis():0)-(a.updatedAt?.toMillis?a.updatedAt.toMillis():0));
+      updateCommunityNotificationBadge();
+      if(tab==='community')refreshCommUI();
+    },()=>{});
+
+  loadCommunityPrivacy();
 
   // Broadcast listener — single doc, near-zero read cost
   db.collection('broadcast').doc('active').onSnapshot(snap=>{
@@ -4525,7 +4563,7 @@ function fetchPosts(force=false){
   db.collection('posts')
     .where('ts','>',cutoff).orderBy('ts','desc').limit(40)
     .get().then(snap=>{
-      commState.posts=snap.docs.map(d=>({id:d.id,...d.data()}));
+      commState.posts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!isCommunityBlocked(p.uid));
       commState.postsLoading=false;
       refreshCommUI();
     }).catch(()=>{commState.postsLoading=false;refreshCommUI();});
@@ -4546,6 +4584,7 @@ function syncPresence(){
     avatar:char.communityAvatar||'🌱',
     bio:char.communityBio||'',
     shareStats:char.communityShareStats!==false,
+    acceptsMessages:char.communityMessagesEnabled!==false,
     ci:char.ciLevel||0,
     streak:char.streak||0,
     sessions:char.communityShareStats!==false?char.sessions:null,
@@ -4563,10 +4602,85 @@ function syncPresence(){
 }
 
 function getTopMethods(n){
-  // Count sessions per method from logs
+  // Time under tension is the meaningful "most used" signal for long-wear methods.
   const counts={};
-  logs.forEach(l=>{if(l.method)counts[l.method]=(counts[l.method]||0)+1;});
+  logs.forEach(l=>{if(l.method)counts[l.method]=(counts[l.method]||0)+(Number(l.dur)||0);});
   return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([m])=>m);
+}
+
+function loadCommunityPrivacy(){
+  if(!db||!fbUID||!fbIsGoogle)return;
+  db.collection('community_users').doc(fbUID).collection('private').doc('settings').get().then(doc=>{
+    if(!doc.exists)return syncCommunityPrivacy();
+    const settings=doc.data()||{};
+    if(Array.isArray(settings.blockedUsers))char.communityBlockedUsers=settings.blockedUsers;
+    if(settings.acceptsMessages!==undefined)char.communityMessagesEnabled=settings.acceptsMessages!==false;
+    saveChar();syncCommunityPrivacy();
+    // Apply a block list immediately, including to a listener that may already be running.
+    commState.users=commState.users.filter(u=>!isCommunityBlocked(u.uid));
+    commState.posts=commState.posts.filter(p=>!isCommunityBlocked(p.uid));
+    updateCommunityNotificationBadge();
+    if(tab==='community')refreshCommUI();
+  }).catch(()=>{});
+}
+
+function syncCommunityPrivacy(){
+  if(!db||!fbUID||!fbIsGoogle)return;
+  const settings={
+    acceptsMessages:char.communityMessagesEnabled!==false,
+    blockedUsers:(char.communityBlockedUsers||[]).slice(0,200),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+  db.collection('community_users').doc(fbUID).collection('private').doc('settings').set(settings,{merge:true}).catch(()=>{});
+  db.collection('community_users').doc(fbUID).set({acceptsMessages:settings.acceptsMessages},{merge:true}).catch(()=>{});
+}
+
+function setCommunityMessagesEnabled(enabled){
+  char.communityMessagesEnabled=!!enabled;saveChar();syncCommunityPrivacy();
+  showToast(enabled?'Private messages are on':'Private messages are off');
+}
+
+function blockCommunityUser(uid){
+  if(!uid||uid===fbUID||isCommunityBlocked(uid))return;
+  confirmDialog('Block this member?','They will disappear from your community view and will not be able to send you new private messages. Existing messages stay only on their devices.','Block',()=>{
+    const member=commState.users.find(user=>user.uid===uid);
+    char.communityBlockedUsers=[...(char.communityBlockedUsers||[]),uid];
+    char.communityBlockedProfiles={...(char.communityBlockedProfiles||{}),[uid]:member?.name||'Blocked member'};
+    saveChar();syncCommunityPrivacy();
+    commState.users=commState.users.filter(u=>u.uid!==uid);
+    commState.posts=commState.posts.filter(p=>p.uid!==uid);
+    commState.conversations=commState.conversations.filter(c=>!(c.participants||[]).includes(uid));
+    document.getElementById('user-profile-ov')?.remove();
+    updateCommunityNotificationBadge();
+    showToast('Member blocked');
+    if(tab==='community')refreshCommUI();
+  });
+}
+
+function unblockCommunityUser(uid){
+  char.communityBlockedUsers=(char.communityBlockedUsers||[]).filter(id=>id!==uid);
+  const profiles={...(char.communityBlockedProfiles||{})};delete profiles[uid];char.communityBlockedProfiles=profiles;
+  saveChar();syncCommunityPrivacy();
+  showToast('Member unblocked');
+  if(tab==='community'){fetchPosts(true);refreshCommUI();}
+}
+
+function recordCommunityActivity(type,detail={}){
+  if(!db||!fbUID||!fbIsGoogle||!char.communityEnabled)return;
+  db.collection('community_activity').add({
+    type,detail,uid:fbUID,name:char.communityDisplayName||'Restorer',avatar:char.communityAvatar||'🌱',
+    ts:firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(()=>{});
+}
+
+function fetchCommunityActivity(){
+  if(!db)return;
+  commState.activityLoading=true;
+  db.collection('community_activity').orderBy('ts','desc').limit(10).get().then(snap=>{
+    commState.activity=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(item=>!isCommunityBlocked(item.uid));
+    commState.activityLoading=false;commState.activityLoaded=true;
+    if(tab==='community')refreshCommUI();
+  }).catch(()=>{commState.activityLoading=false;commState.activityLoaded=true;if(tab==='community')refreshCommUI();});
 }
 
 function leaveComm(){
@@ -4575,7 +4689,8 @@ function leaveComm(){
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts)commState.unsubPosts();
   if(commState.unsubEncourage)commState.unsubEncourage();
-  commState={ready:false,loading:true,users:[],posts:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,authError:null,newEncouragements:[],openReplies:new Set(),replies:{},broadcast:null};
+  if(commState.unsubConversations)commState.unsubConversations();
+  commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
   // Sign out of Firebase so the account picker shows fresh on next join
   if(fbAuth)fbAuth.signOut().catch(()=>{});
   db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
@@ -4680,7 +4795,7 @@ function loadReplies(postId){
   db.collection('posts').doc(postId).collection('replies')
     .orderBy('ts','asc').limit(50)
     .get().then(snap=>{
-      commState.replies[postId]=snap.docs.map(d=>({id:d.id,...d.data()}));
+      commState.replies[postId]=snap.docs.map(d=>({id:d.id,...d.data()})).filter(reply=>!isCommunityBlocked(reply.uid));
       refreshCommUI();
     }).catch(()=>{commState.replies[postId]=[];refreshCommUI();});
 }
@@ -4732,6 +4847,117 @@ function commEncourage(uid){
     .catch(()=>showToast('⚠ Could not send — try again'));
 }
 
+function markEncouragementsRead(){
+  const unread=communityUnreadEncouragements();
+  if(!unread.length)return;
+  char.communityEncouragementReadAt=Math.max(...unread.map(item=>item.ms||0),Date.now());
+  saveChar();updateCommunityNotificationBadge();
+  if(tab==='community')refreshCommUI();
+}
+
+function openConversation(uid){
+  if(!db||!fbUID||!fbIsGoogle){showToast('Join the community to message members');return;}
+  if(!uid||uid===fbUID)return;
+  if(isCommunityBlocked(uid)){showToast('Unblock this member before messaging');return;}
+  const known=commState.users.find(user=>user.uid===uid);
+  const open=(user)=>{
+    if(!user||user.acceptsMessages===false){showToast('This member has private messages turned off');return;}
+    showConversationSheet(uid,user);
+  };
+  if(known)open(known);
+  else db.collection('community_users').doc(uid).get().then(doc=>open(doc.exists?{uid,...doc.data()}:null)).catch(()=>showToast('Could not open this conversation'));
+}
+
+function showConversationSheet(otherUID,otherUser={}){
+  const existing=document.getElementById('message-ov');if(existing)existing.remove();
+  const cid=conversationIdFor(fbUID,otherUID);
+  const displayName=otherUser.name||'Restorer';
+  const el=document.createElement('div');el.className='overlay';el.id='message-ov';
+  el.innerHTML=`<div class="sheet" style="height:min(78vh,620px);display:flex;flex-direction:column;padding-bottom:18px">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+      ${avatarCircle(otherUser.avatar||'🌱',34,'var(--acc30)','var(--acc12)')}
+      <div style="flex:1;min-width:0"><div style="font-family:Cinzel,serif;font-size:14px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlEsc(displayName)}</div><div style="font-size:9px;color:var(--text5);margin-top:2px">Private conversation</div></div>
+      <button id="message-close" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Close</button>
+    </div>
+    <div id="message-thread" style="flex:1;overflow-y:auto;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px;margin-bottom:9px"></div>
+    <div style="display:flex;gap:7px"><input id="message-inp" class="gold-inp" maxlength="500" placeholder="Write a message…" style="flex:1;font-size:12px"><button id="message-send" class="btn-gold" style="width:auto;padding:0 14px">Send</button></div>
+    <div style="font-size:9px;color:var(--text5);line-height:1.45;margin-top:7px">Messages are private to the two members, but are not end-to-end encrypted. Don’t share anything you would not want stored in RestoreTrack’s Firebase project.</div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  const messageRef=db.collection('conversations').doc(cid).collection('messages');
+  const unsubscribe=messageRef.orderBy('ts','asc').limit(100).onSnapshot(snap=>{
+    const thread=document.getElementById('message-thread');if(!thread)return;
+    const messages=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(message=>!isCommunityBlocked(message.senderUID));
+    thread.innerHTML=messages.length?messages.map(message=>{
+      const mine=message.senderUID===fbUID;
+      const stamp=message.ts?.toDate?message.ts.toDate().toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Sending…';
+      return`<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'};margin:5px 0"><div style="max-width:82%;background:${mine?'var(--acc18)':'var(--bg-card)'};border:1px solid ${mine?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:7px 9px"><div style="font-size:12px;color:var(--text2);line-height:1.45;white-space:pre-wrap;word-break:break-word">${htmlEsc(message.text||'')}</div><div style="font-size:8px;color:var(--text5);text-align:right;margin-top:3px">${stamp}</div></div></div>`;
+    }).join(''):`<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text5);font-size:11px;line-height:1.6">No messages yet.<br>Say hello when you’re ready.</div>`;
+    thread.scrollTop=thread.scrollHeight;
+    markConversationRead(cid);
+  },()=>showToast('Could not load messages'));
+  const close=()=>{unsubscribe();el.remove();};
+  document.getElementById('message-close').onclick=close;
+  el.addEventListener('click',event=>{if(event.target===el)close();});
+  const send=()=>sendPrivateMessage(cid,otherUID,otherUser);
+  document.getElementById('message-send').onclick=send;
+  document.getElementById('message-inp').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}});
+  document.getElementById('message-inp').focus();
+}
+
+function markConversationRead(conversationId){
+  if(!db||!fbUID)return;
+  db.collection('conversations').doc(conversationId).update({unreadBy:firebase.firestore.FieldValue.arrayRemove(fbUID)}).catch(()=>{});
+}
+
+function sendPrivateMessage(conversationId,otherUID,otherUser){
+  const input=document.getElementById('message-inp');
+  const text=input?.value.trim();if(!text||!db||!fbUID)return;
+  input.value='';input.disabled=true;
+  db.collection('community_users').doc(otherUID).get().then(doc=>{
+    if(!doc.exists||doc.data().acceptsMessages===false)throw new Error('disabled');
+    const conversation=db.collection('conversations').doc(conversationId);
+    const message=conversation.collection('messages').doc();
+    const info={
+      [fbUID]:{name:char.communityDisplayName||'Restorer',avatar:char.communityAvatar||'🌱'},
+      [otherUID]:{name:otherUser.name||doc.data().name||'Restorer',avatar:otherUser.avatar||doc.data().avatar||'🌱'}
+    };
+    const batch=db.batch();
+    batch.set(conversation,{participants:[fbUID,otherUID],participantInfo:info,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),lastMessage:text.slice(0,500),lastSenderUID:fbUID,unreadBy:[otherUID]},{merge:true});
+    batch.set(message,{senderUID:fbUID,text:text.slice(0,500),ts:firebase.firestore.FieldValue.serverTimestamp()});
+    return batch.commit();
+  }).then(()=>{if(input)input.disabled=false;}).catch(error=>{
+    if(input)input.disabled=false;
+    showToast(error?.message==='disabled'?'This member has private messages turned off':'⚠ Could not send message');
+  });
+}
+
+function showMessagesInbox(){
+  if(!fbIsGoogle){showToast('Join the community to use messages');return;}
+  const existing=document.getElementById('inbox-ov');if(existing)existing.remove();
+  const rows=commState.conversations.map(conversation=>{
+    const otherUID=(conversation.participants||[]).find(id=>id!==fbUID);
+    const info=conversation.participantInfo?.[otherUID]||{};
+    const unread=(conversation.unreadBy||[]).includes(fbUID);
+    const timestamp=conversation.updatedAt?.toDate?conversation.updatedAt.toDate().toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
+    return`<button class="inbox-row" data-uid="${htmlEsc(otherUID)}" style="width:100%;text-align:left;display:flex;gap:9px;align-items:center;padding:10px 0;background:none;border:0;border-bottom:1px solid var(--stat-border);cursor:pointer;font-family:DM Sans,sans-serif">
+      ${avatarCircle(info.avatar||'🌱',34,'var(--acc18)','var(--acc6)')}
+      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:${unread?700:600};color:var(--text1)">${htmlEsc(info.name||'Restorer')}</div><div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${htmlEsc(conversation.lastMessage||'')}</div></div>
+      <div style="font-size:9px;color:${unread?'var(--accent)':'var(--text5)'};font-weight:${unread?700:400}">${unread?'New':timestamp}</div>
+    </button>`;
+  }).join('');
+  const el=document.createElement('div');el.className='overlay';el.id='inbox-ov';
+  el.innerHTML=`<div class="sheet" style="max-height:78vh"><div class="sheet-handle"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px"><div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Messages</div><button id="inbox-close" class="btn-outline" style="padding:5px 11px;font-size:10px">Close</button></div><div style="font-size:10px;color:var(--text5);line-height:1.5;margin-bottom:8px">Private messages are opt-in. You control this in Community Settings.</div><div>${rows||'<div style="padding:24px 0;text-align:center;font-size:11px;color:var(--text5)">No conversations yet.</div>'}</div></div>`;
+  document.getElementById('root').appendChild(el);
+  document.getElementById('inbox-close').onclick=()=>el.remove();
+  el.addEventListener('click',event=>{if(event.target===el)el.remove();});
+  el.querySelectorAll('.inbox-row').forEach(button=>button.onclick=()=>{
+    const uid=button.dataset.uid;const user=commState.users.find(item=>item.uid===uid)||{uid,...(commState.conversations.find(item=>item.id===conversationIdFor(fbUID,uid))?.participantInfo?.[uid]||{})};
+    el.remove();showConversationSheet(uid,user);
+  });
+}
+
 // ── COMMUNITY RENDER ───────────────────────────────────────────────────────────
 function renderCommunity(){
   if(commState.authError){
@@ -4768,6 +4994,8 @@ function renderCommunity(){
     return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
   });
   const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
+  const unreadEncouragements=communityUnreadEncouragements();
+  const unreadMessages=commState.conversations.filter(c=>(c.unreadBy||[]).includes(fbUID)).length;
 
   // ── Status bar (joined) or join banner ──
   const topBar=!isJoined
@@ -4788,18 +5016,20 @@ function renderCommunity(){
           <div style="font-weight:700;font-size:13px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.communityDisplayName}</div>
           <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[char.ciLevel||0].ci} · ${running?'<span style="color:var(--green)">● Restoring now</span>':(char.communityVisible!==false?'● Visible':'○ Hidden')}</div>
         </div>
+        <button onclick="showMessagesInbox()" style="position:relative;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0" title="Messages">💬${unreadMessages?`<span style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:#fff;border-radius:9px;min-width:15px;height:15px;font-size:8px;line-height:15px;font-weight:700">${unreadMessages}</span>`:''}</button>
         <button onclick="showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">${IC.settings(14)}</button>
       </div>`;
 
   // ── Encouragement notification card ──
-  const encCard=commState.newEncouragements.length?`
+  const encCard=unreadEncouragements.length?`
     <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:12px;padding:11px 14px;margin-bottom:10px">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:7px">👊 Encouragements</div>
-      ${commState.newEncouragements.map(e=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:7px"><span>👊 Encouragements</span><button onclick="markEncouragementsRead()" style="background:none;border:0;color:var(--green);font-size:9px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">Mark seen</button></div>
+      ${unreadEncouragements.slice(0,5).map(e=>`
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <span style="font-size:18px">${e.avatar}</span>
-          <span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text1)">${e.from}</strong> encouraged you!</span>
+          <span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text1)">${htmlEsc(e.from)}</strong> encouraged you!</span>
         </div>`).join('')}
+      ${unreadEncouragements.length>5?`<div style="font-size:10px;color:var(--text4);margin-top:4px">+${unreadEncouragements.length-5} more waiting for you</div>`:''}
     </div>`:'';
 
   // Broadcast banner (admin announcements)
@@ -4817,11 +5047,12 @@ function renderCommunity(){
   const tabs=[
     {id:'live',   label:'🟢 Live',    badge:active.length>0?active.length:null},
     {id:'posts',  label:'💬 Posts',   badge:newPosts>0?newPosts:null},
+    {id:'activity',label:'⚡ Activity',badge:null},
     {id:'members',label:'👥 Members', badge:null},
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
     ${tabs.map(t=>`
-      <button onclick="commTab='${t.id}';localStorage.setItem('rst-comm-tab','${t.id}');setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
+      <button onclick="commTab='${t.id}';localStorage.setItem('rst-comm-tab','${t.id}');setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':t.id==='activity'?'fetchCommunityActivity();':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
         background:${commTab===t.id?'var(--bg-card)':'transparent'};
         color:${commTab===t.id?'var(--accent)':'var(--text4)'};
         box-shadow:${commTab===t.id?'0 1px 4px rgba(0,0,0,.2)':'none'}">
@@ -4878,6 +5109,26 @@ function renderCommunity(){
       </button>`:''}`;
   }
 
+  else if(commTab==='activity'){
+    const activityRows=commState.activityLoading
+      ?`<div style="text-align:center;padding:28px;color:var(--text5);font-size:11px"><div class="live-dot" style="display:inline-block;margin-bottom:8px"></div><br>Loading activity…</div>`
+      :commState.activity.length
+        ?commState.activity.map(item=>{
+          const isSession=item.type==='session_completed';
+          const isCI=item.type==='ci_reached';
+          const description=isSession
+            ?`Stopped using <strong style="color:var(--text1)">${htmlEsc(item.detail?.method||'a method')}</strong> after ${fmtDur(Number(item.detail?.duration)||0)}.`
+            :isCI?`Updated their progress to <strong style="color:var(--accent)">${LEVELS[Math.min(Number(item.detail?.ci)||0,10)].ci}</strong>.`
+            :'Recorded a restoration activity.';
+          const eventMs=item.ts?.toMillis?item.ts.toMillis():Date.now();
+          return`<div style="display:flex;gap:9px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--stat-border)">
+            ${avatarCircle(item.avatar||'🌱',34,'var(--acc18)','var(--acc6)')}
+            <div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text2);line-height:1.55"><strong style="color:var(--text1)">${htmlEsc(item.name||'Restorer')}</strong> ${description}</div><div style="font-size:9px;color:var(--text5);margin-top:3px">${timeAgo(eventMs)}</div></div>
+          </div>`;
+        }).join('')
+        :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:1.8;background:var(--bg-stat);border-radius:12px">No activity has been shared yet.<br>Finish a session to help start the feed.</div>`;
+    content=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">The latest 10 community milestones</div></div><button onclick="fetchCommunityActivity()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">${IC.refresh(13)} Refresh</button></div><div class="card" style="padding:2px 12px">${activityRows}</div>`;
+  }
 
   else if(commTab==='members'){
     const allMembers=commState.users;
@@ -5068,6 +5319,7 @@ function showUserProfile(uid){
   const u=commState.users.find(x=>x.uid===uid);
   if(!u)return;
   const isMe=u.uid===fbUID;
+  const canMessage=!isMe&&fbIsGoogle&&u.acceptsMessages!==false&&!isCommunityBlocked(uid);
   const ex=document.getElementById('user-profile-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='user-profile-ov';
 
@@ -5129,16 +5381,14 @@ function showUserProfile(uid){
         <div style="font-family:Cinzel,serif;font-size:17px;font-weight:700;color:var(--text1)">${u.name||'Restorer'}</div>
         <div style="font-size:11px;color:var(--text4);margin-top:3px">${u.active?`<span style="color:var(--green)">● Restoring now</span>`:u.lastSeen?'Recently active':''}</div>
       </div>
-      ${isMe?'':
-        `<button onclick="event.stopPropagation();commEncourage('${u.uid}');document.getElementById('user-profile-ov').remove();"
-          style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:9px 14px;font-size:16px;cursor:pointer;flex-shrink:0">👊</button>`
-      }
+      ${isMe?'':`<div style="display:flex;gap:5px;align-items:center"><button onclick="event.stopPropagation();commEncourage('${u.uid}');document.getElementById('user-profile-ov').remove();" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:9px 12px;font-size:16px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>${canMessage?`<button onclick="event.stopPropagation();openConversation('${u.uid}');" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:9px 12px;font-size:14px;color:var(--accent);cursor:pointer;flex-shrink:0" title="Message">💬</button>`:''}</div>`}
     </div>
     ${joinedStr?`<div style="font-size:10px;color:var(--text5);margin-bottom:12px">Member since ${joinedStr}</div>`:''}
     ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${htmlEsc(u.bio)}"</div>`:''}
     ${statsHtml}
     ${methodsHtml}
     ${achBadges}
+    ${!isMe?`<button onclick="blockCommunityUser('${u.uid}')" style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.22);border-radius:9px;padding:9px;font-size:11px;color:#b85454;cursor:pointer;font-family:DM Sans,sans-serif;margin-bottom:7px">Block member</button>`:''}
     <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
@@ -5150,6 +5400,9 @@ function showCommSettings(){
   const el=document.createElement('div');el.className='overlay';el.id='comm-settings-ov';
   const visible=char.communityVisible!==false;
   const shareStats=char.communityShareStats!==false;
+  const messagesEnabled=char.communityMessagesEnabled!==false;
+  const blockedRows=Object.entries(char.communityBlockedProfiles||{}).filter(([uid])=>(char.communityBlockedUsers||[]).includes(uid)).map(([uid,name])=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--stat-border)"><div style="flex:1;min-width:0;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlEsc(name)}</div><button onclick="unblockCommunityUser('${uid}');showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:5px 8px;font-size:10px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Unblock</button></div>`).join('');
   el.innerHTML=`<div class="sheet" style="max-height:88vh;padding-bottom:28px">
     <div class="sheet-handle"></div>
     <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:16px">Community Settings</div>
@@ -5192,6 +5445,14 @@ function showCommSettings(){
         <div style="font-size:10px;color:var(--text4);margin-top:1px">Show sessions, hours, and streak when others view your profile</div>
       </div>
     </label>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--bg-stat);border-radius:10px;margin-bottom:7px">
+      <input type="checkbox" id="comm-messages-toggle" ${messagesEnabled?'checked':''} style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2)">Allow private messages</div>
+        <div style="font-size:10px;color:var(--text4);margin-top:1px">Turn this off to stop all new incoming private messages.</div>
+      </div>
+    </label>
+    ${(char.communityBlockedUsers||[]).length?`<div style="margin:12px 0 5px;font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px">Blocked members</div><div style="background:var(--bg-stat);border-radius:10px;padding:0 10px;margin-bottom:10px">${blockedRows||'<div style="padding:10px 0;font-size:10px;color:var(--text5)">Blocked members from an older version can be unblocked by their ID after contacting support.</div>'}</div>`:''}
     <button class="btn-ghost" id="comm-settings-done" style="width:100%;margin-bottom:8px">Done</button>
     <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list. Your posts expire naturally after 14 days. You can rejoin anytime.','Leave',leaveComm)"
       style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">
@@ -5212,6 +5473,7 @@ function showCommSettings(){
   document.getElementById('comm-stats-toggle').onchange=e=>{
     char.communityShareStats=e.target.checked;saveChar();syncPresence();
   };
+  document.getElementById('comm-messages-toggle').onchange=e=>setCommunityMessagesEnabled(e.target.checked);
 }
 
 function showAvatarPicker(){
