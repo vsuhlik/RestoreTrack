@@ -1642,7 +1642,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.5.0</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.5.1</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
@@ -3539,7 +3539,7 @@ function renderProfileScreen(){
   const joined=profiles[0]?.createdAt||today();
   document.getElementById('root').innerHTML=`<div class="pscreen">
     <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.5.0</span></div>
+      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.5.1</span></div>
     </div>
 
     <!-- Profile card -->
@@ -3626,7 +3626,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.5.0';
+    const version='v2.5.1';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -4878,6 +4878,7 @@ function showConversationSheet(otherUID,otherUser={}){
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
       ${avatarCircle(otherUser.avatar||'🌱',34,'var(--acc30)','var(--acc12)')}
       <div style="flex:1;min-width:0"><div style="font-family:Cinzel,serif;font-size:14px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlEsc(displayName)}</div><div style="font-size:9px;color:var(--text5);margin-top:2px">Private conversation</div></div>
+      <button id="message-delete-convo" title="Delete conversation" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:20px;padding:5px 10px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">🗑</button>
       <button id="message-close" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Close</button>
     </div>
     <div id="message-thread" style="flex:1;overflow-y:auto;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px;margin-bottom:9px"></div>
@@ -4891,13 +4892,17 @@ function showConversationSheet(otherUID,otherUser={}){
     thread.innerHTML=messages.length?messages.map(message=>{
       const mine=message.senderUID===fbUID;
       const stamp=message.ts?.toDate?message.ts.toDate().toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Sending…';
-      return`<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'};margin:5px 0"><div style="max-width:82%;background:${mine?'var(--acc18)':'var(--bg-card)'};border:1px solid ${mine?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:7px 9px"><div style="font-size:12px;color:var(--text2);line-height:1.45;white-space:pre-wrap;word-break:break-word">${htmlEsc(message.text||'')}</div><div style="font-size:8px;color:var(--text5);text-align:right;margin-top:3px">${stamp}</div></div></div>`;
+      return`<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'};align-items:flex-end;gap:4px;margin:5px 0">
+        ${mine?`<button onclick="deleteMessage('${cid}','${message.id}')" title="Delete message" style="background:none;border:none;color:var(--text5);font-size:11px;cursor:pointer;padding:2px;flex-shrink:0">✕</button>`:''}
+        <div style="max-width:82%;background:${mine?'var(--acc18)':'var(--bg-card)'};border:1px solid ${mine?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:7px 9px"><div style="font-size:12px;color:var(--text2);line-height:1.45;white-space:pre-wrap;word-break:break-word">${htmlEsc(message.text||'')}</div><div style="font-size:8px;color:var(--text5);text-align:right;margin-top:3px">${stamp}</div></div>
+      </div>`;
     }).join(''):`<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text5);font-size:11px;line-height:1.6">No messages yet.<br>Say hello when you’re ready.</div>`;
     thread.scrollTop=thread.scrollHeight;
     markConversationRead(cid);
-  },()=>showToast('Could not load messages'));
+  },error=>{console.warn('[RT] message thread listener error',error?.code,error?.message);showToast('Could not load messages');});
   const close=()=>{unsubscribe();el.remove();};
   document.getElementById('message-close').onclick=close;
+  document.getElementById('message-delete-convo').onclick=()=>deleteConversation(cid,close);
   el.addEventListener('click',event=>{if(event.target===el)close();});
   const send=()=>sendPrivateMessage(cid,otherUID,otherUser);
   document.getElementById('message-send').onclick=send;
@@ -4928,8 +4933,48 @@ function sendPrivateMessage(conversationId,otherUID,otherUser){
     return batch.commit();
   }).then(()=>{if(input)input.disabled=false;}).catch(error=>{
     if(input)input.disabled=false;
+    console.warn('[RT] sendPrivateMessage error',error?.code,error?.message);
     showToast(error?.message==='disabled'?'This member has private messages turned off':'⚠ Could not send message');
   });
+}
+
+function deleteMessage(cid,messageId){
+  if(!db||!fbUID)return;
+  confirmDialog(
+    'Delete this message?',
+    'This removes it for both people in the conversation. This cannot be undone.',
+    'Delete',
+    ()=>{
+      db.collection('conversations').doc(cid).collection('messages').doc(messageId).delete()
+        .catch(error=>{console.warn('[RT] deleteMessage error',error?.code,error?.message);showToast('⚠ Could not delete message');});
+    }
+  );
+}
+
+function deleteConversation(cid,onDone){
+  if(!db||!fbUID)return;
+  confirmDialog(
+    'Delete this conversation?',
+    'This permanently deletes the entire message history for both people. This cannot be undone.',
+    'Delete Conversation',
+    ()=>{
+      const messagesRef=db.collection('conversations').doc(cid).collection('messages');
+      const wipeNext=()=>messagesRef.limit(400).get().then(snap=>{
+        if(snap.empty)return db.collection('conversations').doc(cid).delete();
+        const batch=db.batch();
+        snap.docs.forEach(doc=>batch.delete(doc.ref));
+        return batch.commit().then(wipeNext);
+      });
+      wipeNext().then(()=>{
+        commState.conversations=commState.conversations.filter(c=>c.id!==cid);
+        showToast('✓ Conversation deleted');
+        if(onDone)onDone();
+      }).catch(error=>{
+        console.warn('[RT] deleteConversation error',error?.code,error?.message);
+        showToast('⚠ Could not delete conversation');
+      });
+    }
+  );
 }
 
 function showMessagesInbox(){
@@ -4940,11 +4985,14 @@ function showMessagesInbox(){
     const info=conversation.participantInfo?.[otherUID]||{};
     const unread=(conversation.unreadBy||[]).includes(fbUID);
     const timestamp=conversation.updatedAt?.toDate?conversation.updatedAt.toDate().toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
-    return`<button class="inbox-row" data-uid="${htmlEsc(otherUID)}" style="width:100%;text-align:left;display:flex;gap:9px;align-items:center;padding:10px 0;background:none;border:0;border-bottom:1px solid var(--stat-border);cursor:pointer;font-family:DM Sans,sans-serif">
-      ${avatarCircle(info.avatar||'🌱',34,'var(--acc18)','var(--acc6)')}
-      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:${unread?700:600};color:var(--text1)">${htmlEsc(info.name||'Restorer')}</div><div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${htmlEsc(conversation.lastMessage||'')}</div></div>
-      <div style="font-size:9px;color:${unread?'var(--accent)':'var(--text5)'};font-weight:${unread?700:400}">${unread?'New':timestamp}</div>
-    </button>`;
+    return`<div style="display:flex;align-items:center;gap:4px;padding:10px 0;border-bottom:1px solid var(--stat-border)">
+      <button class="inbox-row" data-uid="${htmlEsc(otherUID)}" style="flex:1;min-width:0;text-align:left;display:flex;gap:9px;align-items:center;background:none;border:0;cursor:pointer;font-family:DM Sans,sans-serif;padding:0">
+        ${avatarCircle(info.avatar||'🌱',34,'var(--acc18)','var(--acc6)')}
+        <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:${unread?700:600};color:var(--text1)">${htmlEsc(info.name||'Restorer')}</div><div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${htmlEsc(conversation.lastMessage||'')}</div></div>
+        <div style="font-size:9px;color:${unread?'var(--accent)':'var(--text5)'};font-weight:${unread?700:400};flex-shrink:0">${unread?'New':timestamp}</div>
+      </button>
+      <button class="inbox-del" data-cid="${htmlEsc(conversation.id)}" title="Delete conversation" style="background:none;border:none;color:var(--text5);font-size:13px;cursor:pointer;padding:6px;flex-shrink:0">🗑</button>
+    </div>`;
   }).join('');
   const el=document.createElement('div');el.className='overlay';el.id='inbox-ov';
   el.innerHTML=`<div class="sheet" style="max-height:78vh"><div class="sheet-handle"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px"><div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Messages</div><button id="inbox-close" class="btn-outline" style="padding:5px 11px;font-size:10px">Close</button></div><div style="font-size:10px;color:var(--text5);line-height:1.5;margin-bottom:8px">Private messages are opt-in. You control this in Community Settings.</div><div>${rows||'<div style="padding:24px 0;text-align:center;font-size:11px;color:var(--text5)">No conversations yet.</div>'}</div></div>`;
@@ -4954,6 +5002,10 @@ function showMessagesInbox(){
   el.querySelectorAll('.inbox-row').forEach(button=>button.onclick=()=>{
     const uid=button.dataset.uid;const user=commState.users.find(item=>item.uid===uid)||{uid,...(commState.conversations.find(item=>item.id===conversationIdFor(fbUID,uid))?.participantInfo?.[uid]||{})};
     el.remove();showConversationSheet(uid,user);
+  });
+  el.querySelectorAll('.inbox-del').forEach(button=>button.onclick=(event)=>{
+    event.stopPropagation();
+    deleteConversation(button.dataset.cid,()=>showMessagesInbox());
   });
 }
 
