@@ -4882,7 +4882,6 @@ function showConversationSheet(otherUID,otherUser={}){
     </div>
     <div id="message-thread" style="flex:1;overflow-y:auto;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px;margin-bottom:9px"></div>
     <div style="display:flex;gap:7px"><input id="message-inp" class="gold-inp" maxlength="500" placeholder="Write a message…" style="flex:1;font-size:12px"><button id="message-send" class="btn-gold" style="width:auto;padding:0 14px">Send</button></div>
-    <div style="font-size:9px;color:var(--text5);line-height:1.45;margin-top:7px">Messages are private to the two members, but are not end-to-end encrypted. Don’t share anything you would not want stored in RestoreTrack’s Firebase project.</div>
   </div>`;
   document.getElementById('root').appendChild(el);
   const messageRef=db.collection('conversations').doc(cid).collection('messages');
@@ -4924,7 +4923,7 @@ function sendPrivateMessage(conversationId,otherUID,otherUser){
       [otherUID]:{name:otherUser.name||doc.data().name||'Restorer',avatar:otherUser.avatar||doc.data().avatar||'🌱'}
     };
     const batch=db.batch();
-    batch.set(conversation,{participants:[fbUID,otherUID],participantInfo:info,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),lastMessage:text.slice(0,500),lastSenderUID:fbUID,unreadBy:[otherUID]},{merge:true});
+    batch.set(conversation,{participants:[fbUID,otherUID].sort(),participantInfo:info,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),lastMessage:text.slice(0,500),lastSenderUID:fbUID,unreadBy:[otherUID]},{merge:true});
     batch.set(message,{senderUID:fbUID,text:text.slice(0,500),ts:firebase.firestore.FieldValue.serverTimestamp()});
     return batch.commit();
   }).then(()=>{if(input)input.disabled=false;}).catch(error=>{
