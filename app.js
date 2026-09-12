@@ -3590,10 +3590,11 @@ function renderProfileScreen(){
         <div style="background:rgba(212,102,153,.06);border:1px solid rgba(212,102,153,.2);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text3);line-height:1.6">
           🔒 <strong style="color:var(--text2)">Privacy note:</strong> Your photos are encrypted in transit and stored privately under your Google account. Only you can access them — not other users or the app owner.
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
           <button class="btn-gold" id="cloud-backup-btn" style="flex:1;padding:10px;font-size:12px">☁ Back Up Now</button>
           <button class="btn-ghost" id="cloud-restore-btn" style="flex:1;padding:10px;font-size:12px">☁ Restore from Cloud</button>
         </div>
+        <button onclick="signOutDevice()" style="width:100%;background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline;padding:4px">Sign out of this device</button>
       ` : `
         <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
           Back up your entire profile — sessions, photos, and progress — to your Google account. Restore instantly on any device.
@@ -4763,11 +4764,34 @@ function leaveComm(){
   if(commState.unsubEncourage)commState.unsubEncourage();
   if(commState.unsubConversations)commState.unsubConversations();
   commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
-  // Sign out of Firebase so the account picker shows fresh on next join
-  if(fbAuth)fbAuth.signOut().catch(()=>{});
-  db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
+  // NOTE: This no longer signs you out of Google — that's now a separate,
+  // explicit action (signOutDevice below). Leaving the community just hides
+  // your presence/posts; staying signed in means Cloud Backup keeps working
+  // and rejoining later is one tap instead of a full re-auth.
   const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
+  showToast('You\'ve left the community');
   render();
+}
+
+function signOutDevice(){
+  confirmDialog(
+    'Sign Out of This Device?',
+    'This disconnects your Google account from this device only. Your community profile, cloud backup, and data on your other devices are completely untouched — sign back in anytime with the same account to pick up right where you left off.',
+    'Sign Out',
+    ()=>{
+      if(fbAuth)fbAuth.signOut().catch(()=>{});
+      if(commState.unsubUsers)commState.unsubUsers();
+      if(commState.unsubPosts)commState.unsubPosts();
+      if(commState.unsubEncourage)commState.unsubEncourage();
+      if(commState.unsubConversations)commState.unsubConversations();
+      commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
+      db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
+      const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
+      showToast('✓ Signed out of this device');
+      render();
+      initFirebase(); // re-arm anonymous browsing so Community stays viewable
+    }
+  );
 }
 
 const _reactLocks=new Set();
@@ -5582,10 +5606,22 @@ function showCommSettings(){
     </label>
     ${(char.communityBlockedUsers||[]).length?`<div style="margin:12px 0 5px;font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px">Blocked members</div><div style="background:var(--bg-stat);border-radius:10px;padding:0 10px;margin-bottom:10px">${blockedRows||'<div style="padding:10px 0;font-size:10px;color:var(--text5)">Blocked members from an older version can be unblocked by their ID after contacting support.</div>'}</div>`:''}
     <button class="btn-ghost" id="comm-settings-done" style="width:100%;margin-bottom:8px">Done</button>
-    <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list. Your posts expire naturally after 14 days. You can rejoin anytime.','Leave',leaveComm)"
-      style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">
-      Leave Community
-    </button>
+
+    <div style="border-top:1px solid var(--stat-border);margin-top:4px;padding-top:14px">
+      <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Account</div>
+
+      <button onclick="signOutDevice()"
+        style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px;font-size:13px;color:var(--text2);cursor:pointer;font-family:DM Sans,sans-serif;margin-bottom:5px">
+        🔓 Sign Out of This Device
+      </button>
+      <div style="font-size:9px;color:var(--text5);line-height:1.5;margin-bottom:14px">Disconnects your Google account on this device only. Nothing is deleted — not your data, your posts, or your cloud backup.</div>
+
+      <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list and you\\'ll stop appearing in posts and member lists. Your posts expire naturally after 14 days. You stay signed in, so rejoining later is one tap.','Leave',leaveComm)"
+        style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">
+        Leave Community
+      </button>
+      <div style="font-size:9px;color:var(--text5);line-height:1.5;margin-top:6px">Turns off your community presence and posts. Doesn't sign you out or touch your cloud backup.</div>
+    </div>
   </div>`;
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
