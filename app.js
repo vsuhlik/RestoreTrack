@@ -3583,6 +3583,10 @@ function renderProfileScreen(){
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:16px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">☁ Cloud Backup</div>
       ${fbIsGoogle && fbUID ? `
+        <div style="background:rgba(34,168,90,.08);border:1px solid rgba(34,168,90,.25);border-radius:8px;padding:7px 10px;margin-bottom:10px;font-size:10px;color:var(--green);display:flex;align-items:center;gap:6px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></span>
+          Connected as ${htmlEsc(fbUserEmail||'your Google account')}
+        </div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
           Your data is backed up to your Google account — sessions, settings, and photos. Restore anytime on any device by signing in with the same Google account.
         </div>
@@ -3596,6 +3600,10 @@ function renderProfileScreen(){
         </div>
         <button onclick="signOutDevice()" style="width:100%;background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline;padding:4px">Sign out of this device</button>
       ` : `
+        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:7px 10px;margin-bottom:10px;font-size:10px;color:var(--text4);display:flex;align-items:center;gap:6px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--text5);flex-shrink:0"></span>
+          Not connected to Google
+        </div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
           Back up your entire profile — sessions, photos, and progress — to your Google account. Restore instantly on any device.
         </div>
@@ -4345,7 +4353,7 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
   return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2px solid ${border};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.52)}px;flex-shrink:0;line-height:1">${emoji||'🌱'}</div>`;
 }
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
-let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false;
+let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false,fbUserEmail=null;
 let _onboardingRestorePending=false; // true while a fresh-install "Restore from Cloud" sign-in is in flight
 let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
 let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
@@ -4381,37 +4389,30 @@ function countNewPosts(){
   }).length;
 }
 
+let _authListenerAttached=false; // stops us stacking duplicate listeners on sign-out/sign-in cycles
 function initFirebase(){
-  if(db)return; // already initialised
   try{
     if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
     db=firebase.firestore();
     fbAuth=firebase.auth();
-    // Eagerly check redirect result BEFORE registering onAuthStateChanged
-    // This ensures Google auth is processed first on redirect return
+    if(_authListenerAttached)return; // already listening — reuse it, don't re-register
+    _authListenerAttached=true;
     fbAuth.getRedirectResult().then(result=>{
       if(result&&result.user&&localStorage.getItem('rst-comm-pending')){
         localStorage.removeItem('rst-comm-pending');
-        fbUID=result.user.uid;fbIsGoogle=true;
+        fbUID=result.user.uid;fbIsGoogle=true;fbUserEmail=result.user.email||null;
         commState.ready=true;commState.authError=null;
         finaliseJoin();
         return;
       }
-      if(result&&result.user&&localStorage.getItem('rst-onboarding-restore-pending')){
-        localStorage.removeItem('rst-onboarding-restore-pending');
-        fbUID=result.user.uid;fbIsGoogle=true;
-        _onboardingRestorePending=true;
-        restoreFromCloudOnboarding();
-        return;
-      }
     }).catch(()=>{});
     fbAuth.onAuthStateChanged(user=>{
-      if(_onboardingRestorePending||localStorage.getItem('rst-onboarding-restore-pending'))return;
       if(user){
         const isGoogle=user.providerData.some(p=>p.providerId==='google.com');
         if(!isGoogle&&fbIsGoogle)return;
         fbUID=user.uid;
         fbIsGoogle=isGoogle;
+        fbUserEmail=isGoogle?(user.email||null):null;
         commState.ready=true;commState.authError=null;
         if(fbIsGoogle&&localStorage.getItem('rst-comm-pending')){
           localStorage.removeItem('rst-comm-pending');
@@ -4420,6 +4421,7 @@ function initFirebase(){
           startCommunityListeners();
         }
       } else {
+        fbUserEmail=null;
         if(localStorage.getItem('rst-comm-pending'))return;
         fbAuth.signInAnonymously().catch(e=>{
           commState.authError='Could not connect. Check your internet connection.';
@@ -4439,7 +4441,7 @@ function signInWithGoogle(){
   // Always show account picker — prevents auto-reuse of previous session
   provider.setCustomParameters({prompt:'select_account'});
   fbAuth.signInWithPopup(provider).then(result=>{
-    fbUID=result.user.uid;fbIsGoogle=true;
+    fbUID=result.user.uid;fbIsGoogle=true;fbUserEmail=result.user.email||null;
     commState.ready=true;commState.authError=null;
     localStorage.removeItem('rst-comm-pending');
     finaliseJoin();
@@ -4785,7 +4787,7 @@ function signOutDevice(){
       if(commState.unsubEncourage)commState.unsubEncourage();
       if(commState.unsubConversations)commState.unsubConversations();
       commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
-      db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;
+      db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;fbUserEmail=null;
       const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
       showToast('✓ Signed out of this device');
       render();
