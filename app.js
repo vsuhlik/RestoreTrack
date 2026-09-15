@@ -6197,16 +6197,12 @@ const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"resto
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false,fbUserEmail=null;
 let _onboardingRestorePending=false; // true while a fresh-install "Restore from Cloud" sign-in is in flight
 let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
-let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,unsubBroadcast:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
+let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubConversations:null,unsubBroadcast:null,authError:null,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
 
 function isCommunityBlocked(uid){return!!uid&&(char.communityBlockedUsers||[]).includes(uid);}
 function conversationIdFor(uidA,uidB){return[uidA,uidB].sort().join('_');}
-function communityUnreadEncouragements(){
-  const seenAt=Number(char.communityEncouragementReadAt)||0;
-  return(commState.encouragements||[]).filter(e=>(e.ms||0)>seenAt);
-}
 function updateCommunityNotificationBadge(){
-  const hasUnread=communityUnreadEncouragements().length>0||commState.conversations.some(c=>(c.unreadBy||[]).includes(fbUID));
+  const hasUnread=commState.conversations.some(c=>(c.unreadBy||[]).includes(fbUID));
   const navComm=document.querySelector('[data-tab="community"] .nav-icon');
   if(!navComm)return;
   let badge=navComm.querySelector('.enc-badge');
@@ -6399,7 +6395,6 @@ function startCommunityListeners(){
   if(!db||!fbUID)return;
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts){commState.unsubPosts();commState.unsubPosts=null;}
-  if(commState.unsubEncourage)commState.unsubEncourage();
   if(commState.unsubConversations)commState.unsubConversations();
   if(commState.unsubBroadcast){commState.unsubBroadcast();commState.unsubBroadcast=null;}
 
@@ -6432,31 +6427,6 @@ function startCommunityListeners(){
   // ── Manual fetch: posts loaded on demand, not streamed
   fetchPosts(true);
   if(commTab==='activity'&&!commState.activityLoaded)fetchCommunityActivity();
-
-  // ── Encouragement inbox. The initial result restores unread messages sent
-  // while the app was closed; later additions behave like a live notification.
-  commState.encouragementListenerReady=false;
-  commState.unsubEncourage=db.collection('community_users').doc(fbUID)
-    .collection('encouragements')
-    .orderBy('ts','desc').limit(10)
-    .onSnapshot(snap=>{
-      const isInitial=!commState.encouragementListenerReady;
-      commState.encouragements=snap.docs.map(doc=>{
-        const d=doc.data();
-        return{id:doc.id,from:d.fromName||'Someone',avatar:d.fromAvatar||'👊',fromUID:d.fromUID||'',ms:d.ts?.toMillis?d.ts.toMillis():0};
-      }).filter(e=>!isCommunityBlocked(e.fromUID));
-      commState.encouragementListenerReady=true;
-      snap.docChanges().forEach(change=>{
-        if(!isInitial&&change.type==='added'){
-          const d=change.doc.data();
-          const from=d.fromName||'Someone';
-          const avatar=d.fromAvatar||'👊';
-          if(!isCommunityBlocked(d.fromUID))showToast(`${avatar} ${from} encouraged you!`);
-        }
-      });
-      updateCommunityNotificationBadge();
-      if(tab==='community')refreshCommUI();
-    },()=>{});
 
   commState.unsubConversations=db.collection('conversations')
     .where('participants','array-contains',fbUID).limit(30)
@@ -6647,11 +6617,11 @@ function leaveComm(){
   char.communityEnabled=false;char.communityDisplayName='';saveChar();
   if(commState.unsubUsers)commState.unsubUsers();
   if(commState.unsubPosts)commState.unsubPosts();
-  if(commState.unsubEncourage)commState.unsubEncourage();
+  // (encouragement listener removed — future Activity reactions will use a new path)
   if(commState.unsubConversations)commState.unsubConversations();
   if(commState.unsubBroadcast)commState.unsubBroadcast();
   if(commState.postsFetchTimer)clearInterval(commState.postsFetchTimer);
-  commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,unsubBroadcast:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
+  commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubConversations:null,unsubBroadcast:null,authError:null,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
   // NOTE: This no longer signs you out of Google — that's now a separate,
   // explicit action (signOutDevice below). Leaving the community just hides
   // your presence/posts; staying signed in means Cloud Backup keeps working
@@ -6670,11 +6640,11 @@ function signOutDevice(){
       if(fbAuth)fbAuth.signOut().catch(()=>{});
       if(commState.unsubUsers)commState.unsubUsers();
       if(commState.unsubPosts)commState.unsubPosts();
-      if(commState.unsubEncourage)commState.unsubEncourage();
+      // (encouragement listener removed — future Activity reactions will use a new path)
       if(commState.unsubConversations)commState.unsubConversations();
       if(commState.unsubBroadcast)commState.unsubBroadcast();
       if(commState.postsFetchTimer)clearInterval(commState.postsFetchTimer);
-      commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,unsubBroadcast:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
+      commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubConversations:null,unsubBroadcast:null,authError:null,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
       db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;fbUserEmail=null;
       const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
       showToast('✓ Signed out of this device');
@@ -6818,55 +6788,6 @@ function commReply(postId){
     inp.disabled=false;
     refreshCommUI();
   }).catch(()=>{inp.disabled=false;showToast('⚠ Could not send reply');});
-}
-
-function commEncourage(uid,btn){
-  if(!db||!fbUID||!fbIsGoogle){showToast('Sign in to send encouragement');return;}
-  if(uid===fbUID){showToast('That\'s you 😄');return;}
-  // Optimistic feedback: burst fires on tap, button locks and turns gold,
-  // then flips to ✓ once Firestore confirms. On failure, everything reverts.
-  if(btn){
-    btn.style.background='var(--acc12)';
-    btn.style.borderColor='var(--acc30)';
-    btn.disabled=true;
-  }
-  showEncourageBurst('👊',btn);
-  db.collection('community_users').doc(uid)
-    .collection('encouragements').add({
-      fromUID:fbUID,
-      fromName:char.communityDisplayName||'Someone',
-      fromAvatar:char.communityAvatar||'👊',
-      ts:firebase.firestore.FieldValue.serverTimestamp()
-    }).then(()=>{
-      showToast('👊 Encouragement sent!');
-      if(btn){
-        btn.textContent='✓';
-        setTimeout(()=>{
-          if(btn){
-            btn.style.background='';
-            btn.style.borderColor='';
-            btn.textContent='👊';
-            btn.disabled=false;
-          }
-        },1600);
-      }
-    })
-    .catch(()=>{
-      showToast('⚠ Could not send — try again');
-      if(btn){
-        btn.style.background='';
-        btn.style.borderColor='';
-        btn.disabled=false;
-      }
-    });
-}
-
-function markEncouragementsRead(){
-  const unread=communityUnreadEncouragements();
-  if(!unread.length)return;
-  char.communityEncouragementReadAt=Math.max(...unread.map(item=>item.ms||0),Date.now());
-  saveChar();updateCommunityNotificationBadge();
-  if(tab==='community')refreshCommUI();
 }
 
 function openConversation(uid){
@@ -7064,7 +6985,6 @@ function renderCommunity(){
     return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
   });
   const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
-  const unreadEncouragements=communityUnreadEncouragements();
   const unreadMessages=commState.conversations.filter(c=>(c.unreadBy||[]).includes(fbUID)).length;
   const memberCount=commState.users.length;
   const topStreak=commState.users.reduce((max,u)=>Math.max(max,u.streak||0),0);
@@ -7104,18 +7024,6 @@ function renderCommunity(){
           <div><span style="color:#F59E0B;font-weight:700">${topStreak}🔥</span> top streak</div>`:''}
         </div>
       </div>`;
-
-  // ── Encouragement notification card ──
-  const encCard=unreadEncouragements.length?`
-    <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:12px;padding:11px 14px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:7px"><span>👊 Encouragements</span><button onclick="markEncouragementsRead()" style="background:none;border:0;color:var(--green);font-size:9px;font-weight:700;cursor:pointer;font-family:var(--font-body)">Mark seen</button></div>
-      ${unreadEncouragements.slice(0,5).map(e=>`
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-          <span style="font-size:18px">${e.avatar}</span>
-          <span style="font-size:12px;color:var(--text2)"><strong style="color:var(--text1)">${htmlEsc(e.from)}</strong> encouraged you!</span>
-        </div>`).join('')}
-      ${unreadEncouragements.length>5?`<div style="font-size:10px;color:var(--text4);margin-top:4px">+${unreadEncouragements.length-5} more waiting for you</div>`:''}
-    </div>`:'';
 
   // Broadcast banner (admin announcements)
   const broadcastBanner=commState.broadcast?.msg?`
@@ -7256,7 +7164,7 @@ function renderCommunity(){
     }
   }
 
-  return`${topBar}${broadcastBanner}${encCard}${tabBar}${content}`;
+  return`${topBar}${broadcastBanner}${tabBar}${content}`;
 }
 
 // mode: 'live' | 'member' | 'dormant'. Defaults based on activity.
@@ -7283,10 +7191,6 @@ function buildUserCard(u,now,isJoined,mode){
     const timeStr=ms>0?timeAgo(ms):'—';
     secondLine=`<span style="color:var(--text4)">Active ${timeStr}</span>`;
   }
-  const encourageBtn=isMe?''
-    :isJoined
-      ?`<button onclick="event.stopPropagation();commEncourage('${u.uid}',this)" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0;transition:all .2s" title="Encourage">👊</button>`
-      :`<button onclick="event.stopPropagation();showToast('Join the community to encourage others')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0;opacity:.4" title="Join to encourage">👊</button>`;
   return`<div onclick="showUserProfile('${u.uid}')" style="background:var(--bg-card);border:1px solid ${u.active?'var(--green-border)':'var(--card-border)'};border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:center;cursor:pointer;transition:border-color .2s">
     <div style="position:relative;flex-shrink:0">
       ${avatarCircle(u.avatar||'🌱',38,u.active?'var(--green)':'var(--acc30)',u.active?'var(--green-bg)':'var(--acc12)')}
@@ -7301,7 +7205,6 @@ function buildUserCard(u,now,isJoined,mode){
       </div>
       <div style="font-size:10px;color:var(--text4);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${secondLine}</div>
     </div>
-    ${encourageBtn}
   </div>`;
 }
 
@@ -7513,10 +7416,9 @@ function showUserProfile(uid){
       <div style="font-size:11px;color:var(--text4)">${statusLine}</div>
     </div>
 
-    <!-- Action buttons: encourage + message -->
-    ${!isMe?`<div style="display:flex;gap:8px;margin-bottom:16px">
-      <button onclick="event.stopPropagation();commEncourage('${u.uid}',this)" style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px;font-size:13px;color:var(--text2);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s"><span style="font-size:16px">👊</span> Encourage</button>
-      ${canMessage?`<button onclick="event.stopPropagation();document.getElementById('user-profile-ov').remove();openConversation('${u.uid}')" style="flex:1;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:11px;font-size:13px;color:var(--accent);cursor:pointer;font-family:var(--font-body);font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px"><span style="font-size:15px">💬</span> Message</button>`:''}
+    <!-- Action button: message only. Encourage was removed — see future Activity reactions. -->
+    ${!isMe&&canMessage?`<div style="margin-bottom:16px">
+      <button onclick="event.stopPropagation();document.getElementById('user-profile-ov').remove();openConversation('${u.uid}')" style="width:100%;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:11px;font-size:13px;color:var(--accent);cursor:pointer;font-family:var(--font-body);font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px"><span style="font-size:15px">💬</span> Send Message</button>
     </div>`:''}
 
     ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-style:italic">"${htmlEsc(u.bio)}"</div>`:''}
