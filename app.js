@@ -2145,8 +2145,11 @@ function render(){
     }
   }
   else if(tab==='community'){
-    // Restore persisted inner tab, default live
-    commTab=localStorage.getItem('rst-comm-tab')||'live';
+    // commTab persists within a session (module-level state). It resets to
+    // 'live' on cold start — the Live tab is the freshest signal in the app
+    // and the right default whenever the user reopens it. Do NOT re-read
+    // from localStorage here: that would overwrite the user's in-session
+    // switch the moment they leave and return to the Community tab.
     setLastSeen(commTab);
     if(commTab==='posts')fetchPosts(true);
     if(commTab==='activity'&&!commState.activityLoaded)fetchCommunityActivity();
@@ -6197,7 +6200,7 @@ function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false,fbUserEmail=null;
 let _onboardingRestorePending=false; // true while a fresh-install "Restore from Cloud" sign-in is in flight
-let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
+let commTab='live'; // resets to Live on every cold start; manual switches persist for the current session only
 let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubConversations:null,unsubBroadcast:null,authError:null,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
 
 function isCommunityBlocked(uid){return!!uid&&(char.communityBlockedUsers||[]).includes(uid);}
@@ -7073,7 +7076,7 @@ function renderCommunity(){
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
     ${tabs.map(t=>`
-      <button onclick="commTab='${t.id}';localStorage.setItem('rst-comm-tab','${t.id}');setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':t.id==='activity'?'fetchCommunityActivity();':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-body);transition:all .15s;position:relative;
+      <button onclick="commTab='${t.id}';setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':t.id==='activity'?'fetchCommunityActivity();':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-body);transition:all .15s;position:relative;
         background:${commTab===t.id?'var(--bg-card)':'transparent'};
         color:${commTab===t.id?'var(--accent)':'var(--text4)'};
         box-shadow:${commTab===t.id?'0 1px 4px rgba(0,0,0,.2)':'none'}">
