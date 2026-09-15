@@ -730,6 +730,7 @@ function deleteProfile(){
   localStorage.removeItem('rst-comm-pending');
   localStorage.removeItem('rst-coach-queue');
   localStorage.removeItem('rst-coach-feedback-queue');
+  localStorage.removeItem('rst-comm-welcome-seen');
   // Reset all state
   profiles=[];currentPid=null;
   char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0,dayNotes:{},preferredMethods:[]};
@@ -6959,9 +6960,10 @@ function renderCommunity(){
     </div>`;
   }
   if(!commState.ready||commState.loading){
-    return`<div style="text-align:center;padding:80px 20px">
-      <div class="live-dot" style="display:inline-block;margin-bottom:12px"></div>
-      <div style="font-size:11px;color:var(--text4)">Loading community...</div>
+    return`<div style="text-align:center;padding:60px 20px">
+      <div class="live-dot" style="display:inline-block;margin-bottom:14px"></div>
+      <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:6px">Connecting to the community…</div>
+      <div style="font-size:10px;color:var(--text5);line-height:1.6">First load can take a moment while we find who's online.</div>
     </div>`;
   }
 
@@ -6971,23 +6973,38 @@ function renderCommunity(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
 
 
-  // Build active list from Firestore data
-  // Use lastSeen recency as the active signal — more reliable than sessionStartedAt age
-  // lastSeen is kept fresh by the 5-minute heartbeat, so 2 hours is a safe window
-  let active=commState.users.filter(u=>{
-    if(!u.active)return false;
-    if(!u.lastSeen)return false;
-    const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
-    return(now-seenMs)<2*60*60*1000;
-  });
+  // Active users = anyone whose `active` flag is true, full stop. No
+  // lastSeen recency check. A session is real from the moment it starts
+  // until the user ends it — even if their phone sleeps or the app gets
+  // backgrounded. Members and Live tabs must agree on this rule, or the
+  // same person appears in one "restoring now" section but not the other.
+  const active=commState.users.filter(u=>u.active);
+  // 2-hour window instead of 30 min. At community scale, half-hour windows
+  // almost never catch anyone — this makes the "Recently Active" section
+  // actually show the users who were just here.
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
-    return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<30*60*1000;
+    return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<2*60*60*1000;
   });
   const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
   const unreadMessages=commState.conversations.filter(c=>(c.unreadBy||[]).includes(fbUID)).length;
   const memberCount=commState.users.length;
   const topStreak=commState.users.reduce((max,u)=>Math.max(max,u.streak||0),0);
+
+  // ── First-time welcome banner ──
+  // Shown once per user, dismissible, remembered in localStorage.
+  const welcomeBanner=(()=>{
+    if(localStorage.getItem('rst-comm-welcome-seen'))return '';
+    return `<div id="comm-welcome-banner" style="background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.04));border:1px solid var(--acc30);border-radius:12px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px"><span style="font-size:14px">👋</span> Welcome to the Community</div>
+        <button onclick="dismissCommunityWelcome()" style="background:none;border:none;color:var(--text4);font-size:14px;cursor:pointer;font-family:var(--font-body);padding:0;line-height:1;flex-shrink:0" title="Dismiss">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.7">
+        Real people restoring right now. Browse freely — or <strong style="color:var(--text2)">join with Google</strong> to post, message, and appear on the Live tab. Seeing other restorers' progress is one of the most motivating parts of this journey.
+      </div>
+    </div>`;
+  })();
 
   // ── Status bar (joined) or join banner ──
   const topBar=!isJoined
@@ -7060,9 +7077,10 @@ function renderCommunity(){
   if(commTab==='live'){
     const activeCards=active.length
       ?active.map(u=>buildUserCard(u,now,isJoined,'live')).join('')
-      :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:2;background:var(--bg-stat);border-radius:12px">
-          <div style="font-size:28px;margin-bottom:8px">◉</div>
-          No one restoring right now.<br>${isJoined?'Start a session to be first.':'Join and start a session to appear here.'}
+      :`<div style="text-align:center;padding:32px 20px;background:var(--bg-stat);border-radius:12px">
+          <div style="font-size:32px;margin-bottom:10px;opacity:.7">◉</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">No one restoring right now</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.7;max-width:280px;margin:0 auto">${isJoined?'Be the first — start a session and you\'ll appear here.':'Join the community and start a session to appear here.'}</div>
         </div>`;
     const recentCards=recentlyActive.length
       ?`<div class="sec-title" style="margin-top:10px">Recently Active</div>${recentlyActive.map(u=>buildUserCard(u,now,isJoined,'member')).join('')}`
@@ -7079,25 +7097,27 @@ function renderCommunity(){
         </div>`
       :regularPosts.length
         ?regularPosts.map(p=>buildPostCard(p,now,reacted,isJoined)).join('')
-        :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:2;background:var(--bg-stat);border-radius:12px">
-            <div style="font-size:28px;margin-bottom:8px">💬</div>
-            ${isJoined?'No posts yet — be the first to share an update.':'No posts yet.'}
+        :`<div style="text-align:center;padding:32px 20px;background:var(--bg-stat);border-radius:12px">
+            <div style="font-size:32px;margin-bottom:10px;opacity:.7">💬</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">The community is quiet</div>
+            <div style="font-size:11px;color:var(--text4);line-height:1.7;max-width:280px;margin:0 auto">${isJoined?'Share a question, a win, or an observation. Even a short post helps the next person feel less alone.':'Posts from members will appear here as they share updates.'}</div>
           </div>`;
     const _postCooldownRemaining=Math.max(0,Math.ceil((commState.postsFetchCooldownUntil-Date.now())/1000));
     content=`
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700;color:var(--text1)">Community Posts</div>
-        ${_postCooldownRemaining>0
-          ? `<button id="comm-refresh-btn" disabled style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text4);cursor:default;font-family:var(--font-body);display:flex;align-items:center;gap:5px;opacity:.5">${IC.refresh(13)} ${_postCooldownRemaining}s</button>`
-          : `<button id="comm-refresh-btn" onclick="fetchPosts();refreshCommUI()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:5px">${IC.refresh(13)} Refresh</button>`
-        }
+        <div style="display:flex;gap:6px;align-items:center">
+          ${isJoined?`<button id="comm-post-btn" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:5px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            New Post
+          </button>`:''}
+          ${_postCooldownRemaining>0
+            ? `<button id="comm-refresh-btn" disabled style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text4);cursor:default;font-family:var(--font-body);display:flex;align-items:center;gap:5px;opacity:.5">${IC.refresh(13)} ${_postCooldownRemaining}s</button>`
+            : `<button id="comm-refresh-btn" onclick="fetchPosts();refreshCommUI()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:5px">${IC.refresh(13)} Refresh</button>`
+          }
+        </div>
       </div>
-      ${feedCards}
-      <div style="height:68px"></div>
-      ${isJoined?`<button id="comm-post-btn" style="position:fixed;bottom:80px;right:max(12px,calc(50vw - 228px));background:var(--accent);border:none;border-radius:28px;padding:0 20px 0 16px;height:48px;box-shadow:0 4px 20px rgba(0,0,0,.45);cursor:pointer;display:flex;align-items:center;gap:8px;z-index:19;font-family:var(--font-body);font-weight:700;font-size:13px;color:var(--bg);letter-spacing:.3px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Post Update
-      </button>`:''}`;
+      ${feedCards}`;
   }
 
   else if(commTab==='activity'){
@@ -7117,14 +7137,22 @@ function renderCommunity(){
             <div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text2);line-height:1.55"><strong style="color:var(--text1)">${htmlEsc(item.name||'Restorer')}</strong> ${description}</div><div style="font-size:9px;color:var(--text5);margin-top:3px">${timeAgo(eventMs)}</div></div>
           </div>`;
         }).join('')
-        :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:1.8;background:var(--bg-stat);border-radius:12px">No activity has been shared yet.<br>Finish a session to help start the feed.</div>`;
+        :`<div style="text-align:center;padding:24px 8px">
+            <div style="font-size:30px;margin-bottom:10px;opacity:.6">⚡</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px">No activity yet</div>
+            <div style="font-size:11px;color:var(--text4);line-height:1.7">The feed starts with the first session.<br>Finish one and yours will be the latest entry here.</div>
+          </div>`;
     content=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">The latest 10 community milestones</div></div><button onclick="fetchCommunityActivity()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">${IC.refresh(13)} Refresh</button></div><div class="card" style="padding:2px 12px">${activityRows}</div>`;
   }
 
   else if(commTab==='members'){
     const allMembers=commState.users;
     if(!allMembers.length){
-      content=`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;background:var(--bg-stat);border-radius:12px">No members yet.</div>`;
+      content=`<div style="text-align:center;padding:32px 20px;background:var(--bg-stat);border-radius:12px">
+        <div style="font-size:32px;margin-bottom:10px;opacity:.7">👥</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">Be the first member</div>
+        <div style="font-size:11px;color:var(--text4);line-height:1.7;max-width:280px;margin:0 auto">${isJoined?'Invite friends who restore — or watch this list grow as others join.':'Join the community to add yourself to the list.'}</div>
+      </div>`;
     } else {
       // Bucket each member by last-seen recency. Users who have never been
       // seen (or 30+ days ago) land in the final "Community" segment with
@@ -7156,7 +7184,7 @@ function renderCommunity(){
           <div style="font-size:13px;font-weight:700;color:var(--text1)">Members</div>
           <div style="font-size:10px;color:var(--text5)">${allMembers.length} total</div>
         </div>
-        ${segActive.length?sectionHeader('🟢 Restoring now',segActive.length)+segActive.map(u=>buildUserCard(u,now,isJoined,'live')).join(''):''}
+        ${segActive.length?sectionHeader('🟢 In a session',segActive.length)+segActive.map(u=>buildUserCard(u,now,isJoined,'live')).join(''):''}
         ${segWeek.length?sectionHeader('Active this week',segWeek.length)+segWeek.map(u=>buildUserCard(u,now,isJoined,'member')).join(''):''}
         ${segMonth.length?sectionHeader('Active this month',segMonth.length)+segMonth.map(u=>buildUserCard(u,now,isJoined,'member')).join(''):''}
         ${segOlder.length?sectionHeader('Community',segOlder.length)+segOlder.map(u=>buildUserCard(u,now,isJoined,'dormant')).join(''):''}
@@ -7164,7 +7192,15 @@ function renderCommunity(){
     }
   }
 
-  return`${topBar}${broadcastBanner}${tabBar}${content}`;
+  return`${welcomeBanner}${topBar}${broadcastBanner}${tabBar}${content}`;
+}
+
+// Dismisses the one-time welcome banner. Removes the element immediately
+// for a smooth feel; also stores the flag so subsequent renders skip it.
+function dismissCommunityWelcome(){
+  localStorage.setItem('rst-comm-welcome-seen','1');
+  const el=document.getElementById('comm-welcome-banner');
+  if(el)el.remove();
 }
 
 // mode: 'live' | 'member' | 'dormant'. Defaults based on activity.
