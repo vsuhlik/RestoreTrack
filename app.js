@@ -2090,7 +2090,7 @@ function render(){
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
             style="font-family:var(--font-display);font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:var(--font-body);letter-spacing:.5px">v2.5.2</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:var(--font-body);letter-spacing:.5px">v2.6.0</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Progress">${LEVELS[ci].ci}</div>
@@ -5188,7 +5188,7 @@ function renderProfileScreen(){
       <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
         <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">ℹ</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:600;color:var(--text2)">RestoreTrack v2.5.2</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2)">RestoreTrack v2.6.0</div>
           <div style="font-size:10px;color:var(--text5);margin-top:2px">Personal tracker · Not medical advice</div>
         </div>
       </div>
@@ -5201,7 +5201,7 @@ function renderProfileScreen(){
   </div>`;
 
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.5.2';
+    const version='v2.6.0';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
