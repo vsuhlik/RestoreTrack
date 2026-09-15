@@ -6993,13 +6993,15 @@ function renderCommunity(){
   // backgrounded. Members and Live tabs must agree on this rule, or the
   // same person appears in one "restoring now" section but not the other.
   const active=commState.users.filter(u=>u.active);
-  // 2-hour window instead of 30 min. At community scale, half-hour windows
-  // almost never catch anyone — this makes the "Recently Active" section
-  // actually show the users who were just here.
-  const recentlyActive=commState.users.filter(u=>{
-    if(u.active||!u.lastSeen)return false;
-    return(now-(u.lastSeen.toMillis?u.lastSeen.toMillis():0))<2*60*60*1000;
-  });
+  // Count of members who've been around in the last 2 hours. Used only as a
+  // warm hint inside the Live tab's empty state — Live itself is purely a
+  // "who's in a session right now" view, with no secondary list competing
+  // for the user's attention.
+  const recentlyActiveCount=commState.users.filter(u=>{
+    if(!u.lastSeen)return false;
+    const ms=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
+    return(now-ms)<2*60*60*1000;
+  }).length;
   const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
   const unreadMessages=commState.conversations.filter(c=>(c.unreadBy||[]).includes(fbUID)).length;
   const memberCount=commState.users.length;
@@ -7089,19 +7091,20 @@ function renderCommunity(){
   let content='';
 
   if(commTab==='live'){
+    const activityHint=recentlyActiveCount>0
+      ?`<div style="font-size:10px;color:var(--text5);margin-top:12px">${recentlyActiveCount} member${recentlyActiveCount!==1?'s were':' was'} around recently</div>`
+      :'';
     const activeCards=active.length
       ?active.map(u=>buildUserCard(u,now,isJoined,'live')).join('')
       :`<div style="text-align:center;padding:32px 20px;background:var(--bg-stat);border-radius:12px">
           <div style="font-size:32px;margin-bottom:10px;opacity:.7">◉</div>
           <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">No one restoring right now</div>
           <div style="font-size:11px;color:var(--text4);line-height:1.7;max-width:280px;margin:0 auto">${isJoined?'Be the first — start a session and you\'ll appear here.':'Join the community and start a session to appear here.'}</div>
+          ${activityHint}
         </div>`;
-    const recentCards=recentlyActive.length
-      ?`<div class="sec-title" style="margin-top:10px">Recently Active</div>${recentlyActive.map(u=>buildUserCard(u,now,isJoined,'member')).join('')}`
-      :'';
     content=`
       <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px">${active.length>0?'Restoring Right Now':'Active Now'}</div>
-      ${activeCards}${recentCards}`;
+      ${activeCards}`;
   }
 
   else if(commTab==='posts'){
@@ -7196,19 +7199,22 @@ function renderCommunity(){
         if(a.active!==b.active)return a.active?-1:1;
         return 0;
       });
-      const sectionHeader=(label,count)=>`
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 8px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4)">${label}</div>
-          <div style="font-size:10px;color:var(--text5)">${count}</div>
-        </div>`;
+      // The roster is a single continuous list. Members with a recent
+      // timestamp sit above a thin divider; everyone else sits below it.
+      // The divider makes no claim about intent — it just separates "has a
+      // timestamp" from "doesn't." The card content itself (e.g. "Active 4d
+      // ago") carries the recency signal, so no section labels are needed.
+      const hasRecent=segWeek.length||segMonth.length;
+      const showDivider=hasRecent&&segOlder.length;
       content=`
-        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
           <div style="font-size:13px;font-weight:700;color:var(--text1)">Members</div>
           <div style="font-size:10px;color:var(--text5)">${allMembers.length} total</div>
         </div>
-        ${segWeek.length?sectionHeader('Active this week',segWeek.length)+segWeek.map(u=>buildUserCard(u,now,isJoined)).join(''):''}
-        ${segMonth.length?sectionHeader('Active this month',segMonth.length)+segMonth.map(u=>buildUserCard(u,now,isJoined,'member')).join(''):''}
-        ${segOlder.length?sectionHeader('Community',segOlder.length)+segOlder.map(u=>buildUserCard(u,now,isJoined,'dormant')).join(''):''}
+        ${segWeek.map(u=>buildUserCard(u,now,isJoined)).join('')}
+        ${segMonth.map(u=>buildUserCard(u,now,isJoined,'member')).join('')}
+        ${showDivider?`<div style="height:1px;background:var(--stat-border);margin:14px 0"></div>`:''}
+        ${segOlder.map(u=>buildUserCard(u,now,isJoined,'dormant')).join('')}
       `;
     }
   }
