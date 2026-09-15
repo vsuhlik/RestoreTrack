@@ -6464,9 +6464,8 @@ function fetchPosts(force=false){
   startPostsCooldownTimer();
   commState.postsLoading=true;
   refreshCommUI();
-  const cutoff=firebase.firestore.Timestamp.fromDate(new Date(now-14*86400000));
   db.collection('posts')
-    .where('ts','>',cutoff).orderBy('ts','desc').limit(40)
+    .orderBy('ts','desc').limit(40)
     .get().then(snap=>{
       commState.posts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!isCommunityBlocked(p.uid));
       commState.postsLoading=false;
@@ -6662,7 +6661,7 @@ function commPost(text,title){
   if(_postSubmitting){showToast('⚠ Please wait, posting…');return;}
   _postSubmitting=true;
   const postData={
-    title:title||'',text:text.trim().slice(0,200),uid:fbUID,
+    title:title||'',text:text.trim().slice(0,1000),uid:fbUID,
     name:char.communityDisplayName||'Anonymous',
     avatar:char.communityAvatar||'🌱',
     ci:char.ciLevel||0,
@@ -6717,7 +6716,19 @@ function commReact(postId,r){
 
 function deleteCommPost(postId){
   if(!db||!fbUID)return;
-  db.collection('posts').doc(postId).delete().catch(()=>{});
+  // Optimistic removal — take it out of the local cache and re-render
+  // immediately, so the feed updates without waiting for Firestore. If the
+  // server write fails, we restore the previous state and show an error.
+  const prevPosts=commState.posts;
+  commState.posts=commState.posts.filter(p=>p.id!==postId);
+  refreshCommUI();
+  db.collection('posts').doc(postId).delete()
+    .then(()=>showToast('✓ Post deleted'))
+    .catch(()=>{
+      commState.posts=prevPosts;
+      refreshCommUI();
+      showToast('⚠ Could not delete post — try again');
+    });
 }
 
 function reportPost(postId){
@@ -7273,7 +7284,7 @@ function buildPostCard(p,now,reacted,isJoined){
                   <span style="font-family:var(--font-display);font-size:9px;color:var(--accent)">${LEVELS[Math.min(r.ci||0,10)].ci}</span>
                   <span style="font-size:9px;color:var(--text5);margin-left:auto">${rago}</span>
                 </div>
-                <div style="font-size:12px;color:var(--text2);line-height:1.55">${htmlEsc(r.text||'')}</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.6;white-space:pre-line">${htmlEsc(r.text||'')}</div>
               </div>
             </div>`;
           }).join('');
@@ -7293,17 +7304,17 @@ function buildPostCard(p,now,reacted,isJoined){
 
   return`<div style="background:var(--bg-card);border:1px solid ${isMilestone?'var(--card-border-gold)':'var(--card-border)'};border-radius:12px;padding:12px;margin-bottom:7px">
     <div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:9px">
-      <div style="width:38px;height:38px;border-radius:50%;background:${isMilestone?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isMilestone?'var(--acc30)':'var(--stat-border)'};display:flex;align-items:center;justify-content:center;font-size:${isMilestone?'18':'20'}px;flex-shrink:0;line-height:1">${isMilestone?(p.mIcon||'🏅'):(p.avatar||'🌱')}</div>
+      <div ${!isMilestone?`onclick="event.stopPropagation();showUserProfile('${p.uid}')"`:''} style="width:38px;height:38px;border-radius:50%;background:${isMilestone?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isMilestone?'var(--acc30)':'var(--stat-border)'};display:flex;align-items:center;justify-content:center;font-size:${isMilestone?'18':'20'}px;flex-shrink:0;line-height:1;${!isMilestone?'cursor:pointer;':''}">${isMilestone?(p.mIcon||'🏅'):(p.avatar||'🌱')}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:4px">
-          <span style="font-weight:600;font-size:12px;color:var(--text1)">${p.name||'Restorer'}</span>
+          <span ${!isMilestone?`onclick="event.stopPropagation();showUserProfile('${p.uid}')"`:''} style="font-weight:600;font-size:12px;color:var(--text1);${!isMilestone?'cursor:pointer;':''}">${p.name||'Restorer'}</span>
           <span style="font-family:var(--font-display);font-size:9px;color:var(--accent)">${LEVELS[Math.min(p.ci||0,10)].ci}</span>
           <span style="font-size:9px;color:var(--text5);margin-left:auto">${ago}</span>
         </div>
         ${p.title?`<div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:4px;line-height:1.4">${htmlEsc(p.title)}</div>`:''}
         ${isMilestone
           ?`<div style="font-size:12px;color:var(--text2)"><span style="color:var(--accent);font-weight:600">${htmlEsc(p.mTitle||p.text)}</span> unlocked 🎉</div>`
-          :`<div style="font-size:12px;color:var(--text2);line-height:1.6">${htmlEsc(p.text||'')}</div>`}
+          :`<div style="font-size:12px;color:var(--text2);line-height:1.65;white-space:pre-line">${htmlEsc(p.text||'')}</div>`}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--stat-border);flex-wrap:wrap">
@@ -7322,8 +7333,8 @@ function buildPostCard(p,now,reacted,isJoined){
         💬 <span>${replyCount>0?replyCount:''} ${isOpen?'Hide':'Reply'}</span>
       </button>
       ${isMe
-        ?`<button onclick="confirmDialog('Delete post?','This will remove your post and all its replies.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body)">✕</button>`
-        :`<button onclick="reportPost('${p.id}')" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body)" title="Report this post">${IC.flag(12)} Report</button>`
+        ?`<button onclick="confirmDialog('Delete this post?','It will be permanently removed from the feed. This cannot be undone.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:4px 8px;font-size:11px;color:#a03232;cursor:pointer;font-family:var(--font-body);display:inline-flex;align-items:center;gap:4px" title="Delete post">${IC.trash(12)}</button>`
+        :`<button onclick="reportPost('${p.id}')" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body);display:inline-flex;align-items:center;gap:4px" title="Report this post">${IC.flag(12)} Report</button>`
       }
     </div>
     ${replySection}
@@ -7349,10 +7360,10 @@ function showPostSheet(){
     <div class="sheet-handle"></div>
     <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:12px">New Post</div>
     <input id="post-title" class="gold-inp" placeholder="Topic title (optional)..." maxlength="60" style="font-size:13px;margin-bottom:8px">
-    <textarea id="post-text" placeholder="Share a win, a question, an observation..." style="min-height:90px;font-size:13px;margin-bottom:4px"></textarea>
+    <textarea id="post-text" placeholder="Share a win, a question, an observation..." maxlength="1000" style="min-height:120px;font-size:13px;margin-bottom:4px"></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:10px;color:var(--text5)">Be real — honesty is appreciated over hype.</div>
-      <div id="post-char" style="font-size:10px;color:var(--text5)">0 / 200</div>
+      <div id="post-char" style="font-size:10px;color:var(--text5)">0 / 1000</div>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn-ghost" onclick="document.getElementById('post-ov').remove()" style="flex:0 0 76px">Cancel</button>
@@ -7364,7 +7375,7 @@ function showPostSheet(){
   ta.addEventListener('input',()=>{
     const n=ta.value.length;
     const cc=document.getElementById('post-char');
-    if(cc){cc.textContent=`${n} / 200`;cc.style.color=n>180?'#c0392b':'var(--text5)';}
+    if(cc){cc.textContent=`${n} / 1000`;cc.style.color=n>900?'#c0392b':'var(--text5)';}
   });
   document.getElementById('post-submit').onclick=()=>{
     const text=ta.value.trim();if(!text)return;
