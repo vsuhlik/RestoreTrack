@@ -5287,7 +5287,7 @@ async function cloudBackupSave() {
       logs: logsData,
       pid: currentPid,
       backedUpAt: firebase.firestore.FieldValue.serverTimestamp(),
-      appVersion: '2.5.0'
+      appVersion: 'v2.6.0'
     });
 
     // 2. Save photos to subcollection (one doc per photo)
@@ -7168,8 +7168,11 @@ function renderCommunity(){
       // Bucket each member by last-seen recency. Users who have never been
       // seen (or 30+ days ago) land in the final "Community" segment with
       // no timestamp — the point is presence, not the number of days away.
+      // Members currently in a session fold into "Active this week" so this
+      // tab stays a pure roster — the Live tab is the one place to see who's
+      // restoring right now.
       const bucketOf=(u)=>{
-        if(u.active)return 'active';
+        if(u.active)return 'week';
         if(!u.lastSeen)return 'older';
         const ms=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
         const days=(now-ms)/86400000;
@@ -7177,13 +7180,18 @@ function renderCommunity(){
         if(days<30)return 'month';
         return 'older';
       };
-      const segActive=[],segWeek=[],segMonth=[],segOlder=[];
+      const segWeek=[],segMonth=[],segOlder=[];
       allMembers.forEach(u=>{
         const b=bucketOf(u);
-        if(b==='active')segActive.push(u);
-        else if(b==='week')segWeek.push(u);
+        if(b==='week')segWeek.push(u);
         else if(b==='month')segMonth.push(u);
         else segOlder.push(u);
+      });
+      // Float active users to the top of "Active this week" so the live
+      // signal still leads the section even without its own header.
+      segWeek.sort((a,b)=>{
+        if(a.active!==b.active)return a.active?-1:1;
+        return 0;
       });
       const sectionHeader=(label,count)=>`
         <div style="display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 8px">
@@ -7195,8 +7203,7 @@ function renderCommunity(){
           <div style="font-size:13px;font-weight:700;color:var(--text1)">Members</div>
           <div style="font-size:10px;color:var(--text5)">${allMembers.length} total</div>
         </div>
-        ${segActive.length?sectionHeader('🟢 In a session',segActive.length)+segActive.map(u=>buildUserCard(u,now,isJoined,'live')).join(''):''}
-        ${segWeek.length?sectionHeader('Active this week',segWeek.length)+segWeek.map(u=>buildUserCard(u,now,isJoined,'member')).join(''):''}
+        ${segWeek.length?sectionHeader('Active this week',segWeek.length)+segWeek.map(u=>buildUserCard(u,now,isJoined)).join(''):''}
         ${segMonth.length?sectionHeader('Active this month',segMonth.length)+segMonth.map(u=>buildUserCard(u,now,isJoined,'member')).join(''):''}
         ${segOlder.length?sectionHeader('Community',segOlder.length)+segOlder.map(u=>buildUserCard(u,now,isJoined,'dormant')).join(''):''}
       `;
