@@ -1,16 +1,16 @@
 /// ── CONSTANTS ──────────────────────────────────────────────────────────────────
 const LEVELS=[
   {ci:'CI-0',desc:'Starting point of restoration. No loose skin present.',soft:'',hard:''},
-  {ci:'CI-1',desc:'',soft:'No loose skin on the shaft.',hard:'Shaft skin is very tight, may draw the scrotum up on some men.'},
-  {ci:'CI-2',desc:'',soft:'Some loose skin wrinkles over the sulcus.',hard:'Shaft skin is tight.'},
-  {ci:'CI-3',desc:'',soft:'Foreskin covers the sulcus and just touches the corona.',hard:'May be very slight wrinkling of shaft skin.'},
-  {ci:'CI-4',desc:'',soft:'Foreskin covers the corona, leaving most of the glans exposed.',hard:'Some wrinkling of shaft skin behind the sulcus.'},
-  {ci:'CI-5',desc:'',soft:'Half to two-thirds of the glans is exposed.',hard:'Foreskin wrinkles over the sulcus.'},
-  {ci:'CI-6',desc:'',soft:'Foreskin covers most of the glans.',hard:'Foreskin retracts behind the corona.'},
-  {ci:'CI-7',desc:'',soft:'Glans is completely covered with glans visible through the opening.',hard:'Foreskin covers the corona and some of the glans.'},
-  {ci:'CI-8',desc:'',soft:'Small amount of overhanging foreskin.',hard:'Foreskin covers over half of the glans.'},
-  {ci:'CI-9',desc:'',soft:'Foreskin overhangs the end of the glans.',hard:'Foreskin completely covers the glans but there is no overhang.'},
-  {ci:'CI-10',desc:'',soft:'Considerable overhanging foreskin.',hard:'Foreskin still overhangs the end of the glans.'}
+  {ci:'CI-1',desc:'',soft:'There is no loose skin on the shaft of the penis.',hard:'The shaft skin is very tight and on some men draws the scrotum up.'},
+  {ci:'CI-2',desc:'',soft:'There is some loose skin which wrinkles over the sulcus.',hard:'The shaft skin is tight.'},
+  {ci:'CI-3',desc:'',soft:'Foreskin covers the sulcus and just touches the corona.',hard:'There may be very slight wrinkling of the shaft skin.'},
+  {ci:'CI-4',desc:'',soft:'Foreskin covers the corona, leaving most of the glans exposed.',hard:'There is some wrinkling of the shaft skin behind the sulcus.'},
+  {ci:'CI-5',desc:'',soft:'A half to two-thirds of the glans is exposed.',hard:'Foreskin wrinkles over the sulcus.'},
+  {ci:'CI-6',desc:'',soft:'The foreskin covers most of the glans.',hard:'The foreskin retracts behind the corona.'},
+  {ci:'CI-7',desc:'',soft:'The glans is completely covered with the glans visible through the opening.',hard:'Foreskin covers the corona and some of the glans.'},
+  {ci:'CI-8',desc:'',soft:'There is a small amount of overhanging foreskin.',hard:'The foreskin covers over half of the glans.'},
+  {ci:'CI-9',desc:'',soft:'Foreskin overhangs the end of the glans.',hard:'The foreskin completely covers the glans but there is no overhang.'},
+  {ci:'CI-10',desc:'',soft:'There is a considerable amount of overhanging foreskin.',hard:'The foreskin still overhangs the end of the glans.'}
 ];
 const ciDesc=(l)=>l.ci==='CI-0'?'Starting point of restoration. No loose skin present.':
   `<span style="color:var(--text3);font-weight:600">Soft:</span> ${l.soft}<br><span style="color:var(--text3);font-weight:600">Hard:</span> ${l.hard}`;
@@ -36,64 +36,64 @@ const CATS=[
 ];
 const ACHS=[
   // ── First steps
-  {id:'first',   icon:'🌱',title:'First Session',      desc:'Log your very first session',                    check:c=>c.sessions>=1},
-  {id:'rest1',   icon:'🛌',title:'First Rest Day',     desc:'Mark your first intentional rest day',           check:c=>(c.restDays||[]).length>=1},
-  {id:'photo1',  icon:'📸',title:'First Photo',        desc:'Add your first progress photo',                  check:(_,p)=>p&&p.length>=1},
+  {id:'first',   icon:'🌱',title:'First Session',      desc:'Log your very first session',                    check:c=>c.sessions>=1,g:'first'},
+  {id:'rest1',   icon:'🛌',title:'First Rest Day',     desc:'Mark your first intentional rest day',           check:c=>(c.restDays||[]).length>=1,g:'first'},
+  {id:'photo1',  icon:'📸',title:'First Photo',        desc:'Add your first progress photo',                  check:(_,p)=>p&&p.length>=1,g:'first'},
 
   // ── Session milestones
-  {id:'s10',     icon:'📝',title:'10 Sessions',        desc:'Log 10 sessions',                                check:c=>c.sessions>=10},
-  {id:'s25',     icon:'🔄',title:'25 Sessions',        desc:'Log 25 sessions — building the habit',           check:c=>c.sessions>=25},
-  {id:'s50',     icon:'💪',title:'50 Sessions',        desc:'Log 50 sessions',                                check:c=>c.sessions>=50},
-  {id:'s100',    icon:'🏅',title:'100 Sessions',       desc:'Log 100 sessions',                               check:c=>c.sessions>=100},
-  {id:'s200',    icon:'🎖️',title:'200 Sessions',       desc:'Log 200 sessions',                               check:c=>c.sessions>=200},
-  {id:'s365',    icon:'📅',title:'365 Sessions',       desc:'A full year of effort',                          check:c=>c.sessions>=365},
-  {id:'s500',    icon:'🌟',title:'500 Sessions',       desc:'500 sessions — extraordinary commitment',        check:c=>c.sessions>=500},
+  {id:'s10',     icon:'📝',title:'10 Sessions',        desc:'Log 10 sessions',                                check:c=>c.sessions>=10,g:'sess'},
+  {id:'s25',     icon:'🔄',title:'25 Sessions',        desc:'Log 25 sessions — building the habit',           check:c=>c.sessions>=25,g:'sess'},
+  {id:'s50',     icon:'💪',title:'50 Sessions',        desc:'Log 50 sessions',                                check:c=>c.sessions>=50,g:'sess'},
+  {id:'s100',    icon:'🏅',title:'100 Sessions',       desc:'Log 100 sessions',                               check:c=>c.sessions>=100,g:'sess'},
+  {id:'s200',    icon:'🎖️',title:'200 Sessions',       desc:'Log 200 sessions',                               check:c=>c.sessions>=200,g:'sess'},
+  {id:'s365',    icon:'📅',title:'365 Sessions',       desc:'A full year of effort',                          check:c=>c.sessions>=365,g:'sess'},
+  {id:'s500',    icon:'🌟',title:'500 Sessions',       desc:'500 sessions — extraordinary commitment',        check:c=>c.sessions>=500,g:'sess'},
 
   // ── Time milestones
-  {id:'h1',      icon:'⏱',title:'1 Hour',             desc:'Accumulate your first hour of restoration time', check:c=>c.minutes>=60},
-  {id:'h10',     icon:'⌛',title:'10 Hours',           desc:'Accumulate 10 total hours',                      check:c=>c.minutes>=600},
-  {id:'h25',     icon:'🕐',title:'25 Hours',           desc:'25 hours — tissue is responding',                check:c=>c.minutes>=1500},
-  {id:'h50',     icon:'💡',title:'50 Hours',           desc:'Accumulate 50 total hours',                      check:c=>c.minutes>=3000},
-  {id:'h100',    icon:'💯',title:'100 Hours',          desc:'100 hours of dedicated restoration',             check:c=>c.minutes>=6000},
-  {id:'h250',    icon:'🔥',title:'250 Hours',          desc:'250 hours — serious dedication',                 check:c=>c.minutes>=15000},
-  {id:'h500',    icon:'⚡',title:'500 Hours',          desc:'500 hours logged',                               check:c=>c.minutes>=30000},
-  {id:'h1000',   icon:'👑',title:'1,000 Hours',        desc:'1,000 hours — among the most dedicated restorers in existence', check:c=>c.minutes>=60000},
+  {id:'h1',      icon:'⏱',title:'1 Hour',             desc:'Accumulate your first hour of restoration time', check:c=>c.minutes>=60,g:'time'},
+  {id:'h10',     icon:'⌛',title:'10 Hours',           desc:'Accumulate 10 total hours',                      check:c=>c.minutes>=600,g:'time'},
+  {id:'h25',     icon:'🕐',title:'25 Hours',           desc:'25 hours — tissue is responding',                check:c=>c.minutes>=1500,g:'time'},
+  {id:'h50',     icon:'💡',title:'50 Hours',           desc:'Accumulate 50 total hours',                      check:c=>c.minutes>=3000,g:'time'},
+  {id:'h100',    icon:'💯',title:'100 Hours',          desc:'100 hours of dedicated restoration',             check:c=>c.minutes>=6000,g:'time'},
+  {id:'h250',    icon:'🔥',title:'250 Hours',          desc:'250 hours — serious dedication',                 check:c=>c.minutes>=15000,g:'time'},
+  {id:'h500',    icon:'⚡',title:'500 Hours',          desc:'500 hours logged',                               check:c=>c.minutes>=30000,g:'time'},
+  {id:'h1000',   icon:'👑',title:'1,000 Hours',        desc:'1,000 hours — among the most dedicated restorers in existence', check:c=>c.minutes>=60000,g:'time'},
 
   // ── Streak milestones
-  {id:'str3',    icon:'3️⃣',title:'3-Day Streak',      desc:'Restore 3 days in a row',                        check:c=>c.streak>=3},
-  {id:'str7',    icon:'7️⃣',title:'Week Streak',        desc:'Restore 7 days in a row',                        check:c=>c.streak>=7},
-  {id:'str14',   icon:'✌️',title:'2-Week Streak',      desc:'14 days in a row',                               check:c=>c.streak>=14},
-  {id:'str30',   icon:'🌙',title:'Month Streak',       desc:'30 days in a row',                               check:c=>c.streak>=30},
-  {id:'str60',   icon:'⭐',title:'60-Day Streak',      desc:'Two months of daily consistency',                check:c=>c.streak>=60},
-  {id:'str90',   icon:'🌟',title:'90-Day Streak',      desc:'90 days in a row',                               check:c=>c.streak>=90},
-  {id:'str180',  icon:'🏆',title:'180-Day Streak',     desc:'Half a year of daily restoration',               check:c=>c.streak>=180},
-  {id:'str365',  icon:'💎',title:'Year Streak',        desc:'365 consecutive days — legendary',               check:c=>c.streak>=365},
+  {id:'str3',    icon:'3️⃣',title:'3-Day Streak',      desc:'Restore 3 days in a row',                        check:c=>c.streak>=3,g:'streak'},
+  {id:'str7',    icon:'7️⃣',title:'Week Streak',        desc:'Restore 7 days in a row',                        check:c=>c.streak>=7,g:'streak'},
+  {id:'str14',   icon:'✌️',title:'2-Week Streak',      desc:'14 days in a row',                               check:c=>c.streak>=14,g:'streak'},
+  {id:'str30',   icon:'🌙',title:'Month Streak',       desc:'30 days in a row',                               check:c=>c.streak>=30,g:'streak'},
+  {id:'str60',   icon:'⭐',title:'60-Day Streak',      desc:'Two months of daily consistency',                check:c=>c.streak>=60,g:'streak'},
+  {id:'str90',   icon:'🌟',title:'90-Day Streak',      desc:'90 days in a row',                               check:c=>c.streak>=90,g:'streak'},
+  {id:'str180',  icon:'🏆',title:'180-Day Streak',     desc:'Half a year of daily restoration',               check:c=>c.streak>=180,g:'streak'},
+  {id:'str365',  icon:'💎',title:'Year Streak',        desc:'365 consecutive days — legendary',               check:c=>c.streak>=365,g:'streak'},
 
   // ── Daily goal milestones
-  {id:'goal5',   icon:'🎯',title:'Goal Getter',        desc:'Hit your daily goal 5 times',                    check:c=>c.goalDays>=5},
-  {id:'goal30',  icon:'🏹',title:'Goal Month',         desc:'Hit your daily goal 30 times',                   check:c=>c.goalDays>=30},
-  {id:'goal100', icon:'🥇',title:'100 Goal Days',      desc:'Hit your daily goal 100 times',                  check:c=>c.goalDays>=100},
-  {id:'goal365', icon:'🔮',title:'365 Goal Days',      desc:'Hit your daily goal 365 times',                  check:c=>c.goalDays>=365},
+  {id:'goal5',   icon:'🎯',title:'Goal Getter',        desc:'Hit your daily goal 5 times',                    check:c=>c.goalDays>=5,g:'goal'},
+  {id:'goal30',  icon:'🏹',title:'Goal Month',         desc:'Hit your daily goal 30 times',                   check:c=>c.goalDays>=30,g:'goal'},
+  {id:'goal100', icon:'🥇',title:'100 Goal Days',      desc:'Hit your daily goal 100 times',                  check:c=>c.goalDays>=100,g:'goal'},
+  {id:'goal365', icon:'🔮',title:'365 Goal Days',      desc:'Hit your daily goal 365 times',                  check:c=>c.goalDays>=365,g:'goal'},
 
   // ── Method exploration
-  {id:'meth3',   icon:'🧪',title:'Method Explorer',   desc:'Try 3 different restoration methods',            check:c=>(c.methods||[]).length>=3},
-  {id:'meth5',   icon:'🗺️',title:'Method Master',     desc:'Try 5 different restoration methods',            check:c=>(c.methods||[]).length>=5},
+  {id:'meth3',   icon:'🧪',title:'Method Explorer',   desc:'Try 3 different restoration methods',            check:c=>(c.methods||[]).length>=3,g:'method'},
+  {id:'meth5',   icon:'🗺️',title:'Method Master',     desc:'Try 5 different restoration methods',            check:c=>(c.methods||[]).length>=5,g:'method'},
 
   // ── Photo milestones
-  {id:'photo5',  icon:'🖼️',title:'Photo Journal',     desc:'Add 5 progress photos',                          check:(_,p)=>p&&p.length>=5},
-  {id:'photo10', icon:'📷',title:'Dedicated Documenter',desc:'Add 10 progress photos',                       check:(_,p)=>p&&p.length>=10},
+  {id:'photo5',  icon:'🖼️',title:'Photo Journal',     desc:'Add 5 progress photos',                          check:(_,p)=>p&&p.length>=5,g:'photo'},
+  {id:'photo10', icon:'📷',title:'Dedicated Documenter',desc:'Add 10 progress photos',                       check:(_,p)=>p&&p.length>=10,g:'photo'},
 
   // ── CI progress — all 11 levels
-  {id:'ci1',     icon:'🌿',title:'CI-1 Reached',       desc:'First measurable skin coverage — the journey begins', check:c=>(c.ciLevel||0)>=1},
-  {id:'ci2',     icon:'🌱',title:'CI-2 Reached',       desc:'Dekeratinisation beginning — real progress',    check:c=>(c.ciLevel||0)>=2},
-  {id:'ci3',     icon:'✨',title:'CI-3 Reached',       desc:'Rollover appearing — tissue is growing',         check:c=>(c.ciLevel||0)>=3},
-  {id:'ci4',     icon:'🌊',title:'CI-4 Reached',       desc:'Inner foreskin restoring — significant milestone', check:c=>(c.ciLevel||0)>=4},
-  {id:'ci5',     icon:'⭐',title:'CI-5 — Halfway',     desc:'Halfway home. Most restoration benefits are felt here', check:c=>(c.ciLevel||0)>=5},
-  {id:'ci6',     icon:'💫',title:'CI-6 Reached',       desc:'Full glans coverage at rest — profound change',  check:c=>(c.ciLevel||0)>=6},
-  {id:'ci7',     icon:'🔮',title:'CI-7 Reached',       desc:'Rollover beyond the glans — deep restoration',   check:c=>(c.ciLevel||0)>=7},
-  {id:'ci8',     icon:'🌟',title:'CI-8 Reached',       desc:'Tight coverage over the glans — near complete',  check:c=>(c.ciLevel||0)>=8},
-  {id:'ci9',     icon:'👑',title:'CI-9 Reached',       desc:'Natural overhang at rest — final stretch',       check:c=>(c.ciLevel||0)>=9},
-  {id:'ci10',    icon:'🏆',title:'Fully Restored',     desc:'CI-10 — the journey is complete',                check:c=>(c.ciLevel||0)>=10},
+  {id:'ci1',     icon:'🌿',title:'CI-1',              desc:'First measurable skin coverage — the journey begins', check:c=>(c.ciLevel||0)>=1,g:'ci'},
+  {id:'ci2',     icon:'🌱',title:'CI-2',              desc:'Dekeratinisation beginning — real progress',    check:c=>(c.ciLevel||0)>=2,g:'ci'},
+  {id:'ci3',     icon:'✨',title:'CI-3',              desc:'Rollover appearing — tissue is growing',         check:c=>(c.ciLevel||0)>=3,g:'ci'},
+  {id:'ci4',     icon:'🌊',title:'CI-4',              desc:'Inner foreskin restoring — significant milestone', check:c=>(c.ciLevel||0)>=4,g:'ci'},
+  {id:'ci5',     icon:'⭐',title:'CI-5 — Halfway',    desc:'Halfway home. Most restoration benefits are felt here', check:c=>(c.ciLevel||0)>=5,g:'ci'},
+  {id:'ci6',     icon:'💫',title:'CI-6',              desc:'Full glans coverage at rest — profound change',  check:c=>(c.ciLevel||0)>=6,g:'ci'},
+  {id:'ci7',     icon:'🔮',title:'CI-7',              desc:'Rollover beyond the glans — deep restoration',   check:c=>(c.ciLevel||0)>=7,g:'ci'},
+  {id:'ci8',     icon:'🌟',title:'CI-8',              desc:'Tight coverage over the glans — near complete',  check:c=>(c.ciLevel||0)>=8,g:'ci'},
+  {id:'ci9',     icon:'👑',title:'CI-9',              desc:'Natural overhang at rest — final stretch',       check:c=>(c.ciLevel||0)>=9,g:'ci'},
+  {id:'ci10',    icon:'🏆',title:'Fully Restored',    desc:'CI-10 — the journey is complete',                check:c=>(c.ciLevel||0)>=10,g:'ci'},
 ];
 const THEMES=[
   {id:'ivory',  name:'Ivory',  bg:'#F0EDE6',accent:'#7A5C10',text:'#1a1710',mid:'#C8A848'},
@@ -109,13 +109,21 @@ const THEMES=[
 ];
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
-let profiles=[],currentPid=null,currentTheme='ivory';
+let profiles=[],currentPid=null,currentTheme='shadow';
 let _repYear=new Date().getFullYear(),_repMonth=new Date().getMonth();
+let _repScope='week'; // 'week' | 'month' | 'all'
+let _repCalExpanded=false;
+let _progressTab='overview'; // 'overview' | 'activity' | 'badges'
+let _photoSelectMode=false;
+let _photoSelectedIds=new Set();
+let _photosUnlocked=false; // in-memory session unlock — resets on refresh
+let _pinBuf='';
+let _photoViewMode='month'; // 'month' | 'ci'
 let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',
   dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
   communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},
-  communityEncouragementReadAt:0};
+  communityEncouragementReadAt:0,preferredMethods:[]};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -123,10 +131,12 @@ let showProfileScreen=false,showSessionSheet=false,showStopSheet=false,showCIShe
 let logMode='timer',manualStart='',manualEnd='',manualStillActive=false;
 let manualStartDate='',manualEndDate='';
 let sheetCat=null,sheetMethod='',sheetNotes='';
-let currentCoachCTA=null;
 let expandedCIRef=new Set();
 let _editStartCI=0,_editCurrentCI=0,_editGoalCI=10;
 let _activeMilestoneIdx=null;
+let _gaugeChain=null; // cached milestone chain — lets the strip update without re-rendering the tab
+let todaySessionsExpanded=false;
+let todayOptionsExpanded=false;
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
@@ -171,6 +181,7 @@ const IC={
   reports: (s=18)=>IC._s('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',s,1.6),
   badges:  (s=18)=>IC._s('<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>',s,1.6),
   community:(s=18)=>IC._s('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',s,1.6),
+  progress:(s=18)=>IC._s('<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',s,1.6),
 };
 function timeAgo(ms){
   const diff=Date.now()-ms;
@@ -194,37 +205,59 @@ const localDateStr=(d)=>{const x=d||new Date();return`${x.getFullYear()}-${Strin
 const today=()=>localDateStr();
 const todayLogs=()=>logs.filter(l=>l.date===today());
 
-// How many minutes of the currently running session fall within today only
-// Uses wallStart (real wall-clock start) if available — more accurate than timerSecs
-function liveTimerTodayMins(){
-  if(!activeTimer||!activeTimer.startedAt)return 0;
-  const midnight=new Date();midnight.setHours(0,0,0,0);
-  // Prefer wallStart (actual wall-clock start); fall back to reconstructed start
-  const sessionStartMs=activeTimer.wallStart
-    ?activeTimer.wallStart
-    :Date.now()-(timerSecs*1000);
-  // Only count elapsed time from midnight (or session start if it started today)
-  const countFromMs=Math.max(sessionStartMs,midnight.getTime());
-  // Subtract any paused time that occurred today (elapsedOnPause only accumulates during pauses)
-  const msSinceCount=Date.now()-countFromMs;
-  return Math.max(0,Math.floor(msSinceCount/60000));
+// Active seconds of a session that fall within the window [fromMs, toMs].
+// Subtracts any paused time that overlaps the window. Works whether the
+// session is currently running, paused, or already stopped — it reads the
+// accumulated pauseIntervals array plus the open pausedAt marker if present.
+function sessionActiveSecsBetween(timer, fromMs, toMs){
+  if(!timer||!timer.wallStart)return 0;
+  const upperBound=Math.min(toMs, Date.now());
+  const windowStart=Math.max(fromMs, timer.wallStart);
+  const windowEnd=upperBound;
+  if(windowEnd<=windowStart)return 0;
+  let totalMs=windowEnd-windowStart;
+  const intervals=(timer.pauseIntervals||[]).slice();
+  if(timer.pausedAt!=null){
+    intervals.push({startMs:timer.pausedAt, endMs:Date.now()});
+  }
+  for(const p of intervals){
+    const overlapStart=Math.max(windowStart, p.startMs);
+    const overlapEnd=Math.min(windowEnd, p.endMs);
+    if(overlapEnd>overlapStart)totalMs-=(overlapEnd-overlapStart);
+  }
+  return Math.max(0, Math.floor(totalMs/1000));
 }
 
-// Returns minutes of the active session that fall within a specific YYYY-MM-DD date (local timezone)
+// How many active minutes of the running/paused session fall within today.
+// Correctly excludes paused time, so the goal bar doesn't overcount after resume.
+function liveTimerTodayMins(){
+  if(!activeTimer||!activeTimer.wallStart)return 0;
+  const midnight=new Date();midnight.setHours(0,0,0,0);
+  return Math.floor(sessionActiveSecsBetween(activeTimer, midnight.getTime(), Date.now())/60);
+}
+
+// Active minutes of the session that fall within a specific YYYY-MM-DD date.
+// Used by the calendar, method breakdown, and multi-day splitter.
 function liveTimerMinsForDate(dateStr){
-  if(!activeTimer||!activeTimer.startedAt)return 0;
-  const sessionStartMs=activeTimer.wallStart
-    ?activeTimer.wallStart
-    :Date.now()-(timerSecs*1000);
+  if(!activeTimer||!activeTimer.wallStart)return 0;
   const p=dateStr.split('-');
   const dateStart=new Date(+p[0],+p[1]-1,+p[2],0,0,0,0).getTime();
   const dateEnd  =new Date(+p[0],+p[1]-1,+p[2],23,59,59,999).getTime();
-  const overlapStart=Math.max(sessionStartMs,dateStart);
-  const overlapEnd  =Math.min(Date.now(),dateEnd);
-  if(overlapEnd<=overlapStart)return 0;
-  return Math.max(0,Math.floor((overlapEnd-overlapStart)/60000));
+  return Math.floor(sessionActiveSecsBetween(activeTimer, dateStart, dateEnd)/60);
 }
 const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
+// Display-only streak — reflects gap-breakage without mutating char.streak
+function displayStreak(){
+  if(!char.streak||!char.lastDate)return 0;
+  const diff=Math.round((new Date(today())-new Date(char.lastDate))/86400000);
+  if(diff<=1)return char.streak;
+  for(let i=1;i<diff;i++){
+    const gd=new Date(char.lastDate+'T12:00:00');
+    gd.setDate(gd.getDate()+i);
+    if(!(char.restDays||[]).includes(localDateStr(gd)))return 0;
+  }
+  return char.streak;
+}
 // Goal-qualifying minutes — filters retaining if user has opted out
 const todayGoalMin=()=>{
   const excl=char.countRetainingInGoal===false;
@@ -232,6 +265,19 @@ const todayGoalMin=()=>{
   const liveIsRetaining=!!(activeTimer&&activeTimer.cat==='retaining');
   const liveMins=(!excl||!liveIsRetaining)?liveTimerTodayMins():0;
   return logMins+liveMins;
+};
+// Goal-qualifying minutes for any specific date. Includes the live timer only
+// when the target date is today. Used by awardSession so logging a past session
+// doesn't incorrectly compare against today's minutes.
+const goalMinsForDate=(dateStr)=>{
+  const excl=char.countRetainingInGoal===false;
+  const logMins=logs.filter(l=>l.date===dateStr&&(!excl||l.cat!=='retaining')).reduce((a,l)=>a+l.dur,0);
+  if(dateStr===today()&&activeTimer&&activeTimer.startedAt){
+    const liveIsRetaining=activeTimer.cat==='retaining';
+    if(excl&&liveIsRetaining)return logMins;
+    return logMins+liveTimerTodayMins();
+  }
+  return logMins;
 };
 // Returns Mon-Sun of the current calendar week (never a rolling 7-day window)
 const thisWeekDays=()=>{
@@ -250,7 +296,7 @@ const S={
     try{localStorage.setItem(k,JSON.stringify(v));return true;}
     catch(e){
       if(e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014)){
-        showStorageWarning();
+        try{showStorageWarning();}catch{}
       }
       return false;
     }
@@ -389,6 +435,27 @@ async function compressPhoto(dataUrl, maxDim = 1200, quality = 0.72) {
 function dataUrlSizeKB(dataUrl) {
   return Math.round((dataUrl.length * 3) / 4 / 1024);
 }
+
+// Progressive compression based on user's quality setting.
+// Every tier halts as soon as the result is ≤150KB.
+async function compressForPhoto(dataUrl){
+  const q=char.photoQuality||'balanced';
+  let tiers;
+  if(q==='high')tiers=[[1200,0.80],[1000,0.70],[800,0.60],[700,0.52]];
+  else if(q==='small')tiers=[[640,0.52],[500,0.44],[420,0.36],[360,0.30]];
+  else tiers=[[1000,0.72],[800,0.62],[700,0.52],[600,0.44]]; // balanced (default)
+  let out=dataUrl;
+  for(const [dim,qual] of tiers){
+    out=await compressPhoto(dataUrl,dim,qual);
+    if(dataUrlSizeKB(out)<=150)break;
+  }
+  return out;
+}
+
+// Total size in KB of a list of photos
+function photosTotalKB(arr){
+  return (arr||[]).reduce((a,p)=>a+dataUrlSizeKB(p.url||''),0);
+}
 // ── COMPRESS EXISTING UNCOMPRESSED PHOTOS (one-time, runs on load) ─────────────
 async function compressExistingPhotos(pid) {
   try {
@@ -450,28 +517,31 @@ async function migratePhotosToIDB(){
   }
 }
 
-// ── STORAGE WARNING ────────────────────────────────────────────────────────────let _storageWarnShown=false;
+// ── STORAGE WARNING ────────────────────────────────────────────────────────────
+let _storageWarnShown=false;
 function showStorageWarning(){
   if(_storageWarnShown)return;_storageWarnShown=true;
   const usedKB=S.usage();
   const el=document.createElement('div');
   el.id='storage-warn-banner';
   el.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#5c0f0f;border:1px solid #c0392b;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;z-index:9999;max-width:340px;width:90%;text-align:center;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.5)';
-  el.innerHTML=`⚠️ <strong>Storage almost full</strong> (${usedKB} KB used)<br><span style="font-size:11px;opacity:.85">New data may not be saved. Back up your data now.</span><br><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><button onclick="document.getElementById('storage-warn-banner')?.remove();showProfileSheet=true;render();" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:DM Sans,sans-serif;font-size:12px;font-weight:600">Backup Now →</button><button onclick="document.getElementById('storage-warn-banner')?.remove()" style="background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:DM Sans,sans-serif;font-size:12px">Dismiss</button></div>`;
+  el.innerHTML=`⚠️ <strong>Storage almost full</strong> (${usedKB} KB used)<br><span style="font-size:11px;opacity:.85">New data may not be saved. Back up your data now.</span><br><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><button onclick="document.getElementById('storage-warn-banner')?.remove();showProfileScreen=true;render();" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:var(--font-body);font-size:12px;font-weight:600">Backup Now →</button><button onclick="document.getElementById('storage-warn-banner')?.remove()" style="background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);font-size:12px">Dismiss</button></div>`;
   document.body.appendChild(el);
 }
 async function loadAll(){
   await migrateProfileDataToIDB(); // one-time: moves char/logs/profiles/timer to IDB
   await migratePhotosToIDB();      // one-time: moves photos to IDB (existing)
-  if(currentPid)await compressExistingPhotos(currentPid);
   // Read from IDB first, fall back to localStorage
   profiles=(await ProfileDB.get('rst-profiles'))??S.get('rst-profiles')??[];
   currentPid=S.get('rst-active-pid'); // tiny key — localStorage is fine here
+  _photosUnlocked=false;_pinBuf=''; // reset lock state on every load
 
   // Single profile system — take the first (and only) profile if it exists
   if(!currentPid&&profiles.length>0){currentPid=profiles[0].id;S.set('rst-active-pid',currentPid);}
   if(currentPid&&profiles.find(p=>p.id===currentPid)){
-    showProfileScreen=false;await loadProfile(currentPid);
+    showProfileScreen=false;
+    await compressExistingPhotos(currentPid); // one-time: shrink pre-tier photos
+    await loadProfile(currentPid);
   } else {
     showProfileScreen=true;
   }
@@ -501,13 +571,25 @@ if(char.startCI===undefined)char.startCI=0;
   if(!char.communityBlockedProfiles||typeof char.communityBlockedProfiles!=='object')char.communityBlockedProfiles={};
   if(!char.communityEncouragementReadAt)char.communityEncouragementReadAt=0;
   if(!char.dayNotes)char.dayNotes={};
+  if(!Array.isArray(char.preferredMethods))char.preferredMethods=[];
+  if(!char.photoQuality)char.photoQuality='balanced';
+  if(char.ghostOverlay===undefined)char.ghostOverlay=true;
+  if(char.cameraGrid===undefined)char.cameraGrid=true;
+  if(char.cameraTimer===undefined)char.cameraTimer=0;
+  if(char.photoLockEnabled===undefined)char.photoLockEnabled=false;
+  if(!char.photoLockPinHash)char.photoLockPinHash='';
+  if(!char.photoLockSalt)char.photoLockSalt='';
+  if(!char.photoLockCredentialId)char.photoLockCredentialId='';
   const l=(await ProfileDB.get(`rst-${pid}-logs`))??S.get(`rst-${pid}-logs`);
   if(l)logs=l;
   photos=await PhotoDB.load(pid);
   currentTheme=char.theme||'shadow';applyTheme(currentTheme);
   const t=(await ProfileDB.get(`rst-${pid}-timer`))??S.get(`rst-${pid}-timer`);
   if(t){
-    activeTimer=t;sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';
+    // Default fields added in the pause-tracking update — keeps timers saved
+    // by older versions loadable without crashing the new helpers.
+    activeTimer={pauseIntervals:[],pausedAt:null,...t};
+    sheetMethod=t.method||'';sheetCat=t.cat||null;sheetNotes=t.notes||'';
     if(t.startedAt){timerSecs=Math.floor((Date.now()-t.startedAt)/1000)+(t.elapsedOnPause||0);startInterval();}
     else{timerSecs=t.elapsedOnPause||0;} // stopped mid-save — restore frozen time, no interval
   }
@@ -549,12 +631,21 @@ function applyTheme(id){document.documentElement.setAttribute('data-theme',id||'
 function selectTheme(id){currentTheme=id;applyTheme(id);char.theme=id;if(currentPid)saveChar();document.querySelectorAll('.theme-chip').forEach(el=>el.classList.toggle('sel',el.dataset.tid===id));}
 
 // ── PROFILE OPS ────────────────────────────────────────────────────────────────
-function createProfile(name){
+function createProfile(name,startCI=0,currentCI=null,goalCI=10,preferredMethods=[],customMethods=[],dailyGoalMin=120){
   // Only ever one profile — this is called once on first launch
   const id='p'+Date.now();
   profiles=[{id,name,createdAt:today()}];
   saveProfiles();currentPid=id;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:120,goalDays:0,theme:currentTheme,customMethods:[],ciLevel:0,ciHistory:[],startCI:0,ciGoal:10,restDays:[],startDate:today(),communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0};
+  if(currentCI===null)currentCI=startCI;
+  if(goalCI<=currentCI)goalCI=Math.min(10,currentCI+1);
+  // Build history: only push entries for levels > 0
+  const hist=[];
+  if(currentCI>0){
+    if(startCI<currentCI)hist.push({ci:startCI,date:today()});
+    hist.push({ci:currentCI,date:today()});
+  }
+  const _dg=Math.max(5,Math.min(1440,dailyGoalMin||120));
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:_dg,goalDays:0,theme:currentTheme||'shadow',customMethods:[],ciLevel:currentCI,ciHistory:hist,startCI:startCI,ciGoal:goalCI,restDays:[],startDate:today(),ciSetupDone:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0,preferredMethods:preferredMethods,countRetainingInGoal:true,photoQuality:'balanced',ghostOverlay:true,cameraGrid:true,cameraTimer:0,photoLockEnabled:false,photoLockPinHash:'',photoLockSalt:'',photoLockCredentialId:''};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -563,7 +654,8 @@ function showRenameInline(){
   if(!el)return;
   el.style.display='block';
   const inp=document.getElementById('rename-val');
-  if(inp){inp.focus();inp.select();}
+  if(!inp)return;
+  inp.focus();inp.select();
   inp.onkeydown=e=>{if(e.key==='Enter')saveRenameInline();};
 }
 function saveRenameInline(){
@@ -576,6 +668,10 @@ function saveRenameInline(){
     checkNameAvailable(n).then(available=>{
       if(!available){
         showToast('⚠ That name is already used in the community — choose another');
+        // Clear and refocus so the user can type a new name without first
+        // deleting the rejected one — the input is still visible on screen.
+        const inp2=document.getElementById('rename-val');
+        if(inp2){inp2.value='';inp2.focus();}
         return;
       }
       // Commit
@@ -632,10 +728,14 @@ function deleteProfile(){
   S.del('rst-active-pid');
   S.del('rst-reactions');
   localStorage.removeItem('rst-comm-pending');
+  localStorage.removeItem('rst-coach-queue');
+  localStorage.removeItem('rst-coach-feedback-queue');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0,dayNotes:{}};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0,dayNotes:{},preferredMethods:[]};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
+  _photoSelectMode=false;_photoSelectedIds=new Set();
+  _photosUnlocked=false;_pinBuf='';
   stopInterval();
   showProfileScreen=true;
   render();
@@ -653,9 +753,7 @@ function startInterval(){
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
     const el=document.getElementById('mc-run-time');if(el)el.textContent=fmtLive(timerSecs);
-    const el2=document.getElementById('mc-run-time-2');if(el2)el2.textContent=fmtLive(timerSecs);
     const el3=document.getElementById('mc-run-time-3');if(el3)el3.textContent=fmtLive(timerSecs);
-    const si=document.getElementById('sheet-timer');if(si)si.textContent=fmtLive(timerSecs);
     // Every 60 seconds — refresh live stats elements without full re-render
     liveTickCount++;
     if(liveTickCount%60===0){
@@ -665,24 +763,26 @@ function startInterval(){
 }
 function refreshLiveStats(){
   // Update goal bar and today stats inline if on Today tab
-  const tMin=todayMin();           // all minutes — for stat tile display
   const tGoalMin=todayGoalMin();   // goal-qualifying minutes — for bar & "to go"
   const goal=char.dailyGoalMin||120;
   const goalPct=Math.min(100,Math.round((tGoalMin/goal)*100));
+  const isGoalMet=goalPct>=100;
   // Goal bar fill
   const fill=document.querySelector('.goal-fill');
   if(fill){
     fill.style.width=goalPct+'%';
-    fill.className='goal-fill '+(goalPct>=100?'goal-fill-ok':'goal-fill-warn');
+    fill.className='goal-fill '+(isGoalMet?'goal-fill-ok':'goal-fill-warn');
+    fill.style.animation=isGoalMet?'goalCelebrate 3s ease-in-out infinite':'';
   }
   // Goal text
   const goalTexts=document.querySelectorAll('[data-live="goal-text"]');
-  goalTexts.forEach(el=>{el.textContent=goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go';});
+  goalTexts.forEach(el=>{
+    el.textContent=isGoalMet?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go';
+    el.style.color=isGoalMet?'var(--green)':'var(--text4)';
+    el.style.fontWeight=isGoalMet?'600':'400';
+  });
   const goalDone=document.querySelector('[data-live="goal-done"]');
-  if(goalDone)goalDone.textContent=fmtMin(tGoalMin)+' done';
-  // Today stat tile
-  const todayStat=document.querySelector('[data-live="today-min"]');
-  if(todayStat)todayStat.textContent=fmtMin(tGoalMin);
+  if(goalDone)goalDone.textContent=fmtMin(tGoalMin);
 }
 function stopInterval(){
   clearInterval(timerInterval);timerInterval=null;
@@ -699,7 +799,7 @@ function beginSession(){
     showToast('⚠ A session is already in progress');
     showSessionSheet=false;render();return;
   }
-  activeTimer={startedAt:Date.now(),wallStart:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
+  activeTimer={startedAt:Date.now(),wallStart:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0,pauseIntervals:[],pausedAt:null};
   timerSecs=0;saveTimer(activeTimer);startInterval();showSessionSheet=false;
   if(navigator.vibrate)navigator.vibrate(60);
   syncPresence();
@@ -710,7 +810,8 @@ function stopSession(){
   const elapsed=activeTimer.startedAt
     ?Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0)
     :(activeTimer.elapsedOnPause||timerSecs);
-  timerSecs=elapsed;activeTimer={...activeTimer,startedAt:null,elapsedOnPause:elapsed};
+  timerSecs=elapsed;
+  activeTimer={...activeTimer,startedAt:null,elapsedOnPause:elapsed,pausedAt:Date.now()};
   saveTimer(activeTimer);
   if(navigator.vibrate)navigator.vibrate([40,30,40]);
   // Warn if under 2 minutes — likely accidental
@@ -732,7 +833,15 @@ function stopSession(){
 }
 function resumeSession(){
   if(!activeTimer)return;
-  activeTimer={...activeTimer,startedAt:Date.now(),elapsedOnPause:timerSecs};
+  const now=Date.now();
+  // Close the currently-open pause interval. If the pause was never marked
+  // (older timer restored from storage), start the interval at "now" so the
+  // array stays well-formed without inventing a fake gap.
+  const pauseIntervals=(activeTimer.pauseIntervals||[]).slice();
+  if(activeTimer.pausedAt!=null){
+    pauseIntervals.push({startMs:activeTimer.pausedAt, endMs:now});
+  }
+  activeTimer={...activeTimer,startedAt:now,elapsedOnPause:timerSecs,pauseIntervals,pausedAt:null};
   saveTimer(activeTimer);startInterval();showStopSheet=false;render();
 }
 function commitSession(notes){
@@ -745,7 +854,7 @@ function commitSession(notes){
   // If we have a real start timestamp, split across days accurately
   // wallStart survives stopSession() which nulls startedAt
   if(activeTimer&&activeTimer.wallStart&&!activeTimer._forceSave){
-    awardMultiDay(method,catId,activeTimer.wallStart,Date.now(),n);
+    awardMultiDay(method,catId,activeTimer.wallStart,Date.now(),n,timerSecs,activeTimer);
   } else {
     const finalMins=Math.max(1,Math.round(timerSecs/60));
     awardSession(method,catId,finalMins,n);
@@ -781,22 +890,41 @@ function logManual(method,catId,totalMins,notes,dateStr,startMs,endMs){
   }
   showSessionSheet=false;render();
 }
-function awardMultiDay(method,catId,startMs,endMs,notes){
-  // Split a long session into per-day chunks and award each day separately
-  // startMs/endMs are Unix milliseconds
-  const chunks=[];
+function awardMultiDay(method,catId,startMs,endMs,notes,activeSecs,timer){
+  // Split a long session into per-day chunks and award each day separately.
+  // startMs/endMs are Unix milliseconds. `timer` is the activeTimer object
+  // captured at commit — we use its pauseIntervals to compute *active* time
+  // per day, so a session that was paused across a Tuesday doesn't credit
+  // Tuesday with hours that never actually happened.
+  if(endMs<=startMs)return;
+  const perDaySecs={};
   let cursor=startMs;
   while(cursor<endMs){
-    // Find midnight at end of cursor's day
     const d=new Date(cursor);
     const midnight=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
     const chunkEnd=Math.min(midnight,endMs);
-    const mins=Math.round((chunkEnd-cursor)/60000);
     const dateStr=localDateStr(new Date(cursor));
-    if(mins>0)chunks.push({dateStr,mins});
+    const secs=timer
+      ?sessionActiveSecsBetween(timer, cursor, chunkEnd)
+      :Math.max(0, Math.floor((chunkEnd-cursor)/1000));
+    if(secs>0)perDaySecs[dateStr]=(perDaySecs[dateStr]||0)+secs;
     cursor=chunkEnd;
   }
+  const chunks=Object.entries(perDaySecs)
+    .map(([dateStr,secs])=>({dateStr,mins:Math.max(1,Math.round(secs/60))}))
+    .filter(c=>c.mins>0);
   if(!chunks.length)return;
+  // If a total active-seconds figure was passed, clamp the sum to it so
+  // rounding across many day chunks can't inflate the session total.
+  if(activeSecs){
+    const targetMins=Math.max(1,Math.round(activeSecs/60));
+    const sumMins=chunks.reduce((a,c)=>a+c.mins,0);
+    if(sumMins!==targetMins&&chunks.length){
+      chunks[chunks.length-1].mins+=targetMins-sumMins;
+      if(chunks[chunks.length-1].mins<=0)chunks.pop();
+      if(!chunks.length)return;
+    }
+  }
   const totalMins=chunks.reduce((a,c)=>a+c.mins,0);
   // Award each day chunk — only the last one triggers toasts/badges/streak update
   // to avoid spamming. We batch-add all log entries then do one full recalc.
@@ -864,11 +992,11 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
       ns=gapBroken?1:ns+1;
     }
   }else ns=1;
-  const prevTodayMin=todayGoalMin();
+  const prevDateMin=goalMinsForDate(td);
   const nm=char.methods.includes(method)?char.methods:[...char.methods,method];
   let ngd=char.goalDays;
   const sessionCountsForGoal=char.countRetainingInGoal!==false||catId!=='retaining';
-  if(sessionCountsForGoal&&prevTodayMin<char.dailyGoalMin&&(prevTodayMin+totalMins)>=char.dailyGoalMin)ngd++;
+  if(sessionCountsForGoal&&prevDateMin<char.dailyGoalMin&&(prevDateMin+totalMins)>=char.dailyGoalMin)ngd++;
   char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
   const newly=[];
   for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
@@ -945,7 +1073,7 @@ function openEditSessionSheet(id){
   const el=document.createElement('div');el.className='overlay';el.id='edit-sess-ov';
   el.innerHTML=`<div class="sheet">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:13px;color:var(--accent);margin-bottom:14px;text-align:center">Edit Session</div>
+    <div style="font-family:var(--font-display);font-size:13px;color:var(--accent);margin-bottom:14px;text-align:center">Edit Session</div>
     <div class="sec-title">Date</div>
     <input type="date" id="es-date" class="gold-inp" value="${entry.date}" max="${today()}">
     <div class="sec-title">Duration</div>
@@ -1051,12 +1179,8 @@ function setCILevel(n){
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
 async function addPhoto(ciLevel,dataUrl,note,dateStr){
   const photoDate=dateStr||today();
-  // Compress before storing — target ≤150KB with progressive quality fallback
-  let compressed=await compressPhoto(dataUrl,1200,0.72);
-  if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(dataUrl,900,0.60);
-  if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(dataUrl,700,0.50);
-  if(dataUrlSizeKB(compressed)>150)compressed=await compressPhoto(dataUrl,600,0.42);
-  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:compressed,note:note||''};
+  const compressed=await compressForPhoto(dataUrl);
+  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:compressed,note:note||'',pinned:false};
   photos=[newPhoto,...photos];
   try{
     await PhotoDB.save(currentPid,photos);
@@ -1076,6 +1200,182 @@ function deletePhoto(id){
   render();
 }
 
+function togglePhotoPin(id,btn){
+  photos=photos.map(p=>p.id===id?{...p,pinned:!p.pinned}:p);
+  savePhotos();
+  const updated=photos.find(p=>p.id===id);
+  showToast(updated?.pinned?'⭐ Pinned':'Unpinned');
+
+  // Keep the cached era array in sync so navigating away and back shows the
+  // new pin state — the era holds its own object references, and photos.map()
+  // above just replaced the pinned entry with a new object.
+  if(Array.isArray(window._viewerEra)){
+    const ei=window._viewerEra.findIndex(p=>p.id===id);
+    if(ei>=0)window._viewerEra[ei]=updated;
+  }
+
+  // Prefer the button reference passed in by the viewer's onclick. Falling
+  // back to a global id lookup only covers legacy callers. If we can't find
+  // the button at all, we assume the viewer is closed and call render().
+  const pinBtn=btn||document.getElementById('viewer-pin-btn');
+  if(pinBtn){
+    const isOn=!!updated?.pinned;
+    pinBtn.textContent=isOn?'⭐':'☆';
+    pinBtn.style.background=isOn?'var(--acc12)':'';
+    pinBtn.style.borderColor=isOn?'var(--acc30)':'';
+    pinBtn.style.color=isOn?'var(--accent)':'';
+    return;
+  }
+  render();
+}
+
+function groupPhotosByMonth(sortedPhotos){
+  const map={};
+  sortedPhotos.forEach(p=>{
+    const key=(p.date||'').slice(0,7);
+    if(!key)return;
+    if(!map[key])map[key]=[];
+    map[key].push(p);
+  });
+  return Object.entries(map)
+    .sort((a,b)=>b[0].localeCompare(a[0]))
+    .map(([key,list])=>({
+      key,
+      label:new Date(key+'-15T12:00:00').toLocaleDateString('en',{month:'long',year:'numeric'}),
+      photos:list,
+      totalKB:photosTotalKB(list)
+    }));
+}
+
+function photoPrivacyMessage(){
+  const connected=!!(fbIsGoogle&&fbUID);
+  const backedUp=!!char.lastCloudBackup;
+  if(connected&&backedUp){
+    const when=new Date(char.lastCloudBackup).toLocaleDateString();
+    return{icon:'🔒',strong:'Stored locally, and backed up privately to your Google account.',rest:`Last cloud backup: ${when}. Only you can access them.`};
+  }
+  if(connected){
+    return{icon:'🔒',strong:'Stored on this device only.',rest:'Your Google account is connected — run a Cloud Backup from your profile to protect them.'};
+  }
+  return{icon:'🔒',strong:'Stored on this device only.',rest:'Never uploaded, never synced, never shared. Only you can see them.'};
+}
+
+function togglePhotoSelect(id){
+  if(_photoSelectedIds.has(id))_photoSelectedIds.delete(id);
+  else _photoSelectedIds.add(id);
+  if(!_photoSelectedIds.size)_photoSelectMode=false;
+  const c=document.getElementById('content');
+  if(c&&tab==='photos'){c.innerHTML=renderPhotos();attachEvents();}
+}
+
+function enterPhotoSelect(id){
+  _photoSelectMode=true;
+  _photoSelectedIds=new Set([id]);
+  const c=document.getElementById('content');
+  if(c&&tab==='photos'){c.innerHTML=renderPhotos();attachEvents();}
+}
+
+function exitPhotoSelect(){
+  _photoSelectMode=false;
+  _photoSelectedIds=new Set();
+  const c=document.getElementById('content');
+  if(c&&tab==='photos'){c.innerHTML=renderPhotos();attachEvents();}
+}
+
+function bulkDeleteSelectedPhotos(){
+  const count=_photoSelectedIds.size;
+  if(!count)return;
+  confirmDialog(
+    `Delete ${count} photo${count!==1?'s':''}?`,
+    'These photos will be permanently removed from your timeline. This cannot be undone.',
+    'Delete',
+    ()=>{
+      const ids=_photoSelectedIds;
+      photos=photos.filter(p=>!ids.has(p.id));
+      savePhotos();
+      recalcAchievements();
+      _photoSelectMode=false;
+      _photoSelectedIds=new Set();
+      showToast(`Deleted ${count} photo${count!==1?'s':''}`);
+      render();
+    }
+  );
+}
+
+function mountStorageSheet(){
+  const ex=document.getElementById('storage-ov');if(ex)ex.remove();
+  const months=groupPhotosByMonth([...photos].sort((a,b)=>b.date.localeCompare(a.date)));
+  const totalKB=photosTotalKB(photos);
+  const fmtKB=kb=>kb>=1024?`${(kb/1024).toFixed(1)} MB`:`${kb} KB`;
+  const currentQ=char.photoQuality||'balanced';
+  const qOption=(id,label,desc)=>`<div onclick="setPhotoQuality('${id}')" style="display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;border-bottom:1px solid var(--stat-border);${currentQ===id?'background:var(--acc6);':''}">
+    <div style="width:18px;height:18px;border-radius:50%;border:2px solid ${currentQ===id?'var(--accent)':'var(--stat-border)'};flex-shrink:0;display:flex;align-items:center;justify-content:center">${currentQ===id?'<span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span>':''}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:600;color:var(--text1)">${label}</div>
+      <div style="font-size:10px;color:var(--text4);margin-top:1px">${desc}</div>
+    </div>
+  </div>`;
+  const el=document.createElement('div');el.className='overlay';el.id='storage-ov';
+  el.innerHTML=`<div class="sheet" style="max-height:88vh;padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:14px">Storage</div>
+    <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center">
+      <div style="font-size:24px;font-weight:700;color:var(--accent);line-height:1">${fmtKB(totalKB)}</div>
+      <div style="font-size:11px;color:var(--text4);margin-top:4px">${photos.length} photo${photos.length!==1?'s':''} · stored in IndexedDB</div>
+    </div>
+
+    <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Compression Quality</div>
+    <div style="font-size:10px;color:var(--text5);margin-bottom:8px;line-height:1.55">Applies to new photos only. Higher = sharper, more space.</div>
+    <div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;overflow:hidden;margin-bottom:16px">
+      ${qOption('high','High quality','~1200px, sharper details, larger files')}
+      ${qOption('balanced','Balanced (recommended)','~1000px, good detail and size')}
+      ${qOption('small','Small','~600px, compact, faster backup')}
+    </div>
+
+    <button onclick="exportPhotosZip()" ${photos.length?'':'disabled'} style="width:100%;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:11px;font-size:12px;font-weight:600;color:var(--accent);cursor:${photos.length?'pointer':'default'};font-family:var(--font-body);margin-bottom:16px;opacity:${photos.length?1:.5}">📦 Export All as ZIP</button>
+
+    <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">By Month</div>
+    ${months.length?months.map(m=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;margin-bottom:6px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text1)">${m.label}</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:2px">${m.photos.length} photo${m.photos.length!==1?'s':''} · ${fmtKB(m.totalKB)}</div>
+        </div>
+        <button onclick="deleteMonthPhotos('${m.key}')" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:7px;padding:6px 10px;font-size:11px;color:#a03232;cursor:pointer;font-family:var(--font-body);flex-shrink:0">Delete</button>
+      </div>`).join(''):'<div style="font-size:11px;color:var(--text5);text-align:center;padding:12px">No photos yet.</div>'}
+
+    <button class="btn-ghost" onclick="document.getElementById('storage-ov').remove()" style="width:100%;margin-top:12px">Close</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
+
+function setPhotoQuality(q){
+  char.photoQuality=q;
+  saveChar();
+  mountStorageSheet();
+  showToast(`✓ Quality set to ${q}`);
+}
+
+function deleteMonthPhotos(monthKey){
+  const list=photos.filter(p=>(p.date||'').slice(0,7)===monthKey);
+  if(!list.length)return;
+  confirmDialog(
+    `Delete ${list.length} photo${list.length!==1?'s':''}?`,
+    `All photos from ${monthKey} will be permanently removed. This cannot be undone.`,
+    'Delete',
+    ()=>{
+      const ids=new Set(list.map(p=>p.id));
+      photos=photos.filter(p=>!ids.has(p.id));
+      savePhotos();
+      recalcAchievements();
+      document.getElementById('storage-ov')?.remove();
+      showToast(`Deleted ${list.length} photo${list.length!==1?'s':''}`);
+      render();
+    }
+  );
+}
+
 // ── CONFIRM DIALOG ─────────────────────────────────────────────────────────────
 function confirmDialog(title,msg,confirmLabel,onConfirm){
   const ex=document.getElementById('confirm-ov');if(ex)ex.remove();
@@ -1083,11 +1383,11 @@ function confirmDialog(title,msg,confirmLabel,onConfirm){
   el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
     <div class="sheet-handle"></div>
     <div style="font-size:18px;text-align:center;margin-bottom:10px">⚠️</div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--text1);text-align:center;margin-bottom:8px">${title}</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--text1);text-align:center;margin-bottom:8px">${title}</div>
     <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6;margin-bottom:20px">${msg}</div>
     <div style="display:flex;gap:8px">
       <button class="btn-ghost" id="confirm-cancel" style="flex:1">Cancel</button>
-      <button id="confirm-ok" style="flex:1;background:linear-gradient(135deg,#5c0f0f,#c0392b);border:none;border-radius:10px;padding:13px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">${confirmLabel}</button>
+      <button id="confirm-ok" style="flex:1;background:linear-gradient(135deg,#5c0f0f,#c0392b);border:none;border-radius:10px;padding:13px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--font-body)">${confirmLabel}</button>
     </div>
   </div>`;
   document.getElementById('root').appendChild(el);
@@ -1102,12 +1402,12 @@ function shortSessionDialog(elapsed,onSave,onDiscard,onResume){
   el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
     <div class="sheet-handle"></div>
     <div style="font-size:28px;text-align:center;margin-bottom:10px">⏱</div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--text1);text-align:center;margin-bottom:8px">Session under 2 minutes</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--text1);text-align:center;margin-bottom:8px">Session under 2 minutes</div>
     <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6;margin-bottom:20px">Only ${fmtHMS(elapsed)} logged. This might have been accidental — what would you like to do?</div>
     <div style="display:flex;flex-direction:column;gap:7px">
-      <button id="ssd-resume" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:12px;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">${IC.play(14)} Resume Session</button>
-      <button id="ssd-save" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px;color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Save it anyway</button>
-      <button id="ssd-discard" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:12px;color:#a03232;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Discard session</button>
+      <button id="ssd-resume" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:12px;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font-body)">${IC.play(14)} Resume Session</button>
+      <button id="ssd-save" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px;color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--font-body)">Save it anyway</button>
+      <button id="ssd-discard" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:12px;color:#a03232;font-size:13px;cursor:pointer;font-family:var(--font-body)">Discard session</button>
     </div>
   </div>`;
   document.getElementById('root').appendChild(el);
@@ -1125,7 +1425,6 @@ function openPhotoViewer(photo,eraPhotos){
   function buildContent(p,i){
     const hasPrev=i<era.length-1;
     const hasNext=i>0;
-    const isEditing=false;
     return`
       <div style="position:relative;width:100%">
         <img src="${p.url}" alt="Progress photo" style="max-width:100%;max-height:50vh;border-radius:10px;object-fit:contain;display:block;margin:0 auto">
@@ -1139,13 +1438,25 @@ function openPhotoViewer(photo,eraPhotos){
       </div>
       ${era.length>1?`<div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text5)">${era.length-i} of ${era.length}</div>`:''}
       <div id="viewer-meta" style="margin-top:10px;text-align:center;width:100%">
-        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">${p.ci}</div>
+        <div style="font-family:var(--font-display);font-size:14px;color:var(--accent)">${p.ci}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:3px">${fmtDate(p.date)}</div>
         ${p.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${p.note}</div>`:'<div style="font-size:11px;color:var(--text5);margin-top:6px">No caption</div>'}
+        <div style="margin-top:8px">
+          ${p.canonical
+            ?`<span style="font-size:11px;color:var(--accent);font-weight:600">★ ${p.ci} representative</span> <button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body);text-decoration:underline;margin-left:4px">Remove</button>`
+            :`<button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:var(--font-body);text-decoration:underline">★ Set as ${p.ci} representative</button>`
+          }
+        </div>
       </div>
       <div id="viewer-edit-area"></div>
-      <div style="display:flex;gap:8px;margin-top:14px;width:100%">
+      ${_isIOS()?`<div style="font-size:11px;color:var(--text5);text-align:center;margin-top:14px;line-height:1.55;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span style="font-size:14px">💡</span>
+        <span>Long-press the photo to save it to Photos</span>
+      </div>`:''}
+      <div style="display:flex;gap:8px;margin-top:${_isIOS()?'10':'14'}px;width:100%">
         <button class="btn-ghost" onclick="document.getElementById('photo-view').remove()" style="flex:1">Close</button>
+        ${_isIOS()?'':`<button class="btn-outline" onclick="exportPhotoSingle(${p.id})" title="Download" style="flex:0 0 auto;padding:10px 14px;font-size:12px">⬇</button>`}
+        <button id="viewer-pin-btn" class="btn-outline" onclick="event.stopPropagation();togglePhotoPin(${p.id},this)" style="flex:0 0 auto;padding:10px 14px;font-size:12px;${p.pinned?'background:var(--acc12);border-color:var(--acc30);color:var(--accent);':''}">${p.pinned?'⭐':'☆'}</button>
         <button class="btn-outline" onclick="openViewerEdit(${p.id})" style="flex:0 0 60px;font-size:12px">✏ Edit</button>
         <button class="del-btn" onclick="document.getElementById('photo-view').remove();confirmDialog('Delete this photo?','This will permanently remove it from your timeline.','Delete',()=>deletePhoto(${p.id}))" style="padding:10px 14px;font-size:12px">Delete</button>
       </div>`;
@@ -1154,6 +1465,10 @@ function openPhotoViewer(photo,eraPhotos){
   const el=document.createElement('div');el.className='photo-viewer';el.id='photo-view';
   el.innerHTML=buildContent(era[idx],idx);
   document.getElementById('root').appendChild(el);
+  // Remember the era this viewer was opened with, so togglePhotoPin can
+  // reopen it in the same context (filmstrip or single-photo) instead of
+  // silently dropping the user to a single-photo view.
+  window._viewerEra=era;
 
   // Swipe touch handling
   let touchStartX=0;
@@ -1169,14 +1484,7 @@ function openPhotoViewer(photo,eraPhotos){
     if(newIdx<0||newIdx>=era.length)return;
     idx=newIdx;
     el.innerHTML=buildContent(era[idx],idx);
-    // Re-attach touch
-    el.removeEventListener('touchstart',()=>{});
-    el.removeEventListener('touchend',()=>{});
-    el.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
-    el.addEventListener('touchend',e=>{
-      const dx=e.changedTouches[0].clientX-touchStartX;
-      if(Math.abs(dx)>50){dx<0?viewerNav(1):viewerNav(-1);}
-    },{passive:true});
+    // Swipe listeners persist on `el` — attached once at open, no need to re-attach
   };
 
   // Edit function
@@ -1190,7 +1498,7 @@ function openPhotoViewer(photo,eraPhotos){
       return`<button
         onclick="(function(v){document.querySelectorAll('.vw-ci-btn').forEach(b=>{const s=b.dataset.ci===v;b.style.background=s?'var(--acc12)':'var(--bg-stat)';b.style.borderColor=s?'var(--acc30)':'var(--stat-border)';b.style.color=s?'var(--accent)':'var(--text3)';});document.getElementById('edit-photo-ci').value=v;})('${l.ci}')"
         class="vw-ci-btn" data-ci="${l.ci}"
-        style="padding:7px 2px;border-radius:7px;font-family:Cinzel,serif;font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;background:${isSel?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--acc30)':'var(--stat-border)'};color:${isSel?'var(--accent)':'var(--text3)'}">${l.ci}</button>`;
+        style="padding:7px 2px;border-radius:7px;font-family:var(--font-display);font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;background:${isSel?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--acc30)':'var(--stat-border)'};color:${isSel?'var(--accent)':'var(--text3)'}">${l.ci}</button>`;
     }).join('');
     editArea.innerHTML=`
       <div style="margin-top:12px;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:10px;padding:12px;width:100%">
@@ -1199,10 +1507,10 @@ function openPhotoViewer(photo,eraPhotos){
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px">${ciGrid}</div>
         <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Date</div>
         <input type="date" id="edit-photo-date" value="${p.date}" max="${today()}"
-          style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:7px;padding:7px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px">
+          style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:7px;padding:7px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:var(--font-body);margin-bottom:10px">
         <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Caption</div>
         <input type="text" id="edit-photo-note" value="${htmlEsc(p.note||'')}" placeholder="Add a caption..."
-          style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:7px 10px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px">
+          style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:7px 10px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:var(--font-body);margin-bottom:10px">
         <div style="display:flex;gap:7px">
           <button class="btn-ghost" onclick="document.getElementById('viewer-edit-area').innerHTML=''" style="flex:0 0 70px;padding:8px">Cancel</button>
           <button class="btn-gold" onclick="saveViewerEdit(${photoId})" style="flex:1;padding:8px">Save</button>
@@ -1217,22 +1525,170 @@ function openPhotoViewer(photo,eraPhotos){
     const ciVal=document.getElementById('edit-photo-ci')?.value||null;
     photos=photos.map(p=>p.id===photoId?{...p,date:dateVal||p.date,note:noteVal,...(ciVal?{ci:ciVal}:{})}:p);
     savePhotos();
-    // Refresh the viewer content to show updated values
+    // Sync the era entry — `era` holds the original object references, so the
+    // `.map()` above didn't update it. Replace before re-rendering.
+    const updated=photos.find(p=>p.id===photoId);
+    if(updated)era[idx]=updated;
     el.innerHTML=buildContent(era[idx],idx);
     showToast('✓ Photo updated');
-    // Re-attach touch
-    el.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
-    el.addEventListener('touchend',e=>{
-      const dx=e.changedTouches[0].clientX-touchStartX;
-      if(Math.abs(dx)>50){dx<0?viewerNav(1):viewerNav(-1);}
-    },{passive:true});
+    // Swipe listeners persist on `el` — no need to re-attach
   };
+}
+
+// ── PHOTO EXPORT (ZIP) ────────────────────────────────────────────────────────
+const _crc32Table=(()=>{
+  const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){
+    let c=n;
+    for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
+    t[n]=c>>>0;
+  }
+  return t;
+})();
+function crc32(bytes){
+  let crc=0xFFFFFFFF;
+  for(let i=0;i<bytes.length;i++)crc=(crc>>>8)^_crc32Table[(crc^bytes[i])&0xFF];
+  return (crc^0xFFFFFFFF)>>>0;
+}
+function dataUrlToBytes(dataUrl){
+  const b64=(dataUrl.split(',')[1])||'';
+  const bin=atob(b64);
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return bytes;
+}
+function buildZipBlob(entries){
+  const chunks=[];
+  const central=[];
+  let offset=0;
+  for(const e of entries){
+    const nameBytes=new TextEncoder().encode(e.name);
+    const crc=crc32(e.bytes);
+    const size=e.bytes.length;
+    const lfh=new Uint8Array(30+nameBytes.length);
+    const lv=new DataView(lfh.buffer);
+    lv.setUint32(0,0x04034b50,true);
+    lv.setUint16(4,20,true);
+    lv.setUint16(6,0,true);
+    lv.setUint16(8,0,true);
+    lv.setUint16(10,0,true);
+    lv.setUint16(12,0,true);
+    lv.setUint32(14,crc,true);
+    lv.setUint32(18,size,true);
+    lv.setUint32(22,size,true);
+    lv.setUint16(26,nameBytes.length,true);
+    lv.setUint16(28,0,true);
+    lfh.set(nameBytes,30);
+    chunks.push(lfh);
+    chunks.push(e.bytes);
+    const cdh=new Uint8Array(46+nameBytes.length);
+    const cv=new DataView(cdh.buffer);
+    cv.setUint32(0,0x02014b50,true);
+    cv.setUint16(4,20,true);
+    cv.setUint16(6,20,true);
+    cv.setUint16(8,0,true);
+    cv.setUint16(10,0,true);
+    cv.setUint16(12,0,true);
+    cv.setUint16(14,0,true);
+    cv.setUint32(16,crc,true);
+    cv.setUint32(20,size,true);
+    cv.setUint32(24,size,true);
+    cv.setUint16(28,nameBytes.length,true);
+    cv.setUint16(30,0,true);
+    cv.setUint16(32,0,true);
+    cv.setUint16(34,0,true);
+    cv.setUint16(36,0,true);
+    cv.setUint32(38,0,true);
+    cv.setUint32(42,offset,true);
+    cdh.set(nameBytes,46);
+    central.push(cdh);
+    offset+=lfh.length+size;
+  }
+  const centralStart=offset;
+  let centralSize=0;
+  for(const c of central){chunks.push(c);centralSize+=c.length;}
+  const eocd=new Uint8Array(22);
+  const ev=new DataView(eocd.buffer);
+  ev.setUint32(0,0x06054b50,true);
+  ev.setUint16(4,0,true);
+  ev.setUint16(6,0,true);
+  ev.setUint16(8,entries.length,true);
+  ev.setUint16(10,entries.length,true);
+  ev.setUint32(12,centralSize,true);
+  ev.setUint32(16,centralStart,true);
+  ev.setUint16(20,0,true);
+  chunks.push(eocd);
+  return new Blob(chunks,{type:'application/zip'});
+}
+// Detect iOS/iPadOS — the only platform where the classic <a download> link
+// doesn't actually save the file from a standalone PWA. We match both the
+// classic iPhone/iPad/iPod UA string and the iPadOS-on-Mac path, where the UA
+// reports Macintosh but touch points > 1 (Safari's way of hiding iPad from
+// sites that don't ask for the desktop layout).
+function _isIOS(){
+  if(/iPad|iPhone|iPod/.test(navigator.userAgent))return true;
+  return navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;
+}
+
+function exportPhotoSingle(id){
+  const p=photos.find(x=>x.id===id);
+  if(!p)return;
+
+  // iOS standalone PWAs refuse <a download> (it starts a navigation, which
+  // iOS blocks and shows as a flash back to the app) and silently reject
+  // navigator.share() in this context. Long-pressing the image is the only
+  // reliable path on iOS — it invokes the OS's own "Save Image" menu.
+  // So on iOS, we skip the download entirely and guide the user to long-press.
+  if(_isIOS()){
+    showToast('📷 Long-press the photo to save it to Photos');
+    return;
+  }
+
+  // Desktop and Android: standard download link — lands in Downloads.
+  const ci=(p.ci||'CI-0').replace(/[^A-Za-z0-9-]/g,'_');
+  const filename=`restoretrack-${p.date||today()}-${ci}.jpg`;
+  const a=document.createElement('a');
+  a.href=p.url;
+  a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  showToast('📷 Photo downloaded');
+}
+async function exportPhotosZip(){
+  if(!photos.length){showToast('No photos to export');return;}
+  showToast(`📦 Preparing ZIP (${photos.length} photos)…`);
+  try{
+    const entries=photos.map((p,i)=>{
+      const ci=(p.ci||'CI-0').replace(/[^A-Za-z0-9-]/g,'_');
+      const date=p.date||today();
+      const name=`${date}_${ci}_${String(i+1).padStart(3,'0')}.jpg`;
+      return{name,bytes:dataUrlToBytes(p.url)};
+    });
+    // Also include a small manifest
+    const manifest=JSON.stringify({
+      exportedAt:new Date().toISOString(),
+      profileName:char.name||'Restorer',
+      photoCount:photos.length,
+      photos:photos.map(p=>({id:p.id,date:p.date,ci:p.ci,note:p.note||''}))
+    },null,2);
+    entries.push({name:'manifest.json',bytes:new TextEncoder().encode(manifest)});
+    const blob=buildZipBlob(entries);
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`restoretrack-photos-${today().replace(/-/g,'')}.zip`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    showToast(`✅ ${photos.length} photos exported`);
+  }catch(e){
+    console.warn('[RT] zip export error',e);
+    showToast('⚠ Could not build ZIP');
+  }
 }
 
 // ── EXPORT ─────────────────────────────────────────────────────────────────────
 function exportCSV(){
   const rows=[['Date','Method','Category','Duration (min)','Notes']];
-  logs.forEach(l=>{const cat=catFor(l.cat);rows.push([l.date,l.method,cat.label,l.dur,(l.notes||'').replace(/,/g,' ')]);});
+  logs.forEach(l=>{const cat=catFor(l.cat);rows.push([l.date,l.method,cat.label,l.dur,(l.notes||'').replace(/[,\r\n]+/g,' ')]);});
   const csv=rows.map(r=>r.join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
@@ -1274,42 +1730,6 @@ function getSessionQuip(totalMins){
   return fn(fmtMin(totalMins));
 }
 
-// ── JOURNEY ARC SVG (used on Journey tab hero card) ─────────────────────────
-function journeyArcSVG(ci,startCI,ciGoal,goalPct){
-  const cx=120,cy=106,r=85;
-  const swTrack=20,swFill=13;
-  const startDeg=148,totalDeg=244,segCount=10;
-  const gapT=2.8,gapF=1.6;
-  const segDeg=totalDeg/segCount;
-  const toR=d=>d*Math.PI/180;
-  let trackPaths='',fillPaths='';
-  for(let i=0;i<segCount;i++){
-    // Track arc (wider — creates the groove/slot)
-    const st=startDeg+i*segDeg+gapT/2,et=startDeg+(i+1)*segDeg-gapT/2;
-    // Fill arc (narrower — sits inside the groove)
-    const sf=startDeg+i*segDeg+gapF/2,ef=startDeg+(i+1)*segDeg-gapF/2;
-    const filled=i<ci,isLast=i===ci-1;
-    trackPaths+=`<path d="${arcD(cx,cy,r,st,et)}" stroke="var(--bg-stat)" stroke-width="${swTrack}" fill="none" stroke-linecap="round" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(0 -1px 2px rgba(255,255,255,0.05))"/>`;
-    if(filled){
-      fillPaths+=`<path d="${arcD(cx,cy,r,sf,ef)}" stroke="var(--accent)" stroke-width="${swFill}" fill="none" stroke-linecap="round" opacity="${isLast?'1':'0.86'}" style="filter:drop-shadow(0 0 7px var(--accent)) drop-shadow(0 2px 4px rgba(0,0,0,0.4))"/>`;
-    }
-  }
-  // Goal marker dot
-  if(ciGoal>0&&ciGoal<=10){
-    const gd=startDeg+ciGoal*segDeg;
-    const gx=(cx+r*Math.cos(toR(gd))).toFixed(1);
-    const gy=(cy+r*Math.sin(toR(gd))).toFixed(1);
-    fillPaths+=`<circle cx="${gx}" cy="${gy}" r="6" fill="var(--bg)" stroke="${ci>=ciGoal?'var(--green)':'var(--accent)'}" stroke-width="2.5" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4))"/>`;
-  }
-  const subtitle=goalPct>=100?'🏆 Goal Reached!':goalPct+'% to Goal';
-  return`<svg viewBox="0 0 240 175" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:240px;display:block;margin:0 auto">
-    ${trackPaths}
-    ${fillPaths}
-    <text x="${cx}" y="100" text-anchor="middle" font-family="Cinzel,serif" font-size="50" font-weight="900" fill="var(--accent)">${ci}</text>
-    <text x="${cx}" y="120" text-anchor="middle" font-family="Cinzel,serif" font-size="12" font-weight="600" fill="var(--text3)">${LEVELS[ci].ci}</text>
-    <text x="${cx}" y="140" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" font-weight="600" fill="${goalPct>=100?'var(--green)':'var(--text4)'}">${subtitle}</text>
-  </svg>`;
-}
 // ── CI RING SVG ────────────────────────────────────────────────────────────────
 function arcD(cx,cy,r,startDeg,endDeg){
   const toR=d=>d*Math.PI/180;
@@ -1318,41 +1738,6 @@ function arcD(cx,cy,r,startDeg,endDeg){
   const sweep=((endDeg-startDeg)%360+360)%360;
   const large=sweep>180?1:0;
   return`M${sx.toFixed(2)},${sy.toFixed(2)} A${r},${r} 0 ${large},1 ${ex.toFixed(2)},${ey.toFixed(2)}`;
-}
-function ciRingSVG(){
-  const ci=char.ciLevel||0;
-  const cx=110,cy=105,r=80,sw=14;
-  const startDeg=148,totalDeg=244,segCount=10,gap=1.5;
-  const segDeg=totalDeg/segCount;
-  let paths='';
-  for(let i=0;i<segCount;i++){
-    const s=startDeg+i*segDeg+gap,e=startDeg+(i+1)*segDeg-gap;
-    const filled=i<ci;
-    const isLast=i===ci-1;
-    const op=filled?(isLast?'1':'0.8'):'0.2';
-    const color=filled?'var(--accent)':'var(--stat-border,#444)';
-    paths+=`<path d="${arcD(cx,cy,r,s,e)}" stroke="${color}" stroke-width="${sw}" fill="none" stroke-linecap="round" opacity="${op}"/>`;
-  }
-  // Active dot at current position
-  const dotDeg=ci>0?startDeg+ci*segDeg:startDeg;
-  const toR=d=>d*Math.PI/180;
-  const dotX=cx+r*Math.cos(toR(dotDeg)),dotY=cy+r*Math.sin(toR(dotDeg));
-  const dotEl=ci>0?`<circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="6" fill="var(--accent)"/>
-    <circle cx="${dotX.toFixed(1)}" cy="${dotY.toFixed(1)}" r="3" fill="var(--bg)"/>`:
-    `<circle cx="${(cx+r*Math.cos(toR(startDeg))).toFixed(1)}" cy="${(cy+r*Math.sin(toR(startDeg))).toFixed(1)}" r="5" fill="var(--stat-border,#444)" opacity="0.5"/>`;
-  // Bottom labels
-  const lx=cx+r*Math.cos(toR(startDeg));
-  const ly=cy+r*Math.sin(toR(startDeg));
-  const rx=cx+r*Math.cos(toR(startDeg+totalDeg));
-  const ry=cy+r*Math.sin(toR(startDeg+totalDeg));
-  return`<svg viewBox="0 0 220 172" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:220px;display:block;margin:0 auto">
-    ${paths}${dotEl}
-    <text x="${cx}" y="${cy-10}" text-anchor="middle" font-family="Cinzel,serif" font-size="34" font-weight="900" fill="var(--accent)">${LEVELS[ci].ci}</text>
-    <text x="${cx}" y="${cy+13}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="500" fill="var(--text3)">${ci===0?'Starting point':ci===10?'Fully restored':'In progress'}</text>
-    <text x="${cx}" y="${cy+30}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="var(--text4)">${ci<10?`Next: CI-${ci+1}`:'🏆 Journey Complete'}</text>
-    <text x="${(lx-5).toFixed(0)}" y="${(ly+16).toFixed(0)}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="var(--text5)">CI-0</text>
-    <text x="${(rx+5).toFixed(0)}" y="${(ry+16).toFixed(0)}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="var(--text5)">CI-10</text>
-  </svg>`;
 }
 
 // ── COACH MESSAGE ──────────────────────────────────────────────────────────────
@@ -1365,24 +1750,24 @@ const COACH_BRAIN={
   // ── TENSION & GROWTH SCIENCE ──────────────────────────────────────────────
   tension:{
     keywords:['tension','how does','work','science','tissue','grow','biology','mechanism','skin expansion','mitosis'],
-    response:(u)=>`Foreskin restoration works through mechanotransduction — your skin cells sense sustained tension and respond by dividing and producing new tissue. This is the same process behind skin expansion used in reconstructive surgery, and it's well-documented in biology.\n\nThe key word is sustained. Brief, intense pulling doesn't trigger the signal. What triggers it is hours of gentle, consistent tension across the day. Think of it less like a workout and more like orthodontics — the force is small, the time is long, and the result is permanent structural change.\n\nAt your current pace of ${u.avgDay>0?fmtMin(u.avgDay)+'/day':'getting started'}, you're ${u.avgDay>=60?'applying a meaningful tension signal — keep it up.':u.avgDay>0?'building toward the recommended range. Most restorers aim for 60–120+ minutes daily.':'not yet applying consistent tension. Even 30 minutes daily is a real start.'}`
+    response:(u)=>`The biological principle is sound: sustained mechanical stretch can prompt living skin to adapt and gain surface area. Tissue expansion is an established reconstructive technique, and mechanotransduction is a real cellular process.\n\nThe important limit is that there are no high-quality clinical trials that tell us exactly how non-surgical foreskin restoration compares to other methods, what the ideal daily routine is, or how quickly any individual will progress. Community timelines are personal reports, not a prediction for you.\n\nWhat we do know from your own data: you're currently at ${LEVELS[u.ci].ci}, you've logged ${u.sessions} sessions totalling ${Math.floor(u.minutes/60)} hours, and your 30-day average is ${fmtMin(u.avgDay)}/day.\n\nA safer way to use that data is to watch your own comfortable time under tension, skin condition, and photos over months. If you develop pain, numbness, coldness, persistent colour change, broken skin, or urinary symptoms, stop and seek medical advice.\n\nSources reviewed: PubMed PMID 36077018 (mechanical stretch and skin regeneration) and PMID 36518877 (external tissue expansion evidence and limitations).`
   },
 
   howLong:{
     keywords:['how long','timeline','years','months','when will','how much time','take','finish','complete','done','ci-10','fully restored'],
-    response:(u)=>`This is the question every restorer wants answered, and the honest answer is: nobody can tell you with certainty, including me.\n\nWhat we do know is that progression depends almost entirely on daily tension hours and your individual biology. Some people move from CI-0 to CI-5 in 2 years with consistent effort. Others take 5 years. Some move faster, some slower.\n\nWhat I can tell you is specific to you: you're currently at ${LEVELS[u.ci].ci}, you've logged ${u.sessions} sessions totalling ${Math.floor(u.minutes/60)} hours, and your 30-day average is ${fmtMin(u.avgDay)}/day. At that pace you're accumulating roughly ${Math.round(u.avgDay*30/60)} hours of tension per month.\n\nFocus on the process, not the destination. The restorers who finish are the ones who stopped asking "when" and started asking "how can I be more consistent."`
+    response:(u)=>`This is the question every restorer wants answered, and the honest answer is: nobody can tell you with certainty, including me.\n\nThere is no validated hours-per-day target or deadline that can certify you as "on track." Community reports describe full restoration taking anywhere from 2 to 7+ years depending on starting point, daily time under tension, and individual biology. Those are personal accounts, not a prediction for you.\n\nWhat I can tell you is specific to you: you're currently at ${LEVELS[u.ci].ci}, you've logged ${u.sessions} sessions totalling ${Math.floor(u.minutes/60)} hours, and your 30-day average is ${fmtMin(u.avgDay)}/day.\n\nThe restorers who finish tend to be the ones who stopped asking "when" and started focusing on sustainable, comfortable daily practice. If you're concerned about tight erections, scarring, or persistent skin changes, that's a reason to speak with a clinician — not to increase tension.\n\nSources reviewed: BMJ 2024 rapid responses on foreskin restoration; Ozer & Timmermans (2022) systematic review noting the absence of peer-reviewed non-surgical protocols.`
   },
 
   ciLevels:{
     keywords:['ci level','ci-','ci0','ci1','ci2','ci3','ci4','ci5','ci6','ci7','ci8','ci9','ci10','what is ci','coverage index','halfway','progress','what level'],
-    response:(u)=>`The Coverage Index (CI) is the standard scale restorers use to measure progress, from CI-0 (starting point) to CI-10 (full restoration).\n\nYou're currently at ${LEVELS[u.ci].ci}. ${u.ci===0?'At CI-0, you\'re at the beginning — no measurable loose skin yet. The first sign of progress is usually slight wrinkling of shaft skin during erection.':u.ci<=3?'At your stage, the early visible signs are starting to appear — shaft skin loosening, slight rollover. This early phase can feel slow, but the groundwork is being laid.':u.ci<=5?'You\'re approaching or at the halfway point. At CI-5 most restorers begin experiencing functional benefits — reduced sensitivity in a good way, glans beginning to retain moisture.':u.ci<=7?'You\'re in the upper half. Glans coverage at rest is becoming consistent. Many restorers find motivation increases significantly at this stage because the results are undeniable.':'You\'re in the final stretch. The tissue is there — refinement and fullness is what remains.'}\n\nCI is self-assessed based on the standard descriptions. Update it in the Journey tab when you notice consistent progress.`
+    response:(u)=>`The Coverage Index (CI) is the standard scale restorers use to describe coverage, from CI-0 (starting point) to CI-10 (full restoration). It was created by Paul Sherriff as a practical tool, not a scientific instrument — its value is in tracking your own trend over time, not comparing yourself to others.\n\nYou're currently at ${LEVELS[u.ci].ci}.\n\nA useful companion scale is the Real Coverage Index (RCI), which describes the same levels in words rather than photos. The community wiki has both.\n\nOne important caveat: CI is typically assessed flaccid. Coverage erect often lags 2–3 levels behind, especially for men who are "growers." This is normal and doesn't mean your progress has stalled.\n\nUpdate your CI in the Progress tab when you notice consistent change — not day-to-day fluctuation.`
   },
 
   methods:{
     keywords:['method','manual','device','tape','t-tape','tugger','tlc','dtr','retaining','inflation','which method','best method','what should i use','packing','ric','restore in comfort'],
     response:(u)=>{
       const used=(u.methods||[]).length;
-      return`There are five main restoration approaches, each with its own advantages:\n\n✋ Manual methods (MM1-MM5) require no equipment and can be done anywhere. Great for beginners and for applying tension in specific directions. The downside is you have to be actively doing them — no passive wear time.\n\n⚙ Devices (DTR, TLC Tugger, HyperRestore etc.) apply tension passively while you go about your day. Most restorers find devices give them their highest tension hours because wearing time is easy to accumulate.\n\n📐 Taping (T-Tape, cross tape) is one of the most popular methods — creates a custom tension setup using medical tape. T-Tape in particular is loved for long wear times and gentle consistent tension.\n\n💨 Inflation applies tension from the inside using air. Different tissue areas are targeted compared to external methods.\n\n🔒 Retaining holds coverage without active tension — good for dekeratinisation and protection between sessions.\n\nYou've used ${used} method${used!==1?'s':''} so far${used>0?': '+u.methods.slice(0,3).join(', '):''}. ${used<3?'Exploring different methods helps you find what works best for your anatomy and lifestyle.':'Good variety — different methods target different areas of the prepuce.'}`
+      return`There is no medically proven best method. Your stage mainly determines which methods you can apply without slipping, pinching, or excessive force — not which one is guaranteed to grow tissue faster.\n\nThe five broad approaches:\n\n✋ Manual methods (MM1–MM5) require no equipment and can be done anywhere. Good for beginners and for applying directed tension.\n\n⚙ Devices (DTR, TLC Tugger, HyperRestore, etc.) apply tension passively while you go about your day. Many restorers find devices are the easiest way to accumulate wear time.\n\n📐 Taping (T-tape, cross tape) creates a custom tension setup using medical tape. Popular for long wear times.\n\n💨 Inflation applies tension from the inside using air. Targets different tissue areas than external methods. Always cover the urethral opening before inflating.\n\n🔒 Retaining holds coverage without active tension — for dekeratinisation and protection between sessions. It is not a substitute for active tension.\n\nYou've used ${used} method${used!==1?'s':''} so far${used>0?': '+u.methods.slice(0,3).join(', '):''}. Choose the safest method you can use comfortably and consistently.\n\nStop active tension for pain, numbness, colour change, broken skin, or rash. A clinician can help if tight erections, scarring, or skin disease are part of the picture.`
     }
   },
 
@@ -1393,22 +1778,22 @@ const COACH_BRAIN={
 
   plateau:{
     keywords:['plateau','stuck','stall','no progress','not moving','same ci','months','not working','slow','nothing happening','frustrated'],
-    response:(u)=>`Plateaus are one of the most common and frustrating parts of restoration — and almost every restorer experiences them. Here's what's actually happening and what to do about it.\n\nTissue growth isn't linear. Your skin cells go through cycles of growth, consolidation, and rest. What looks like a plateau on the outside is often an internal consolidation phase — the new tissue is organising itself before the next visible growth phase.\n\nThe other common cause is tension adaptation. Your skin can adapt to a specific tension level and stop responding. The fix is variation — change your method, change the direction of tension, try a different device, or adjust the force level.\n\nAt ${LEVELS[u.ci].ci} with ${Math.floor(u.minutes/60)} hours logged, ${u.minutes<3000?'you\'re still in the early phases where patience is the main tool.':'you have significant hours invested. A plateau now likely means your tissue needs a different stimulus — try a method you haven\'t used recently.'}\n\nOne more thing: dekeratinisation is happening even when CI doesn't change. The glans is softening and becoming more sensitive beneath the surface. Progress is often invisible before it becomes visible.`
+    response:(u)=>`Plateaus are one of the most common and frustrating parts of restoration — and almost every restorer experiences them.\n\nTissue growth doesn't appear to be linear for most people. Community reports describe cycles of visible growth and apparent plateaus — the reason for this isn't fully established, but it's a shared experience.\n\nSome restorers find that varying method or tension level seems to help. Change one variable at a time and give it weeks, not days, before judging.\n\nAt ${LEVELS[u.ci].ci} with ${Math.floor(u.minutes/60)} hours logged, ${u.minutes<3000?'you\'re still in the early phases where patience is the main tool.':'you have significant hours invested.'}\n\nOne more thing: dekeratinisation is happening even when CI doesn't change. The glans is softening and becoming more sensitive beneath the surface. Progress is often invisible before it becomes visible.`
   },
 
   dekeratinisation:{
     keywords:['dekeratinisation','dekeratinization','sensitive','sensitivity','glans','shiny','soft','moist','rough','dry','skin texture'],
-    response:(u)=>`Dekeratinisation is one of the most significant — and least discussed — benefits of restoration, and it starts happening long before your CI level moves significantly.\n\nThe glans naturally has a mucosal surface that needs protection from friction and air exposure. After circumcision, constant exposure causes the surface to harden and produce a keratinised layer — essentially a callus. This reduces sensitivity significantly.\n\nAs you restore coverage, the glans begins spending more time protected. The keratinised layer gradually sheds and the mucosal surface returns. This is why many restorers report significant sensitivity changes well before reaching their target CI level.\n\nAt ${LEVELS[u.ci].ci}, ${u.ci>=3?'you should be starting to notice some changes in glans texture and sensitivity, especially on days with good coverage.':'this process is beginning. Retaining (using a retainer to maintain coverage between sessions) accelerates dekeratinisation significantly even before your CI advances.'}\n\nSigns to look for: slightly shinier appearance, increased sensitivity, occasional slight moisture retention. These are all positive indicators.`
+    response:(u)=>`Dekeratinisation is one of the most significant — and least discussed — benefits of restoration, and it starts happening long before your CI level moves significantly.\n\nThe glans naturally has a mucosal surface that stays protected in an intact foreskin. After circumcision, constant exposure is associated with hardening of the surface and a keratinised layer forming. Many restorers describe this as reducing sensitivity.\n\nAs you restore coverage, the glans begins spending more time protected. The keratinised layer gradually sheds and the mucosal surface returns. This is why many restorers report significant sensitivity changes well before reaching their target CI level.\n\nAt ${LEVELS[u.ci].ci}, ${u.ci>=3?'you should be starting to notice some changes in glans texture and sensitivity, especially on days with good coverage.':'this process is beginning. Retaining (using a retainer to maintain coverage between sessions) accelerates dekeratinisation significantly even before your CI advances.'}\n\nSigns to look for: slightly shinier appearance, increased sensitivity, occasional slight moisture retention. These are all positive indicators.`
   },
 
   restDays:{
     keywords:['rest day','rest','recovery','break','day off','overdo','sore','irritated','take a break','too much','hurts','pain','uncomfortable'],
-    response:(u)=>`Rest days are not a failure — they're a deliberate part of the process. Your skin needs recovery time to consolidate new tissue, and pushing through soreness or irritation is one of the most common mistakes restorers make.\n\n${(u.restDays||[]).length>0?`You've marked ${u.restDays.length} rest day${u.restDays.length!==1?'s':''} — good.`:'You haven\'t marked any rest days yet. Even with good consistency, planned rest days are worth considering.'}\n\nSigns you should take a rest day:\n• Any soreness, redness, or irritation in the skin\n• The skin feels fatigued or tighter than usual\n• You've had 7 or more consecutive days without a break\n• You feel mentally burned out on the routine\n\nSigns a rest day is not needed:\n• You simply don't feel like it (push through gently)\n• You missed yesterday (just resume today)\n\nOne or two rest days per week is healthy for most restorers and doesn't meaningfully slow progress. Overtraining absolutely does.`
+    response:(u)=>`Take a break from active tension when your skin is sore, raw, cracked, blistered, persistently red, swollen, unusually sensitive, or simply not recovering between wears. Continuing through those signs risks turning a small problem into an injury.\n\nThere is no research-backed universal schedule such as "one or two rest days per week" for non-surgical foreskin restoration. If your skin feels normal and your setup is comfortable, a planned break is a personal choice — not a failure, and not something you need to earn.\n\n${(u.restDays||[]).length>0?`You've marked ${u.restDays.length} rest day${u.restDays.length!==1?'s':''} in the app.`:'You haven\'t marked any rest days yet — that\'s fine if your skin is healthy.'}\n\nStop immediately for pain, numbness, coldness, persistent colour change, swelling, broken skin, or any new urinary symptom. For severe pain, a trapped or retracted foreskin, inability to urinate, spreading redness, fever, or an erection lasting more than four hours, seek urgent medical care.`
   },
 
   beginners:{
     keywords:['beginner','start','starting','new','first','where do i','how do i start','just started','just beginning','confused','what do i do','help','guide'],
-    response:(u)=>`Welcome to the journey. Here's what I'd recommend focusing on as you're getting started:\n\n1. Start with manual methods first. MM1 and MM2 require no equipment, help you understand your anatomy, and can be done anywhere. Do them while watching TV or reading.\n\n2. Set a realistic daily goal. 30–60 minutes to start. You can always increase it. The goal is building a sustainable habit, not maximum output on day one.\n\n3. Update your CI level in the Journey tab. Even if you're at CI-0, setting it gives you a baseline and makes progress visible over time.\n\n4. Take a baseline photo now. In 6 months you'll be glad you did. Progress is nearly invisible day to day but dramatic across months.\n\n5. Be patient with the science. Tissue growth takes months of consistent work before it becomes visible. Many people quit right before they'd start seeing results.\n\nYou've logged ${u.sessions} session${u.sessions!==1?'s':''} so far. ${u.sessions===0?'Your first session is the most important one — even 10 minutes.':u.sessions<10?'Good start. Focus on building the daily habit before optimising anything else.':'You\'re building a real foundation. Keep it going.'}`
+    response:(u)=>`Welcome to the journey. Here's what I'd recommend focusing on as you're getting started:\n\n1. Start with manual methods first. MM1 and MM2 require no equipment, help you understand your anatomy, and can be done anywhere. Do them while watching TV or reading.\n\n2. Set a realistic daily goal. Many restorers start with 30–60 minutes. You can adjust based on comfort and skin condition — the goal is building a sustainable habit, not maximum output on day one.\n\n3. Update your CI level in the Progress tab. Even if you're at CI-0, setting it gives you a baseline and makes progress visible over time.\n\n4. Take a baseline photo now. In 6 months you'll be glad you did. Progress is nearly invisible day to day but dramatic across months.\n\n5. Be patient with the science. Tissue growth takes months of consistent work before it becomes visible. Many people quit right before they'd start seeing results.\n\nYou've logged ${u.sessions} session${u.sessions!==1?'s':''} so far. ${u.sessions===0?'Your first session is the most important one — even 10 minutes.':u.sessions<10?'Good start. Focus on building the daily habit before optimising anything else.':'You\'re building a real foundation. Keep it going.'}`
   },
 
   progress:{
@@ -1418,18 +1803,18 @@ const COACH_BRAIN={
       const avgDay=u.avgDay;
       let assessment='';
       if(u.sessions===0)assessment='You haven\'t logged any sessions yet. Your journey starts with your first log.';
-      else if(avgDay>=90)assessment=`Your ${fmtMin(avgDay)}/day average over the last 30 days is excellent. You're applying a strong, consistent tension signal.`;
-      else if(avgDay>=60)assessment=`Your ${fmtMin(avgDay)}/day average is solid — above the generally recommended minimum. You're doing well.`;
-      else if(avgDay>=30)assessment=`Your ${fmtMin(avgDay)}/day average is a decent base. Pushing toward 60+ minutes daily would meaningfully accelerate your results.`;
-      else if(avgDay>0)assessment=`Your ${fmtMin(avgDay)}/day average is below the recommended range. Small increases compound significantly over time.`;
+      else if(avgDay>=90)assessment=`Your ${fmtMin(avgDay)}/day average over the last 30 days is high. You're applying a lot of consistent time under tension.`;
+      else if(avgDay>=60)assessment=`Your ${fmtMin(avgDay)}/day average represents a solid amount of time under tension. You're doing well.`;
+      else if(avgDay>=30)assessment=`Your ${fmtMin(avgDay)}/day average is a decent base. Many restorers find that pushing toward 60+ minutes daily helps, though there's no validated target.`;
+      else if(avgDay>0)assessment=`Your ${fmtMin(avgDay)}/day average is lower than what many restorers aim for. Small increases compound over time.`;
       else assessment='You haven\'t logged sessions in the past 30 days. Getting back on track is the priority.';
-      return`Here's your honest progress snapshot:\n\n📊 ${u.sessions} sessions · ${hrs} hours total · ${char.streak}-day streak\n🎯 ${fmtMin(avgDay)}/day average (last 30 days)\n◑ Currently ${LEVELS[u.ci].ci}\n\n${assessment}\n\n${u.ci>0&&u.minutes>0?`At your current pace you're accumulating roughly ${Math.round(avgDay*30/60)} hours of tension per month. ${avgDay>=60?'That\'s meaningful progress.':'Increasing your daily average is the single most impactful thing you can do.'}`:''}`;
+      return`Here's your honest progress snapshot:\n\n📊 ${u.sessions} sessions · ${hrs} hours total · ${char.streak}-day streak\n🎯 ${fmtMin(avgDay)}/day average (last 30 days)\n◑ Currently ${LEVELS[u.ci].ci}\n\n${assessment}\n\n${u.ci>0&&u.minutes>0?`At your current pace you're accumulating roughly ${Math.round(avgDay*30/60)} hours of tension per month. ${avgDay>=60?'That\'s a substantial amount.':'Increasing your daily average is one of the most impactful things you can do.'}`:''}`;
     }
   },
 
   motivation:{
     keywords:['motivat','inspired','inspire','keep going','worth it','give up','quit','not worth','why','purpose','reason','point','does it work','real'],
-    response:(u)=>`Restoration works. That's not opinion — it's documented by thousands of restorers over decades and supported by the same tissue expansion science used in reconstructive medicine. The question isn't whether it works, it's whether you'll be consistent enough long enough.\n\nHere's something worth sitting with: the average restorer who reaches CI-8 or higher spent 4–7 years getting there. That sounds daunting. But those years pass regardless. The question is whether you spend them working toward something meaningful or not.\n\nYou've already put in ${Math.floor(u.minutes/60)} hours across ${u.sessions} sessions. That's real. That's tissue that exists now that didn't exist when you started. It doesn't disappear.\n\n${u.streak>7?`Your ${u.streak}-day streak shows you have the consistency to do this. Don't underestimate that.`:u.sessions>20?'You\'ve built real history here. That matters.':'Every session is a deposit into an account that only grows.'}\n\nThe restorers who finish are not the ones with the most free time or the best genetics. They're the ones who decided to stop deciding and just do it every day.`
+    response:(u)=>`Restoration works for many people. The underlying principle — tissue expansion — is well-established in reconstructive medicine, and thousands of restorers have reported success. The question isn't whether it works, it's whether you'll be consistent enough long enough.\n\nHere's something worth sitting with: many restorers who reach CI-8 or higher report spending several years getting there. That sounds daunting. But those years pass regardless. The question is whether you spend them working toward something meaningful or not.\n\nYou've already put in ${Math.floor(u.minutes/60)} hours across ${u.sessions} sessions. That's real. That's tissue that exists now that didn't exist when you started. It doesn't disappear.\n\n${u.streak>7?`Your ${u.streak}-day streak shows you have the consistency to do this. Don't underestimate that.`:u.sessions>20?'You\'ve built real history here. That matters.':'Every session is a deposit into an account that only grows.'}\n\nThe restorers who finish are not the ones with the most free time or the best genetics. They're the ones who decided to stop deciding and just do it every day.`
   },
 
   inflation:{
@@ -1439,7 +1824,7 @@ const COACH_BRAIN={
 
   retaining:{
     keywords:['retain','retaining','retainer','cone','manhood','si retainer','stealth','coverage','protect','between sessions','dekeratini'],
-    response:(u)=>`Retaining is different from active restoration — it's not primarily about tissue growth, it's about maintaining coverage to allow dekeratinisation and protecting the glans from constant exposure.\n\nA retainer (cone, ManHood, SI Retainer, etc.) holds your existing skin forward without active tension. This means the glans spends time covered and protected even when you're not actively restoring.\n\nThe benefits: dekeratinisation accelerates significantly with consistent retaining, sensitivity improves, and there's psychological motivation from experiencing what fuller coverage feels like.\n\nRetaining is most effective at CI-3 and above when there's enough loose skin to actually maintain coverage. Below CI-3, retaining with a device can still help but the coverage is partial.\n\n${u.ci>=3?'At your current CI level, retaining between sessions is highly recommended. Even a few hours per day makes a meaningful difference to dekeratinisation.':'At your current stage, focus primarily on active restoration first. Retaining becomes increasingly beneficial as you gain more coverage.'}`
+    response:(u)=>`Retaining is different from active restoration — it's not primarily about tissue growth, it's about maintaining coverage to allow dekeratinisation and protecting the glans from constant exposure.\n\nA retainer (cone, ManHood, SI Retainer, etc.) holds your existing skin forward without active tension. This means the glans spends time covered and protected even when you're not actively restoring.\n\nThe reported benefits: many restorers describe dekeratinisation changes with consistent retaining, improved sensitivity, and psychological motivation from experiencing what fuller coverage feels like.\n\nRetaining is most effective at CI-3 and above when there's enough loose skin to actually maintain coverage. Below CI-3, retaining with a device can still help but the coverage is partial.\n\n${u.ci>=3?'At your current CI level, retaining between sessions is highly recommended. Even a few hours per day makes a meaningful difference to dekeratinisation.':'At your current stage, focus primarily on active restoration first. Retaining becomes increasingly beneficial as you gain more coverage.'}`
   },
 
   taping:{
@@ -1449,7 +1834,7 @@ const COACH_BRAIN={
 
   goals:{
     keywords:['goal','daily goal','target','set a goal','my goal','change goal','update goal','aim','recommended daily','enough per day'],
-    response:(u)=>`Your current daily goal is ${fmtMin(u.goal)}. ${u.avgDay>=u.goal?'You\'ve been meeting or exceeding it — consider whether it\'s time to set a higher target.':u.avgDay>=u.goal*0.7?'You\'re close to your goal most days. A small push to consistently hit it would compound significantly.':'You\'re currently averaging below your goal. Either adjust the goal to be more realistic, or identify what\'s preventing you from hitting it.'}\n\nFor reference, the general guidance in the restoration community:\n• 30 min/day — minimum to see any progress (slow)\n• 60 min/day — recommended baseline for consistent progress\n• 2–4 hrs/day — what faster progressors typically report\n• 6+ hrs/day — possible with tape or device during work/sleep\n\nMore is generally better, but consistency over time matters more than occasional very long sessions. A steady 90 minutes every day beats 8 hours once a week.\n\nYou can adjust your daily goal in the goal field on the Today tab.`
+    response:(u)=>`Your current daily goal is ${fmtMin(u.goal)}. ${u.avgDay>=u.goal?'You\'ve been meeting or exceeding it — you can adjust it up if you want a bigger target.':u.avgDay>=u.goal*0.7?'You\'re close to your goal most days.':'You\'re currently averaging below your goal.'}\n\nThere is no scientifically validated hours-per-day target for non-surgical foreskin restoration. The numbers you see quoted in the community — 30 minutes, 60 minutes, 2–4 hours — are personal reports, not clinical guidance.\n\nWhat matters more than any specific number:\n• Comfortable tension you can sustain without skin injury\n• Consistency over months, not intensity in a single day\n• Attention to skin condition — stop if anything changes\n\nThe goal in this app exists to give you a personal benchmark. Set it to something realistic for your life, and adjust it as your routine changes. A lower goal you actually hit every day beats a high goal you miss.`
   },
 
   photos:{
@@ -1459,7 +1844,7 @@ const COACH_BRAIN={
 
   sleep:{
     keywords:['sleep','overnight','night','sleeping','nocturnal','while sleeping','bed'],
-    response:(u)=>`Restoring during sleep is possible and some restorers get significant hours this way, but it requires care.\n\nWhat works during sleep: taping (T-Tape specifically), some devices at low tension, retainers for dekeratinisation without active tension.\n\nWhat to be careful of: erections during sleep create significant tension — if you're wearing a device or tape, this tension is amplified and can cause discomfort or skin irritation. Start with retaining only (no active tension device) to see how your body responds overnight.\n\nMany experienced restorers do sleep with tape or a retainer and find it's their highest-yield tension time. The key is: if you wake up uncomfortable, that device isn't right for overnight use on you specifically.\n\nIf you're going to try overnight sessions: start with just a retainer for the first few nights, then try light tape tension, then a low-tension device. Build up gradually and listen to your body.`
+    response:(u)=>`Overnight use is possible but requires care, and there is no research-backed protocol for it.\n\nWhat some restorers report using overnight: retaining only (O-ring, cone, or a medical-grade retainer) with no active tension; or T-tape at very low tension after extended experience.\n\nWhy caution matters: nocturnal erections create unpredictable tension. A setup that feels fine when awake can become uncomfortable or cause skin injury during an erection you can't consciously manage. Many experienced restorers describe overnight use as their highest-yield tension time — but also the time most likely to cause a setback if the setup is wrong for them.\n\nA safer way to build toward overnight use:\n• Start with retaining only (no active tension) for the first few weeks\n• If that's comfortable, try light tape tension\n• Only consider a low-tension device if tape overnight is comfortable\n• Avoid a device while sleeping unless its maker specifically says that use is appropriate\n\nStop immediately for pain, numbness, coldness, colour change, swelling, or any trouble urinating. A setup that is hard to remove is a reason not to proceed. Ask a clinician promptly about persistent pain, rash, swelling, discharge, or fever.`
   },
 
   manual:{
@@ -1480,20 +1865,29 @@ let coachExtended=[]; // loaded from coach_data.json on GitHub
 async function loadCoachData(){
   try{
     const res=await fetch('./coach_data.json');
-    if(!res.ok)return;
+    if(!res.ok){console.warn('[Coach] coach_data.json returned status', res.status);return;}
     const data=await res.json();
-    if(Array.isArray(data))coachExtended=data;
+    if(Array.isArray(data)){
+      coachExtended=data;
+      console.log(`[Coach] Loaded ${coachExtended.length} extended entries`);
+    } else {
+      console.warn('[Coach] coach_data.json is not an array');
+    }
   }catch(e){
-    // Silently fail — app works fine with built-in brain only
+    console.error('[Coach] coach_data.json failed to parse or load:', e.message);
   }
 }
 loadCoachData();
 
 // ── COACH BRAIN MATCHER ────────────────────────────────────────────────────────
 function coachBrainMatch(question){
-  const q=question.toLowerCase();
+  // Normalize: lowercase, strip punctuation, collapse whitespace
+  const q=question.toLowerCase()
+    .replace(/[?!.,;:"']/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+
   // Build user context object
-  const td=today();
   const last30=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=30);
   const avgDay=last30.length?Math.round(last30.reduce((a,l)=>a+l.dur,0)/30):0;
   const u={
@@ -1507,128 +1901,182 @@ function coachBrainMatch(question){
     restDays:char.restDays||[],
     photos:photos||[]
   };
-  // Score each topic by keyword matches
-  let bestTopic=null,bestScore=0,bestExtEntry=null;
+
+  // Score with specificity tiebreaker:
+  // - Higher score wins.
+  // - On exact tie, entry with FEWER total keywords wins (more focused).
+  // - Extended entries supersede brain entries on exact tie with same keyword count.
+  let bestScore=0,bestKeywordCount=Infinity,bestTopic=null,bestExtEntry=null;
+
   for(const[topic,data] of Object.entries(COACH_BRAIN)){
     let score=0;
     for(const kw of data.keywords){
-      if(q.includes(kw))score+=kw.split(' ').length; // multi-word keywords score higher
+      if(q.includes(kw))score+=kw.split(' ').length;
     }
-    if(score>bestScore){bestScore=score;bestTopic=topic;bestExtEntry=null;}
+    const isBetter=score>bestScore||(score===bestScore&&score>0&&data.keywords.length<bestKeywordCount);
+    if(isBetter){
+      bestScore=score;
+      bestKeywordCount=data.keywords.length;
+      bestTopic=topic;
+      bestExtEntry=null;
+    }
   }
-  // Also search extended knowledge base loaded from coach_data.json
+
+  // Extended knowledge base — loaded from coach_data.json
   for(const entry of coachExtended){
     let score=0;
     for(const kw of entry.keywords){
       if(q.includes(kw))score+=kw.split(' ').length;
     }
-    // Extended data is the maintained, source-reviewed layer. Let it supersede
-    // an equally specific built-in match rather than leaving old copy in place.
-    if(score>=bestScore&&score>0){bestScore=score;bestExtEntry=entry;bestTopic=null;}
+    // Extended supersedes brain on equal score + equal specificity (cautious voice priority)
+    const isBetter=score>bestScore||(score===bestScore&&score>0&&entry.keywords.length<=bestKeywordCount);
+    if(isBetter){
+      bestScore=score;
+      bestKeywordCount=entry.keywords.length;
+      bestExtEntry=entry;
+      bestTopic=null;
+    }
   }
+
   if(bestScore===0){
-    // No match — give a helpful fallback
     return`I'm not sure I have a perfect answer for that specific question, ${char.name}. Try asking about methods, CI levels, consistency, how restoration works, rest days, or ask for a progress check-in.\n\nYou can also send feedback via the profile menu — specific questions you ask that I can't answer well help me get smarter over time.`;
   }
-  // Return from extended JSON if it won, otherwise from built-in brain
+
   if(bestExtEntry) return bestExtEntry.response;
   const data=COACH_BRAIN[bestTopic];
   return typeof data.response==='function'?data.response(u):data.response;
 }
 
-function coachMessage(){
-  const td=today();
-  const ci=char.ciLevel||0;
-  const daysSinceLast=char.lastDate?Math.round((new Date(td)-new Date(char.lastDate))/86400000):-1;
+function todayInsight(){
+  const hour=new Date().getHours();
   const tMin=todayMin();
+  const tGoal=todayGoalMin();
   const goal=char.dailyGoalMin||120;
-  const hoursTotal=char.minutes/60;
+  const goalLeft=Math.max(0,goal-tGoal);
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
+  const tLogs=todayLogs();
 
-  // Analyse weekly patterns
-  const last30=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=30);
-  const last7=logs.filter(l=>(new Date()-new Date(l.date+'T12:00:00'))/86400000<=7);
-  const prev7=logs.filter(l=>{const d=(new Date()-new Date(l.date+'T12:00:00'))/86400000;return d>7&&d<=14;});
-  const last7Mins=last7.reduce((a,l)=>a+l.dur,0);
-  const prev7Mins=prev7.reduce((a,l)=>a+l.dur,0);
-  const avgDailyMins=last30.length?Math.round(last30.reduce((a,l)=>a+l.dur,0)/30):0;
+  // Brand-new user — first-session nudge during the first week.
+  if(char.sessions===0&&!tLogs.length&&!isRunning){
+    const created=(profiles[0]&&profiles[0].createdAt)||today();
+    const daysSince=Math.round((new Date(today())-new Date(created))/86400000);
+    if(daysSince<=7){
+      const firstMethod=(char.preferredMethods||[])[0];
+      if(firstMethod){
+        return{icon:'👋',msg:`Welcome. When you're ready, tap Start Session to log your first ${firstMethod} session.`};
+      }
+      return{icon:'👋',msg:'Welcome to RestoreTrack. Tap Start Session whenever you\'re ready — even a few minutes counts.'};
+    }
+  }
 
-  // Day-of-week consistency analysis
-  const dowCounts=[0,0,0,0,0,0,0];
-  last30.forEach(l=>{const dow=new Date(l.date+'T12:00:00').getDay();dowCounts[dow]++;});
-  const todayDow=new Date().getDay();
-  const dowNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const bestDow=dowCounts.indexOf(Math.max(...dowCounts));
-  const weakestDow=dowCounts.indexOf(Math.min(...dowCounts));
+  // Never interrupt an active session
+  if(isRunning)return null;
+
+  // Streak about to break (evening, no session today)
+  if(hour>=20&&tMin===0&&char.streak>=3)
+    return{icon:'🔥',msg:`${char.streak}-day streak still intact today — a short session keeps it.`};
+
+  // Goal just hit
+  if(tGoal>=goal&&tGoal<goal+30)
+    return{icon:'🎯',msg:`Goal reached — ${fmtMin(tGoal)} logged today.${char.streak>1?` ${char.streak}-day streak.`:''}`};
+
+  // Close to goal (evening)
+  if(goalLeft>0&&goalLeft<=30&&hour>=17)
+    return{icon:'⏱',msg:`${fmtMin(goalLeft)} from today's goal. One short session closes it.`};
+
+  // Today has multiple short sessions — nudge toward longer
+  if(tLogs.length>=2){
+    const avg=Math.round(tLogs.reduce((a,l)=>a+l.dur,0)/tLogs.length);
+    if(avg<10)
+      return{icon:'⏱',msg:`Today's average session is ${avg}m. Longer sessions reach your ${goal}m goal faster.`};
+  }
+
+  // Close to goal (any time)
+  if(goalLeft>0&&goalLeft<=30&&tGoal>0)
+    return{icon:'⏱',msg:`${fmtMin(goalLeft)} from today's goal.`};
+
+  // Weekly trend
+  if(char.sessions>=10){
+    const now=Date.now();
+    const last7=logs.filter(l=>{const d=(now-new Date(l.date+'T12:00:00'))/86400000;return d<=7;});
+    const prev7=logs.filter(l=>{const d=(now-new Date(l.date+'T12:00:00'))/86400000;return d>7&&d<=14;});
+    if(prev7.length>=3){
+      const l7=last7.reduce((a,l)=>a+l.dur,0);
+      const p7=prev7.reduce((a,l)=>a+l.dur,0);
+      const diff=l7-p7;
+      if(diff>=90)return{icon:'📈',msg:`${fmtDur(diff)} more time this week than last.`};
+      if(diff<=-90)return{icon:'📉',msg:`${fmtDur(Math.abs(diff))} less this week than last.`};
+    }
+  }
+
+  // Method rotation — a saved method hasn't been used in 14+ days
+  if((char.methods||[]).length>=2){
+    const methodLast={};
+    logs.forEach(l=>{
+      if(!l.method)return;
+      const t=new Date(l.date+'T12:00:00').getTime();
+      if(!methodLast[l.method]||t>methodLast[l.method])methodLast[l.method]=t;
+    });
+    const nowMs=Date.now();
+    const stale=char.methods
+      .map(m=>({m,days:Math.round((nowMs-(methodLast[m]||nowMs))/86400000)}))
+      .filter(x=>x.days>=14&&x.days<365)
+      .sort((a,b)=>b.days-a.days);
+    if(stale.length)
+      return{icon:'🔄',msg:`It's been ${stale[0].days} days since you used ${stale[0].m}.`};
+  }
+
+  // Photo nudge
+  if(photos.length>0){
+    const days=Math.round((Date.now()-new Date(photos[0].date+'T12:00:00'))/86400000);
+    if(days>=45)return{icon:'📸',msg:`Last photo was ${days} days ago — a new one would track real change.`};
+    if(days>=30)return{icon:'📸',msg:`${days} days since your last photo.`};
+  } else if(char.sessions>=5){
+    return{icon:'📸',msg:'No photos yet — a baseline today is worth having later.'};
+  }
 
   // Time at current CI level
-  const ciHistory=char.ciHistory||[];
-  const lastCIChange=ciHistory.filter(h=>h.ci===ci).pop();
-  const daysAtCI=lastCIChange?Math.round((new Date()-new Date(lastCIChange.date+'T12:00:00'))/86400000):null;
-
-  // ── Priority messages — most actionable first ──
-  if(char.sessions===0)
-    return{icon:'👋',msg:`Welcome, ${char.name}. Your restoration journey starts with a single session. Even 15 minutes applies the tension signal your body needs. Tap Start Session below.`,cta:'log'};
-
-  if(isRunning)
-    return{icon:'⏱',msg:`Session in progress — ${fmtLive(timerSecs)}. Relax and let consistent, comfortable tension do the work. Pushing harder doesn't speed things up — patience does.`,cta:null};
-
-  // Missed days — urgent
-  if(daysSinceLast>=5)
-    return{icon:'📅',msg:`It's been ${daysSinceLast} days since your last session. Restoration tissue responds to regular signals — a gap this long means starting to rebuild momentum. Even 20 minutes today counts.`,cta:'log'};
-
-  if(daysSinceLast>=3)
-    return{icon:'⏰',msg:`${daysSinceLast} days since your last session. Your ${char.streak>0?char.streak+'-day streak is at risk':'consistency is slipping'} — 15–20 minutes today keeps the momentum going.`,cta:'log'};
-
-  // Tonight's streak at risk (after 8pm, no session today)
-  const hour=new Date().getHours();
-  if(hour>=20&&tMin===0&&char.streak>2)
-    return{icon:'🔥',msg:`Your ${char.streak}-day streak is at risk — you haven't logged today yet and it's getting late. Even a short session protects it.`,cta:'log'};
-
-  // Goal hit
-  if(tMin>=goal){
-    const trend=last7Mins>prev7Mins?`↑ ${Math.round((last7Mins-prev7Mins)/60*10)/10}h more than last week`:'';
-    return{icon:'🎯',msg:`Daily goal hit — ${fmtMin(tMin)} logged today.${char.streak>=3?` ${char.streak}-day streak 🔥`:''} ${trend?trend+'.':''} Consistent tension is the only mechanism that drives growth — you're doing it right.`,cta:null};
+  if(char.ciHistory&&char.ciHistory.length){
+    const atCI=char.ciHistory.filter(h=>h.ci===char.ciLevel).pop();
+    if(atCI){
+      const days=Math.round((Date.now()-new Date(atCI.date+'T12:00:00'))/86400000);
+      if(days>=90)
+        return{icon:'◑',msg:`${days} days at ${LEVELS[char.ciLevel].ci}. Long stretches are normal.`};
+    }
   }
 
-  // Weekly trend insight
-  if(char.sessions>=10&&prev7Mins>0){
-    const diff=last7Mins-prev7Mins;
-    if(diff<-60)
-      return{icon:'📉',msg:`You've logged ${fmtDur(Math.abs(diff))} less this week than last week. Restoration responds to consistent volume — a dip like this is worth noticing. What's getting in the way?`,cta:'log'};
-    if(diff>60&&last7.length>=4)
-      return{icon:'📈',msg:`You've logged ${fmtDur(diff)} more this week than last — solid improvement. Your average is ${fmtMin(avgDailyMins)}/day over the past month. Keep building on this.`,cta:null};
+  // Day-of-week pattern
+  if(char.sessions>=14){
+    const last30=logs.filter(l=>(Date.now()-new Date(l.date+'T12:00:00'))/86400000<=30);
+    const dowCount=[0,0,0,0,0,0,0];
+    last30.forEach(l=>{dowCount[new Date(l.date+'T12:00:00').getDay()]++;});
+    const todayDow=new Date().getDay();
+    if(dowCount[todayDow]===0&&Math.max(...dowCount)>=3){
+      const names=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      return{icon:'📅',msg:`You haven't logged on a ${names[todayDow]} in 30 days.`};
+    }
   }
 
-  // Day-of-week weakness
-  if(char.sessions>=14&&dowCounts[todayDow]===0&&bestDow!==todayDow)
-    return{icon:'📆',msg:`${dowNames[todayDow]} is your least active day — you've never logged on a ${dowNames[todayDow]} in the last 30 days. ${dowNames[bestDow]} is your most consistent. Every day matters for tissue response.`,cta:'log'};
+  // Total hours milestone
+  const totalH=Math.floor(char.minutes/60);
+  if(totalH>0&&totalH%50===0)
+    return{icon:'⏳',msg:`${totalH} hours logged. Quiet accumulation.`};
 
-  // CI level insight
-  if(daysAtCI&&daysAtCI>60&&ci<10)
-    return{icon:'◑',msg:`You've been at ${LEVELS[ci].ci} for ${daysAtCI} days. CI progression is driven purely by cumulative tension hours — there's no shortcut. Your current pace of ${fmtMin(avgDailyMins)}/day is${avgDailyMins>=60?' solid.':(avgDailyMins>=30?' okay, but more is better.':' below the recommended daily amount.')}`,cta:null};
-
-  // First photo nudge
-  if(photos.length===0&&char.sessions>=3)
-    return{icon:'📸',msg:`You've logged ${char.sessions} sessions — now is the time to add a baseline photo. Progress is nearly invisible day to day, but comparing photos months apart is the most motivating thing you can do.`,cta:'photos'};
-
-  // CI not set
-  if(ci===0&&hoursTotal>=5)
-    return{icon:'◑',msg:`You've logged ${Math.round(hoursTotal)} hours but haven't set a CI level. Head to Journey and set your starting point — it helps track real progress over time.`,cta:'journey'};
-
-  // Avg daily insight
-  if(char.sessions>=7)
-    return{icon:'📊',msg:`Your 30-day average is ${fmtMin(avgDailyMins)}/day.${avgDailyMins>=goal?` You're consistently hitting your ${fmtMin(goal)} goal — excellent.`:avgDailyMins>=60?` You're getting regular sessions in — pushing toward ${fmtMin(goal)} daily would accelerate results.`:` Aim for ${fmtMin(goal)} daily — shorter daily sessions consistently outperform occasional long ones.`}`,cta:avgDailyMins<goal?'log':null};
-
-  // Fallback rotation
-  const day=new Date().getDate();
-  const msgs=[
-    {icon:'🌱',msg:`${Math.round(hoursTotal)} hours logged so far. Every hour of consistent tension is a real signal to your body — there is no other mechanism for growth. Keep showing up.`},
-    {icon:'💡',msg:`If your skin feels sore, tight, or irritated — rest. Recovery is part of the process, not a failure. A rest day used well is better than a session that causes setbacks.`},
-    {icon:'⏳',msg:`Restoration is measured in months and years, not days. You're at ${LEVELS[ci].ci}. The progress is real even when it's invisible — consistent tension is the only variable in your control.`},
-    {icon:'🔬',msg:`You've used ${(char.methods||[]).length} method${(char.methods||[]).length===1?'':'s'}. Different methods apply tension to different areas of the prepuce. Varying your approach can help development over time.`},
+  // Rotating tips — useful, varied, changes daily
+  const tips=[
+    {icon:'💡',msg:'Tap Start Session for a live timer, or Log Past for a session already done.'},
+    {icon:'📸',msg:'Take a baseline photo now — you\'ll be glad you have it months from now.'},
+    {icon:'◑',msg:'Update your CI level in Progress when you notice consistent change, not day-to-day.'},
+    {icon:'📊',msg:'Progress shows weekly totals, a calendar heatmap, and per-method breakdowns.'},
+    {icon:'💬',msg:'Tap here to ask the Coach — methods, rest days, timelines, anything restoration.'},
+    {icon:'🎯',msg:'Your daily goal is a personal target. Change it any time by tapping the number.'},
+    {icon:'🔄',msg:'Different methods target different tissue. Using several can help development.'},
+    {icon:'🛌',msg:'Sore, raw, or irritated skin? Rest a day — recovery is part of the process.'},
+    {icon:'📈',msg:'Check the Progress tab monthly to compare progress photos side by side.'},
+    {icon:'⏳',msg:'Every minute logged is real time under tension. Small sessions add up.'},
   ];
-  return msgs[day%msgs.length];
+  const day=new Date().getDate();
+  return tips[day%tips.length];
 }
 
 // ── RENDER ─────────────────────────────────────────────────────────────────────
@@ -1641,18 +2089,21 @@ function render(){
       <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
         <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
           <span id="v-tap" onclick="adminTap()"
-            style="font-family:Cinzel,serif;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:'DM Sans',sans-serif;letter-spacing:.5px">v2.5.2</span>
+            style="font-family:var(--font-display);font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
+          <span style="font-size:7.5px;color:var(--text6);font-family:var(--font-body);letter-spacing:.5px">v2.5.2</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
-        <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Journey">${LEVELS[ci].ci}</div>
+        <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Progress">${LEVELS[ci].ci}</div>
       </div>
-      <button class="profile-btn" id="pbtn"
-        style="flex-shrink:0;margin-left:8px;display:flex;align-items:center;gap:5px;max-width:170px;overflow:hidden">
-        ${IC.user(13)}
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${char.name}</span>
-        <span style="flex-shrink:0">▾</span>
-      </button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        <button id="coach-btn" title="Ask Coach" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;transition:border-color .2s">🧠</button>
+        <button class="profile-btn" id="pbtn"
+          style="flex-shrink:0;display:flex;align-items:center;gap:5px;max-width:150px;overflow:hidden">
+          ${IC.user(13)}
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${char.name}</span>
+          <span style="flex-shrink:0">▾</span>
+        </button>
+      </div>
     </div>
     ${isRunning?`<div class="session-strip" onclick="tab='today';render()">
       <div class="live-dot" style="flex-shrink:0"></div>
@@ -1666,14 +2117,20 @@ function render(){
     <div class="content" id="content"></div>
     <div class="nav">${renderNav()}</div>
   </div>`;
-  document.getElementById('pbtn').onclick=()=>{showProfileScreen=true;render();};
+    document.getElementById('pbtn').onclick=()=>{showProfileScreen=true;render();};
+  document.getElementById('coach-btn').onclick=()=>showCoachSheet();
   document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
   const c=document.getElementById('content');
   if(tab==='today')c.innerHTML=renderToday();
   else if(tab==='journey')c.innerHTML=renderJourney();
-  else if(tab==='photos')c.innerHTML=renderPhotos();
-  else if(tab==='reports')c.innerHTML=renderReports();
-  else if(tab==='ach')c.innerHTML=renderAch();
+  else if(tab==='photos'){
+    if(char.photoLockEnabled&&!_photosUnlocked){
+      c.innerHTML=renderPhotoLockScreen();
+      attachPhotoLockEvents();
+    } else {
+      c.innerHTML=renderPhotos();
+    }
+  }
   else if(tab==='community'){
     // Restore persisted inner tab, default live
     commTab=localStorage.getItem('rst-comm-tab')||'live';
@@ -1699,220 +2156,80 @@ function render(){
 }
 function renderNav(){
   const running=!!activeTimer&&!!activeTimer.startedAt;
-  return[
-    {id:'today',    icon:IC.today(),    lbl:'Today'},
-    {id:'journey',  icon:IC.journey(),  lbl:'Journey'},
-    {id:'photos',   icon:IC.photos(),   lbl:'Photos'},
-    {id:'reports',  icon:IC.reports(),  lbl:'Reports'},
-    {id:'ach',      icon:IC.badges(),   lbl:'Badges'},
-    {id:'community',icon:IC.community(),lbl:'Community'},
-  ].map(t=>`<button class="nav-btn${tab===t.id?' active':''}" data-tab="${t.id}">
+  const makeBtn=t=>`<button class="nav-btn${tab===t.id?' active':''}" data-tab="${t.id}">
       <span class="nav-icon" style="position:relative;display:inline-flex;align-items:center;justify-content:center">${t.icon}${running&&t.id==='today'?`<span style="position:absolute;top:-2px;right:-4px;width:6px;height:6px;border-radius:50%;background:var(--green);border:1px solid var(--bg-nav)"></span>`:''}</span>${t.lbl}
-    </button>`).join('');
+    </button>`;
+  const items=[
+    {id:'today',    icon:IC.today(),    lbl:'Home'},
+    {id:'journey',  icon:IC.progress(), lbl:'Progress'},
+    {id:'photos',   icon:IC.photos(),   lbl:'Photos'},
+    {id:'community',icon:IC.community(),lbl:'Community'},
+  ];
+  return items.map(makeBtn).join('');
 }
 
-// ── WEEKLY SUMMARY ─────────────────────────────────────────────────────────────
-function getMondayOf(dateStr){
-  const d=new Date(dateStr+'T12:00:00');
-  const day=d.getDay(); // 0=Sun
-  const diff=day===0?-6:1-day;
-  d.setDate(d.getDate()+diff);
-  return localDateStr(d);
-}
-function getWeekDates(mondayStr){
-  const dates=[];
-  for(let i=0;i<7;i++){
-    const d=new Date(mondayStr+'T12:00:00');
-    d.setDate(d.getDate()+i);
-    dates.push(localDateStr(d));
-  }
-  return dates;
-}
-function buildWeeklySummary(){
-  const td=today();
-  const thisMonday=getMondayOf(td);
+// (Weekly summary functions removed — dead code. Weekly Recap now lives in Progress → Activity.)
 
-  // Previous week = Monday before thisMonday
-  const prevMonday=new Date(thisMonday+'T12:00:00');
-  prevMonday.setDate(prevMonday.getDate()-7);
-  const prevMondayStr=localDateStr(prevMonday);
-  const prevWeekDates=getWeekDates(prevMondayStr);
-
-  // Only show if prev week has any data
-  const prevWeekLogs=logs.filter(l=>prevWeekDates.includes(l.date));
-  if(prevWeekLogs.length===0)return'';
-
-  // Week before that for comparison
-  const prevPrevMonday=new Date(prevMondayStr+'T12:00:00');
-  prevPrevMonday.setDate(prevPrevMonday.getDate()-7);
-  const prevPrevDates=getWeekDates(localDateStr(prevPrevMonday));
-  const prevPrevLogs=logs.filter(l=>prevPrevDates.includes(l.date));
-
-  // Calc prev week stats
-  const sessions=prevWeekLogs.length;
-  const totalMins=prevWeekLogs.reduce((a,l)=>a+l.dur,0);
-  const activeDays=new Set(prevWeekLogs.map(l=>l.date)).size;
-  const goalDays=prevWeekDates.filter(d=>
-    logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)>=(char.dailyGoalMin||120)
-  ).length;
-
-  // Best day
-  const dayTotals=prevWeekDates.map(d=>({date:d,mins:logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0)}));
-  const bestDay=dayTotals.reduce((a,b)=>b.mins>a.mins?b:a,{date:'',mins:0});
-  const bestDayName=bestDay.mins>0?new Date(bestDay.date+'T12:00:00').toLocaleDateString('en',{weekday:'long'}):'';
-
-  // Comparison to week before
-  const prevTotalMins=prevPrevLogs.reduce((a,l)=>a+l.dur,0);
-  const prevActiveDays=new Set(prevPrevLogs.map(l=>l.date)).size;
-  let compLine='';
-  if(prevPrevLogs.length===0){
-    compLine='First full week tracked — great start.';
-  } else {
-    const timeDiff=totalMins-prevTotalMins;
-    compLine=timeDiff>5?`${fmtDur(timeDiff)} more time under tension than the week before.`:
-      timeDiff<-5?`${fmtDur(Math.abs(timeDiff))} less time than the week before — no judgment, just a useful signal.`:
-      activeDays>prevActiveDays?`The same total time, spread across more days.`:
-      activeDays<prevActiveDays?`The same total time in fewer, longer wear periods.`:
-      'A steady week by time under tension.';
-  }
-
-  // A long-wear method may create one log for several days. Grade the recap by
-  // accumulated time, never by the number of times someone pressed Stop.
-  const weeklyGoal=(char.dailyGoalMin||120)*7;
-  const timeRatio=weeklyGoal?totalMins/weeklyGoal:0;
-  let headline='',headlineColor='var(--text1)';
-  if(sessions===0){return'';}
-  else if(timeRatio>=.7){headline='A strong time-under-tension week.';headlineColor='var(--green)';}
-  else if(totalMins>=240){headline='Meaningful time logged.';headlineColor='var(--accent)';}
-  else{headline='Every comfortable hour counts.';headlineColor='var(--text2)';}
-
-  // Format the week range label
-  const weekEnd=prevWeekDates[6];
-  const fmtShort=d=>{const p=d.split('-');return`${parseInt(p[2])} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]}`;};
-  const weekLabel=`${fmtShort(prevMondayStr)} – ${fmtShort(weekEnd)}`;
-
-  return`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:16px;margin-bottom:12px;position:relative">
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px">Weekly Recap</div>
-    <div style="font-size:9px;color:var(--text5);margin-bottom:10px">${weekLabel}</div>
-    <div style="font-size:20px;font-weight:700;color:${headlineColor};margin-bottom:10px">${headline}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
-        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${sessions}</div>
-        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Log entr${sessions===1?'y':'ies'}</div>
-      </div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
-        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${fmtDur(totalMins)}</div>
-        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Total time</div>
-      </div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
-        <div style="font-size:18px;font-weight:700;color:var(--text1);line-height:1">${activeDays}<span style="font-size:12px;color:var(--text4)">/7</span></div>
-        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Active days</div>
-      </div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px">
-        <div style="font-size:18px;font-weight:700;color:${goalDays>0?'var(--green)':'var(--text4)'};line-height:1">${goalDays}<span style="font-size:12px;color:var(--text4)">/7</span></div>
-        <div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px;margin-top:3px">Goal days hit</div>
-      </div>
-    </div>
-    ${bestDayName?`<div style="font-size:11px;color:var(--text3);margin-bottom:6px">Most time logged: <strong style="color:var(--text2)">${bestDayName}</strong> — ${fmtDur(bestDay.mins)}</div>`:''}
-    <div style="font-size:10px;color:var(--text5);line-height:1.5;margin-bottom:6px">This recap measures time under tension. One multi-day tape session can be just as meaningful as many shorter logs.</div>
-    <div style="font-size:11px;color:var(--text4);line-height:1.6;border-top:1px solid var(--stat-border);padding-top:8px">${compLine}</div>
-  </div>`;
-}
-function dismissWeeklySummary(){
-  char.weeklySummaryDismissed=getMondayOf(today());
-  saveChar();render();
-}
-
-// ── NEXT MILESTONE ─────────────────────────────────────────────────────────────
-function buildNextMilestone(){
-  // Find the closest upcoming achievement that has measurable progress
-  const candidates=[];
-  for(const a of ACHS){
-    if(char.achievements.includes(a.id))continue;
-    // Only include milestones we can show a progress bar for
-    let current=0,target=0,label='';
-    if(a.id.startsWith('s')){
-      // Session count milestones
-      const n=parseInt(a.id.slice(1));if(isNaN(n))continue;
-      current=char.sessions;target=n;label=`sessions`;
-    } else if(a.id.startsWith('h')){
-      // Hour milestones — convert minutes to hours
-      const n=parseInt(a.id.slice(1));if(isNaN(n))continue;
-      current=Math.floor(char.minutes/60);target=n;label=`hours`;
-    } else if(a.id.startsWith('str')){
-      const n=parseInt(a.id.slice(3));if(isNaN(n))continue;
-      current=char.streak;target=n;label=`day streak`;
-    } else if(a.id.startsWith('goal')){
-      const n=parseInt(a.id.slice(4));if(isNaN(n))continue;
-      current=char.goalDays;target=n;label=`goal days`;
-    } else if(a.id.startsWith('ci')){
-      const n=parseInt(a.id.slice(2));if(isNaN(n))continue;
-      current=char.ciLevel||0;target=n;label=`CI level`;
-    } else if(a.id.startsWith('photo')){
-      const n=parseInt(a.id.slice(5));if(isNaN(n))continue;
-      current=photos.length;target=n;label=`photo${n!==1?'s':''}`;
-    } else if(a.id.startsWith('meth')){
-      const n=parseInt(a.id.slice(4));if(isNaN(n))continue;
-      current=(char.methods||[]).length;target=n;label=`methods tried`;
-    } else continue;
-    if(target<=0||current>=target)continue;
-    const remaining=target-current;
-    const pct=Math.round((current/target)*100);
-    candidates.push({a,current,target,remaining,pct,label});
-  }
-  if(!candidates.length)return'';
-  // Sort by closest (highest pct complete)
-  candidates.sort((a,b)=>b.pct-a.pct);
-  const {a,current,target,remaining,pct,label}=candidates[0];
-  const remainingStr=label==='hours'?`${remaining}h`:label==='CI level'?`${remaining} CI level${remaining!==1?'s':''}`:
-    `${remaining} ${label}`;
-  return`<div class="card" style="margin-bottom:9px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <div style="font-size:22px">${a.icon}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;color:var(--text1)">${a.title}</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:1px">${remainingStr} to go · ${a.desc}</div>
-      </div>
-      <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0">${pct}%</div>
-    </div>
-    <div style="height:6px;background:var(--bg-stat);border-radius:3px;overflow:hidden">
-      <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,var(--acc18),var(--accent));width:${pct}%;transition:width .6s"></div>
-    </div>
-    <div style="font-size:9px;color:var(--text5);margin-top:4px;text-align:right">${current} / ${target} ${label}</div>
-  </div>`;
-}
+// (buildNextMilestone removed — dead code, not referenced anywhere.)
 
 // ── TODAY ──────────────────────────────────────────────────────────────────────
-function getMostUsedMethodEntries(limit=3){
-  const methods={};
-  logs.forEach((log,index)=>{
-    if(!log.method||!log.cat)return;
-    if(!methods[log.method])methods[log.method]={method:log.method,cat:log.cat,minutes:0,lastIndex:index};
-    methods[log.method].minutes+=Number(log.dur)||0;
-    methods[log.method].lastIndex=Math.min(methods[log.method].lastIndex,index);
-  });
-  return Object.values(methods)
-    .sort((a,b)=>b.minutes-a.minutes||a.lastIndex-b.lastIndex)
-    .slice(0,limit);
+function toggleTodayOptions(){
+  todayOptionsExpanded=!todayOptionsExpanded;
+  const c=document.getElementById('content');
+  if(c&&tab==='today'){c.innerHTML=renderToday();attachEvents();}
+}
+function toggleTodaySessions(){
+  todaySessionsExpanded=!todaySessionsExpanded;
+  const c=document.getElementById('content');
+  if(c&&tab==='today'){c.innerHTML=renderToday();attachEvents();}
+}
+// Returns up to `limit` distinct methods, ordered by most-recent use.
+// Recency beats total time-on-task deliberately: when a user adopts a new
+// method, they shouldn't have to grind through months of old sessions
+// before it earns a slot in Quick Start. `logs` is already stored newest-
+// first (see awardSession / rebuildCharFromLogs), so a single forward pass
+// picks the freshest occurrence of each method and stops early.
+function getRecentMethods(limit=3){
+  const seen=new Set();
+  const out=[];
+  for(const log of logs){
+    if(!log.method||!log.cat)continue;
+    if(seen.has(log.method))continue;
+    seen.add(log.method);
+    out.push({method:log.method,cat:log.cat});
+    if(out.length>=limit)break;
+  }
+  return out;
 }
 
 function renderToday(){
   const td=today(),tMin=todayMin(),tGoalMin=todayGoalMin(),goal=char.dailyGoalMin||120;
+  const isRestToday=(char.restDays||[]).includes(td);
+  const retainingOn=char.countRetainingInGoal!==false;
   const goalPct=Math.min(100,Math.round((tGoalMin/goal)*100));
   const tSess=todayLogs();
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
   const isPaused=!!activeTimer&&!activeTimer.startedAt;
-  const msg=coachMessage();currentCoachCTA=msg.cta;
-  const timerBlock=isRunning?`<div class="card" style="border-color:var(--green-border);background:var(--green-bg);margin-bottom:9px">
+    const insight=todayInsight();
+  const stripContent=insight||{icon:'💬',msg:'Need guidance? Ask the Coach anything.'};
+  const insightStrip=`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;margin-bottom:9px;display:flex;gap:10px;align-items:center">
+  <span style="font-size:16px;flex-shrink:0">${stripContent.icon}</span>
+  <div style="flex:1;min-width:0;font-size:12px;color:var(--text2);line-height:1.5">${stripContent.msg}</div>
+  <button onclick="showCoachSheet()" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--accent);font-weight:600;cursor:pointer;font-family:var(--font-body);flex-shrink:0;white-space:nowrap">Ask Coach</button>
+</div>`;
+  const timerBlock=isRunning?`<div class="card sess-active-card" style="border-color:var(--green-border);background:var(--green-bg);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <div class="live-dot"></div>
+      <div class="live-dot sess-live-dot"></div>
       <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--green)">Session Active</div>
       <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method}</div>
       <div style="font-size:9px;color:var(--text5);margin-top:2px">${fmtWallStart(activeTimer.wallStart)}</div></div>
-      <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtLive(timerSecs)}</div>
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtLive(timerSecs)}</div>
     </div>
-    <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop Session</button>
-  </div>`:isPaused?`<div class="card" style="border-color:var(--acc30);margin-bottom:9px">
+    <div style="display:flex;gap:7px">
+      <button id="adjust-time-btn" class="btn-ghost" style="flex:0 0 auto;padding:10px 14px;font-size:12px;white-space:nowrap">⏱ Adjust</button>
+      <button id="stop-btn" class="btn-red" style="flex:1;margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop Session</button>
+    </div>
+  </div>`:isPaused?`<div class="card sess-paused-card" style="border-color:var(--acc30);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:16px">⏸</span>
       <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--accent)">Session Paused</div>
@@ -1920,26 +2237,17 @@ function renderToday(){
     </div>
     <div style="display:flex;gap:7px">
       <button id="resume-btn" class="btn-green" style="margin:0;padding:10px;font-size:13px;flex:1">${IC.play(14)} Resume</button>
-      <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px;flex:1">${IC.stop(14)} Save</button>
+      <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px;flex:1">${IC.stop(14)} Stop</button>
     </div>
+    <button id="adjust-time-btn" class="btn-ghost" style="width:100%;margin-top:7px;padding:9px;font-size:12px">⏱ Adjust Time</button>
   </div>`:'';
-  // Live session card for Today's Sessions list (shows active session alongside completed ones)
-  const liveSessionCard=isRunning?`
-    <div style="display:flex;gap:10px;align-items:flex-start;background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:10px;margin-bottom:7px">
-      <div style="width:34px;height:34px;border-radius:8px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${catFor(activeTimer.cat).icon}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--green)">${activeTimer.method}</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:1px">
-          <span class="live-dot" style="margin-right:4px"></span>
-          Running · <span id="mc-run-time-2">${fmtLive(timerSecs)}</span>
-          ${timerSecs>=86400?` · ${Math.floor(timerSecs/86400)}d ${Math.floor((timerSecs%86400)/3600)}h today: ${fmtMin(liveTimerTodayMins())}`:''}
-        </div>
-      </div>
-    </div>`:'';
 
-  const sessHtml=(liveSessionCard||tSess.length)?
-    liveSessionCard+tSess.map(l=>{const cat=catFor(l.cat);return`
-    <div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;padding:10px;margin-bottom:7px">
+  const buildSessRow=(l,{clickable=false}={})=>{
+    const cat=catFor(l.cat);
+    const cursor=clickable?'cursor:pointer;':'';
+    const onClick=clickable?`onclick="toggleTodaySessions()"`:'';
+    const chevron=clickable?`<div style="font-size:13px;color:var(--text4);align-self:center;flex-shrink:0;transition:transform .2s;transform:rotate(${todaySessionsExpanded?'180':'0'}deg)">▾</div>`:'';
+    return`<div ${onClick} style="display:flex;gap:10px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;padding:10px;margin-bottom:7px;${cursor}">
       <div style="width:34px;height:34px;border-radius:8px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${cat.icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.method}</div>
@@ -1949,8 +2257,17 @@ function renderToday(){
         <button class="edit-btn" data-id="${l.id}" style="display:flex;align-items:center">${IC.edit(12)}</button>
         <button class="del-btn" data-id="${l.id}" style="display:flex;align-items:center">${IC.x(13)}</button>
       </div>
-    </div>`}).join('')
-    :`<div class="empty">No sessions today yet.<br>Tap <strong>Start Session</strong> to begin.</div>`;
+      ${chevron}
+    </div>`;
+  };
+
+  const firstSess=tSess[0];
+  const restSess=tSess.slice(1);
+  const hasMore=restSess.length>0;
+  const sessHtml=firstSess
+    ?buildSessRow(firstSess,{clickable:hasMore})
+      +(hasMore&&todaySessionsExpanded?restSess.map(l=>buildSessRow(l)).join(''):'')
+    :'';
 
   // Last session summary (shown when no active timer and no sessions today)
   const lastLog=logs.find(l=>l.date!==td);
@@ -1962,87 +2279,89 @@ function renderToday(){
         <div style="font-size:10px;color:var(--text4);margin-top:1px">${fmtDate(lastLog.date)} · ${fmtMin(lastLog.dur)}</div>
       </div>
     </div>`:'';
-  // Favour time under tension, rather than raw log count. This keeps long-wear
-  // methods such as T-tape prominent even when they create fewer entries.
-  const quickMethods=getMostUsedMethodEntries(3);
+  // Quick Start mirrors what you've done lately — not lifetime totals.
+  // Switching methods should surface the new one immediately, not after
+  // months of accumulated time.
+  const quickMethods=getRecentMethods(3);
   const quickLogBtn=quickMethods.length&&!activeTimer?`
-    <div style="display:grid;grid-template-columns:repeat(${quickMethods.length},minmax(0,1fr));gap:7px;margin-bottom:7px">
-      ${quickMethods.map((entry,i)=>`<button class="quick-start-btn" data-method="${htmlEsc(entry.method)}" data-cat="${htmlEsc(entry.cat)}" style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left;transition:border-color .2s;min-width:0">
-        <span style="font-size:16px;flex-shrink:0">${catFor(entry.cat).icon}</span>
+    <div style="display:grid;grid-template-columns:repeat(${Math.min(quickMethods.length,3)},minmax(0,1fr));gap:6px;margin-bottom:7px">
+      ${quickMethods.slice(0,3).map(entry=>`<button class="quick-start-btn" data-method="${htmlEsc(entry.method)}" data-cat="${htmlEsc(entry.cat)}" style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:10px;padding:9px 8px;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left;transition:border-color .2s;min-width:0">
+        <span style="font-size:15px;flex-shrink:0">${catFor(entry.cat).icon}</span>
         <div style="flex:1;min-width:0;overflow:hidden">
-          <div style="font-size:10px;font-weight:600;color:var(--accent)">${i===0?'Quick Start':'Quick Start'}</div>
-          <div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${htmlEsc(entry.method)}</div>
+          <div style="font-size:11px;color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${htmlEsc(entry.method)}</div>
         </div>
-        <span style="font-size:10px;color:var(--accent);font-weight:700;flex-shrink:0">▶</span>
       </button>`).join('')}
     </div>`:'';
-  const weeklySummary=''; // Weekly Recap moved to Reports tab
   return`
-  <div class="coach-card">
-    <div style="display:flex;gap:10px;align-items:flex-start">
-      <div class="coach-icon">${msg.icon}</div>
-      <div style="flex:1">
-        <div class="coach-label">Coach</div>
-        <div class="coach-msg">${msg.msg}</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap">
-          ${msg.cta?`<div class="coach-cta" id="coach-cta">${msg.cta==='log'?IC.plus(11)+' Log Session':msg.cta==='photos'?'📸 Add Photo':'→ Update CI'}</div>`:''}
-          <div class="coach-cta" id="coach-talk-btn" style="background:var(--acc18);border-color:var(--acc45)">💬 Ask Coach</div>
-        </div>
+  ${insightStrip}
+  <div class="card" style="margin-bottom:9px;position:relative;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);white-space:nowrap">Today's Goal</span>
+        ${goalPct>=100?`<span style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:2px 8px;font-weight:700;letter-spacing:.3px;white-space:nowrap">✓ MET</span>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <input class="goal-inp" id="goal-inp" type="number" min="5" max="1440" value="${goal}" style="width:54px">
+        <span style="font-size:10px;color:var(--text5)">min</span>
       </div>
     </div>
-  </div>
-  ${weeklySummary}
-  <div class="card" style="margin-bottom:9px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="display:flex;align-items:baseline;gap:8px">
-        <div style="font-family:Cinzel,serif;font-size:22px;font-weight:900;color:var(--accent);cursor:pointer" onclick="tab='journey';render()" title="Go to Journey">${LEVELS[char.ciLevel||0].ci}</div>
-        <div style="font-size:10px;color:var(--text4)">Daily Goal</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:5px">
-        <input class="goal-inp" id="goal-inp" type="number" min="5" max="1440" value="${goal}">
-        <span style="font-size:10px;color:var(--text4)">min</span>
+    <div class="goal-bar" style="height:14px;border-radius:7px;overflow:hidden;position:relative">
+      <div class="goal-fill ${goalPct>=100?'goal-fill-ok':'goal-fill-warn'}" style="width:${goalPct}%;height:100%;border-radius:7px;position:relative;overflow:hidden;transition:width .9s cubic-bezier(.22,.9,.3,1);${goalPct>=100?'animation:goalCelebrate 3s ease-in-out infinite':''}">
+        <div class="goal-shimmer" style="position:absolute;top:0;left:0;width:70%;height:100%;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.35) 50%,transparent 100%);animation:goalShimmer 3.2s ease-in-out infinite;pointer-events:none"></div>
       </div>
     </div>
-    <div class="goal-bar"><div class="goal-fill ${goalPct>=100?'goal-fill-ok':'goal-fill-warn'}" style="width:${goalPct}%"></div></div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text4);margin-top:4px">
-      <span data-live="goal-done">${fmtMin(tGoalMin)} done</span>
-      <span data-live="goal-text">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go'}</span>
-    </div>
-    <div class="stats-grid-4" style="grid-template-columns:1fr 1fr;gap:10px">
-      <div style="text-align:center;background:var(--bg-stat);border-radius:10px;padding:14px 4px">
-        <span class="sg-val" style="font-size:clamp(18px,5vw,26px);color:${tGoalMin>0?'var(--accent)':'var(--text3)'}" data-live="today-min">${fmtMin(tGoalMin)}</span>
-        <div style="font-size:9px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.5px">Today</div>
-      </div>
-      <div style="text-align:center;background:var(--bg-stat);border-radius:10px;padding:14px 4px">
-        <span class="sg-val" style="font-size:clamp(18px,5vw,26px);color:${char.streak>0?'#F59E0B':'var(--text3)'}">${char.streak>0?char.streak+'🔥':'—'}</span>
-        <div style="font-size:9px;color:var(--text5);margin-top:5px;text-transform:uppercase;letter-spacing:.5px">Day Streak</div>
-      </div>
-    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:9px">
+      <span style="display:flex;align-items:baseline;gap:4px">
+        <span data-live="goal-done" style="font-size:13px;font-weight:600;color:var(--text1);font-variant-numeric:tabular-nums">${fmtMin(tGoalMin)}</span>
+        <span style="font-size:10px;color:var(--text4)">done</span>
+      </span>
+      <span data-live="goal-text" style="font-size:10px;color:${goalPct>=100?'var(--green)':'var(--text4)'};font-weight:${goalPct>=100?'600':'400'}">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go'}</span>
     </div>
   </div>
   ${timerBlock}
   ${quickLogBtn}
   ${!activeTimer?`<button id="start-session-btn" class="btn-gold" style="margin-bottom:7px">${IC.plus(14)} Start Session</button>`:''}
-  <div style="display:flex;gap:6px;margin-bottom:12px">
-    <button id="log-past-btn" class="btn-ghost" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 8px">${IC.edit(12)} Log Past</button>
-    <button onclick="markRestDay()" style="flex:0 0 auto;background:${(char.restDays||[]).includes(td)?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${(char.restDays||[]).includes(td)?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:10px 12px;color:${(char.restDays||[]).includes(td)?'var(--accent)':'var(--text3)'};font-size:11px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;white-space:nowrap">🛌 Rest Day</button>
-    <div onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()"
-      style="flex:0 0 auto;display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 2px">
-      <div style="font-size:11px;color:${char.countRetainingInGoal!==false?'var(--text4)':'#c0392b'};white-space:nowrap;line-height:1.3">${char.countRetainingInGoal!==false?'Retaining counts<br>toward goal':'Retaining excluded<br>from goal'}</div>
-      <div style="position:relative;width:38px;height:22px;flex-shrink:0">
-        <div style="width:38px;height:22px;border-radius:11px;background:${char.countRetainingInGoal!==false?'#22a85a':'#c0392b'};transition:background .25s;border:1px solid ${char.countRetainingInGoal!==false?'rgba(34,168,90,.6)':'rgba(192,57,43,.6)'}"></div>
-        <div style="position:absolute;top:2px;left:${char.countRetainingInGoal!==false?'18':'2'}px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .25s"></div>
-      </div>
-    </div>
-  </div>
   ${lastSessHtml}
-  ${buildNextMilestone()}
-  ${(liveSessionCard||tSess.length)?`
+  ${tSess.length?`
   <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
     <span>Today's Sessions</span>
     <span style="font-size:9px;color:var(--text5);font-weight:400;text-transform:none;letter-spacing:0">${tSess.length} logged${tMin>0?' · '+fmtMin(tMin):''}</span>
   </div>
-  ${sessHtml}`:''}`;
+  ${sessHtml}`:''}
+  <div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:12px;overflow:hidden;margin-top:18px;margin-bottom:12px">
+    <button onclick="toggleTodayOptions()" style="width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--font-body)">
+      <span style="font-size:14px;flex-shrink:0">⚙</span>
+      <div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text2)">Session Options</div>
+      ${isRestToday?`<span style="font-size:9px;color:var(--accent);background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:2px 7px;flex-shrink:0;font-weight:600">🛌 Rest day</span>`:''}
+      ${!retainingOn?`<span style="font-size:9px;color:#c0392b;background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:10px;padding:2px 7px;flex-shrink:0;font-weight:600">🔒 Retaining off</span>`:''}
+      <span style="font-size:11px;color:var(--text5);flex-shrink:0;transform:rotate(${todayOptionsExpanded?'180':'0'}deg);transition:transform .2s">▾</span>
+    </button>
+    ${todayOptionsExpanded?`<div style="padding:0 12px 12px;border-top:1px solid var(--stat-border)">
+      ${!activeTimer?`<button id="log-past-btn" class="btn-ghost" style="width:100%;margin:12px 0 4px;padding:9px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px">${IC.edit(13)} Log a Past Session</button>`:''}
+      <div onclick="markRestDay()" style="display:flex;align-items:center;gap:10px;padding:11px 0;cursor:pointer;border-top:1px solid var(--stat-border)">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center">🛌</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text1)">Rest Day</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:1px">${isRestToday?'Today marked as rest — streak protected':'Mark today as rest to protect your streak'}</div>
+        </div>
+        <div style="position:relative;width:38px;height:22px;flex-shrink:0">
+          <div style="width:38px;height:22px;border-radius:11px;background:${isRestToday?'#22a85a':'var(--bg-stat)'};transition:background .25s;border:1px solid ${isRestToday?'rgba(34,168,90,.6)':'var(--stat-border)'}"></div>
+          <div style="position:absolute;top:2px;left:${isRestToday?'18':'2'}px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .25s"></div>
+        </div>
+      </div>
+      <div onclick="char.countRetainingInGoal=!char.countRetainingInGoal;saveChar();render()" style="display:flex;align-items:center;gap:10px;padding:11px 0;cursor:pointer;border-top:1px solid var(--stat-border)">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center">🔒</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text1)">Retaining counts toward goal</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:1px">${retainingOn?'Included in daily goal progress':'Excluded from daily goal progress'}</div>
+        </div>
+        <div style="position:relative;width:38px;height:22px;flex-shrink:0">
+          <div style="width:38px;height:22px;border-radius:11px;background:${retainingOn?'#22a85a':'#c0392b'};transition:background .25s;border:1px solid ${retainingOn?'rgba(34,168,90,.6)':'rgba(192,57,43,.6)'}"></div>
+          <div style="position:absolute;top:2px;left:${retainingOn?'18':'2'}px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:left .25s"></div>
+        </div>
+      </div>
+    </div>`:''}
+  </div>`;
 }
 
 // ── CI JOURNEY TIMELINE ────────────────────────────────────────────────────────
@@ -2063,166 +2382,6 @@ function fmtJourneyDuration(startDateStr){
   return p.join(', ');
 }
 
-function renderCITimeline(){
-  const ci=char.ciLevel||0;
-  const startCI=char.startCI!==undefined?char.startCI:0;
-  const startDate=char.startDate||today();
-  const ciGoal=char.ciGoal||10;
-  const rawHistory=char.ciHistory||[];
-
-  // Build forward-progress-only nodes, preserving original ciHistory index
-  const raw=[{ci:startCI,date:startDate,isStart:true,histIdx:-1}];
-  rawHistory.forEach((h,i)=>raw.push({ci:h.ci,date:h.date,histIdx:i}));
-  const fwd=[raw[0]];
-  for(let i=1;i<raw.length;i++){
-    if(raw[i].ci>fwd[fwd.length-1].ci)fwd.push(raw[i]);
-  }
-  // Reconcile with actual current CI — pop entries above it (user corrected down)
-  while(fwd.length>1&&fwd[fwd.length-1].ci>ci)fwd.pop();
-  // Ensure last fwd node matches actual current ci
-  if(fwd[fwd.length-1].ci<ci){
-    // Find the real history entry for current ci if it exists
-    const real=rawHistory.find(h=>h.ci===ci);
-    fwd.push(real
-      ?{ci,date:real.date,histIdx:rawHistory.indexOf(real)}
-      :{ci,date:today(),histIdx:-2}
-    );
-  }
-
-  // ── Summary stats ──
-  const durationStr=fmtJourneyDuration(startDate);
-  const ciGained=ci-startCI;
-  const curEntry=fwd[fwd.length-1];
-  const daysAtCur=curEntry&&curEntry.date
-    ?Math.max(0,Math.round((Date.now()-new Date(curEntry.date+'T12:00:00').getTime())/86400000)):0;
-  const daysAtCurStr=daysAtCur>=365
-    ?(Math.round(daysAtCur/365*10)/10)+'yr'
-    :daysAtCur>=60?Math.round(daysAtCur/30.4)+'mo':daysAtCur+'d';
-  const milestonesCount=Math.max(0,fwd.length-1);
-
-  const summaryHtml=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px">
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
-        <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1">${ciGained>=0?'+':''}${ciGained}</div>
-        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">CI Gained</div>
-      </div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
-        <div style="font-size:10px;font-weight:700;color:var(--accent);line-height:1.4">${durationStr}</div>
-        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Journey Duration</div>
-      </div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
-        <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1">${daysAtCurStr}</div>
-        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">At ${LEVELS[Math.min(ci,10)].ci}</div>
-      </div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px">
-        <div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent);line-height:1">${milestonesCount}</div>
-        <div style="font-size:8px;color:var(--text5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Milestone${milestonesCount!==1?'s':''}</div>
-      </div>
-    </div>`;
-
-  // ── Horizontal stepper ──
-  const CIRC_H=44,BADGE_H=16,LINE_MT=BADGE_H+CIRC_H/2-1;
-  const NODE_W=68,LINE_W=20;
-  const isGoalReached=ci>=ciGoal;
-  const allNodes=[...fwd,{ci:ciGoal,date:null,isGoal:true}];
-
-  const fmtND=d=>{
-    if(!d)return'';
-    try{return new Date(d+'T12:00:00').toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'});}
-    catch{return'';}
-  };
-
-  const stepperHtml=allNodes.map((n,i)=>{
-    const isGoalNode=!!n.isGoal;
-    const isStartNode=!!n.isStart;
-    // Current = last node before the goal
-    const isCurrent=!isGoalNode&&i===allNodes.length-2;
-    // Editable = has a real histIdx, is not start, not current, not goal
-    const isEditable=!isGoalNode&&!isStartNode&&!isCurrent&&n.histIdx>=0;
-    const hasLine=i<allNodes.length-1;
-
-    const sz=isCurrent?42:32;
-    let cBg,cBdr,cTxt,cShadow='none';
-    if(isGoalNode){
-      cBg=isGoalReached?'var(--green)':'var(--bg-stat)';
-      cBdr=isGoalReached?'var(--green)':'var(--acc30)';
-      cTxt=isGoalReached?'#fff':'var(--accent)';
-    }else if(isCurrent){
-      cBg='var(--accent)';cBdr='var(--accent)';cTxt='var(--bg)';
-      cShadow='0 0 0 5px var(--acc12)';
-    }else{
-      cBg='var(--acc12)';cBdr='var(--acc30)';cTxt='var(--accent)';
-    }
-
-    const innerTxt=isGoalNode?(isGoalReached?'🏆':String(ciGoal)):String(n.ci);
-    const fSz=isGoalNode&&isGoalReached?'14':(isCurrent?'13':'10');
-
-    const mainLabel=isGoalNode
-      ?(isGoalReached?'Reached!':'Goal')
-      :isStartNode?'Start':LEVELS[Math.min(n.ci,10)].ci;
-    const subLabel=isGoalNode
-      ?(isGoalReached?fmtND(curEntry.date||today()):`${ciGoal-ci} lvl${(ciGoal-ci)!==1?'s':''} away`)
-      :fmtND(n.date);
-
-    const nextIsGoal=i===allNodes.length-2;
-    const lineClr=nextIsGoal&&!isGoalReached?'var(--stat-border)':'var(--acc30)';
-
-    // Badge row: NOW label for current, edit button for editable progress nodes
-    const editBtnStyle=`background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--text4);cursor:pointer;font-family:'DM Sans',sans-serif;line-height:1.4;transition:all .15s`;
-    const badgeContent=isCurrent
-      ?`<span style="font-size:7px;font-weight:800;letter-spacing:.4px;color:var(--bg);background:var(--accent);border-radius:6px;padding:2px 6px;white-space:nowrap">NOW</span>`
-      :isGoalReached&&isGoalNode
-        ?`<span style="font-size:7px;font-weight:800;letter-spacing:.4px;color:var(--bg);background:var(--green);border-radius:6px;padding:2px 6px;white-space:nowrap">DONE</span>`
-        :isEditable
-          ?`<button onclick="editTimelineNode(${n.histIdx})" title="Edit milestone"
-              style="${editBtnStyle}"
-              onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
-              onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text4)'">✎</button>`
-          :isStartNode
-            ?`<button onclick="editStartDate()" title="Edit start date"
-                style="${editBtnStyle}"
-                onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
-                onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text4)'">✎</button>`
-            :'';
-
-    return`<div style="flex-shrink:0;width:${NODE_W}px;display:flex;flex-direction:column;align-items:center">
-        <div style="height:${BADGE_H}px;display:flex;align-items:center;justify-content:center">
-          ${badgeContent}
-        </div>
-        <div style="height:${CIRC_H}px;display:flex;align-items:center;justify-content:center">
-          <div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${cBg};border:2px solid ${cBdr};display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:${fSz}px;font-weight:700;color:${cTxt};box-shadow:${cShadow};line-height:1;transition:all .3s">${innerTxt}</div>
-        </div>
-        <div style="font-size:9px;font-weight:700;color:${isCurrent?'var(--accent)':isGoalNode?(isGoalReached?'var(--green)':'var(--text4)'):'var(--text3)'};margin-top:5px;text-align:center;white-space:nowrap">${mainLabel}</div>
-        <div style="font-size:8px;color:var(--text5);margin-top:1px;text-align:center;white-space:nowrap">${subLabel}</div>
-      </div>
-      ${hasLine?`<div style="flex-shrink:0;width:${LINE_W}px;height:2px;background:${lineClr};margin-top:${LINE_MT}px;align-self:flex-start;border-radius:1px"></div>`:''}`;
-  }).join('');
-
-  // Start date — formatted nicely for the header
-  const startFmt=startDate?new Date(startDate+'T12:00:00').toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'}):'—';
-
-  return`<div class="card" style="padding:16px;margin-bottom:10px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">CI Journey</div>
-        <div style="font-size:9px;color:var(--text5);margin-top:1px">${LEVELS[startCI].ci} → ${LEVELS[ciGoal].ci}</div>
-      </div>
-      <button onclick="editStartDate()" title="Edit journey start date"
-        style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:5px 10px;font-size:10px;color:var(--text4);cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;transition:all .2s"
-        onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
-        onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text4)'">
-        <span>Since ${startFmt}</span><span>✎</span>
-      </button>
-    </div>
-    ${summaryHtml}
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 8px">
-      <div style="display:flex;align-items:flex-start;padding:0 2px;width:max-content">
-        ${stepperHtml}
-      </div>
-    </div>
-  </div>`;
-}
-
 function editTimelineNode(histIdx){
   const entry=(char.ciHistory||[])[histIdx];
   if(!entry)return;
@@ -2232,22 +2391,22 @@ function editTimelineNode(histIdx){
     const isSel=v===entry.ci;
     return`<button onclick="window._tlEditCI=${v};document.querySelectorAll('#timeline-edit-ov .tlci-btn').forEach(b=>{const s=+b.dataset.v===${v};b.style.background=s?'var(--accent)':'var(--bg-stat)';b.style.borderColor=s?'var(--accent)':'var(--stat-border)';b.style.color=s?'var(--bg)':'var(--text3)';})"
       class="tlci-btn" data-v="${v}"
-      style="padding:9px 2px;border-radius:8px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;text-align:center;background:${isSel?'var(--accent)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--accent)':'var(--stat-border)'};color:${isSel?'var(--bg)':'var(--text3)'}">${v}</button>`;
+      style="padding:9px 2px;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:700;cursor:pointer;text-align:center;background:${isSel?'var(--accent)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--accent)':'var(--stat-border)'};color:${isSel?'var(--bg)':'var(--text3)'}">${v}</button>`;
   }).join('');
   const el=document.createElement('div');el.className='overlay';el.id='timeline-edit-ov';
   el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:5px">Edit Milestone</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:5px">Edit Milestone</div>
     <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:14px">Correct the CI level or date for this recorded milestone.</div>
     <div class="sec-title">CI Level Reached</div>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:16px">${ciGrid}</div>
     <div class="sec-title">Date Reached</div>
     <input type="date" id="tl-date-inp" value="${entry.date}" max="${today()}"
-      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 14px;color:var(--accent);font-size:15px;font-weight:700;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:16px">
+      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 14px;color:var(--accent);font-size:15px;font-weight:700;width:100%;outline:none;font-family:var(--font-body);margin-bottom:16px">
     <div style="display:flex;gap:8px">
       <button class="btn-ghost" onclick="document.getElementById('timeline-edit-ov').remove()" style="flex:0 0 76px">Cancel</button>
       <button onclick="confirmDialog('Delete milestone?','This entry will be removed from your CI history. This cannot be undone.','Delete',()=>{deleteTimelineNode(${histIdx})})"
-        style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px 14px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">🗑</button>
+        style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px 14px;font-size:13px;color:#a03232;cursor:pointer;font-family:var(--font-body)">🗑</button>
       <button class="btn-gold" onclick="saveTimelineNode(${histIdx})" style="flex:1">✓ Save</button>
     </div>
   </div>`;
@@ -2282,13 +2441,13 @@ function editStartDate(){
   const el=document.createElement('div');el.className='overlay';el.id='start-date-ov';
   el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:6px">Edit Start Date</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:6px">Edit Start Date</div>
     <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:14px">
       The date you began your restoration journey — used as the anchor for your entire CI timeline.
     </div>
     <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Start Date</div>
     <input type="date" id="sd-inp" value="${char.startDate||today()}" max="${today()}"
-      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 14px;color:var(--accent);font-size:15px;font-weight:700;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:16px">
+      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 14px;color:var(--accent);font-size:15px;font-weight:700;width:100%;outline:none;font-family:var(--font-body);margin-bottom:16px">
     <div style="display:flex;gap:8px">
       <button class="btn-ghost" onclick="document.getElementById('start-date-ov').remove()" style="flex:0 0 80px">Cancel</button>
       <button class="btn-gold" onclick="saveStartDate()" style="flex:1">✓ Save</button>
@@ -2311,10 +2470,34 @@ function saveStartDate(){
 }
 
 // ── MILESTONE TOOLTIP TOGGLE ───────────────────────────────────────────────
+// Builds the info strip HTML for the currently-selected milestone.
+// Reads _gaugeChain (cached by renderMasterGauge) so it can be called from
+// either the initial render or the toggle handler.
+function buildMilestoneStrip(){
+  if(_activeMilestoneIdx===null||!_gaugeChain||!_gaugeChain[_activeMilestoneIdx])return'';
+  const m=_gaugeChain[_activeMilestoneIdx];
+  const dateStr=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('en',{weekday:'short',month:'long',day:'numeric',year:'numeric'}):'Unknown date';
+  const nodeLabel=m.isStart&&_activeMilestoneIdx===0?'Journey Started':m.isCurrent?'Current Level':'Level Reached';
+  const canEdit=(m.histIdx>=0)||!!m.isStart;
+  const editFn=m.isStart?`editStartDate()`:`editTimelineNode(${m.histIdx})`;
+  return`
+      <div style="margin:12px 0 0;display:flex;align-items:center;gap:10px;background:var(--acc6);border:1px solid var(--acc30);border-radius:10px;padding:10px 14px;animation:fadeSlideUp .2s ease">
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--accent);flex-shrink:0">CI-${m.ci}</div>
+        <div style="width:1px;height:28px;background:var(--acc30);flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">${nodeLabel}</div>
+          <div style="font-size:11px;color:var(--text2);font-weight:600">${dateStr}</div>
+        </div>
+        ${canEdit?`<button onclick="${editFn}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0">✎ Edit</button>`:''}
+        <button onclick="toggleMilestoneTooltip(${_activeMilestoneIdx})" style="background:none;border:none;font-size:16px;color:var(--text4);cursor:pointer;flex-shrink:0;line-height:1;padding:0 2px">×</button>
+      </div>`;
+}
+
 function toggleMilestoneTooltip(idx){
   _activeMilestoneIdx=_activeMilestoneIdx===idx?null:idx;
-  const c=document.getElementById('content');
-  if(c&&tab==='journey'){c.innerHTML=renderJourney();attachEvents();}
+  // Update only the strip container — no full-tab re-render, no SVG flash.
+  const wrap=document.getElementById('milestone-strip-wrap');
+  if(wrap)wrap.innerHTML=buildMilestoneStrip();
 }
 
 // ── MASTER GAUGE (Journey Tab Hero) ────────────────────────────────────────
@@ -2347,6 +2530,7 @@ function renderMasterGauge(){
     chain.push({ci,date:real?real.date:today(),histIdx:-2});
   }
   if(chain.length>0){chain[0].isStart=true;chain[chain.length-1].isCurrent=true;}
+  _gaugeChain=chain;
 
   // ── Track arc ──
   const SW_TRACK=20,SW_FILL=13;
@@ -2378,7 +2562,7 @@ function renderMasterGauge(){
     const dotR=isCurrent?9:6;
     dotsSVG+=
       `<g onclick="toggleMilestoneTooltip(${idx})" style="cursor:pointer">`+
-        `<circle cx="${p.x}" cy="${p.y}" r="${dotR+9}" fill="transparent"/>`+
+        `<circle cx="${p.x}" cy="${p.y}" r="${dotR+5}" fill="transparent"/>`+
         (isCurrent?`<circle cx="${p.x}" cy="${p.y}" r="${dotR+5}" fill="var(--accent)" opacity=".15" class="milestone-pulse-ring"/>`:'')+
         `<circle cx="${p.x}" cy="${p.y}" r="${dotR}" fill="${isCurrent||isActive?'var(--accent)':'var(--bg-card)'}" stroke="var(--accent)" stroke-width="${isCurrent?2.5:isActive?2.5:1.8}" style="${isCurrent?'filter:drop-shadow(0 0 8px var(--accent))':isActive?'filter:drop-shadow(0 0 5px var(--accent))':''}"/>`+
         (isCurrent
@@ -2390,38 +2574,21 @@ function renderMasterGauge(){
   // ── Center labels ──
   const centerSVG=
     `<circle cx="${CX}" cy="${CY}" r="86" fill="none" stroke="var(--accent)" stroke-width="1" opacity=".04"/>`+
-    `<text x="${CX}" y="${CY-16}" text-anchor="middle" font-family="Cinzel,serif" font-size="60" font-weight="900" fill="var(--accent)" style="filter:drop-shadow(0 0 20px var(--acc18))">${ci}</text>`+
-    `<text x="${CX}" y="${CY+14}" text-anchor="middle" font-family="Cinzel,serif" font-size="13" font-weight="700" fill="var(--text3)">${LEVELS[ci].ci}</text>`+
-    `<text x="${CX}" y="${CY+33}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="600" fill="${isGoalReached?'var(--green)':'var(--text4)'}">${isGoalReached?'Goal Reached ✓':goalPct+'% to Goal'}</text>`;
+    `<text x="${CX}" y="${CY-16}" text-anchor="middle" font-family="Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="60" font-weight="900" fill="var(--accent)" style="filter:drop-shadow(0 0 20px var(--acc18))">${ci}</text>`+
+    `<text x="${CX}" y="${CY+14}" text-anchor="middle" font-family="Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" fill="var(--text3)">${LEVELS[ci].ci}</text>`+
+    `<text x="${CX}" y="${CY+33}" text-anchor="middle" font-family="system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="600" fill="${isGoalReached?'var(--green)':'var(--text4)'}">${isGoalReached?'Goal Reached ✓':goalPct+'% to Goal'}</text>`;
 
   // ── Arc-end labels ──
   const sPos=angleXY(ciToAngle(startCI));
   const startDateFmt=startDate?new Date(startDate+'T12:00:00').toLocaleDateString('en',{month:'short',year:'numeric'}):'';
   const edgeSVG=
-    `<text x="${sPos.x}" y="${(+sPos.y+20).toFixed(1)}" text-anchor="middle" font-family="Cinzel,serif" font-size="9" font-weight="700" fill="var(--text4)">CI-${startCI}</text>`+
-    `<text x="${sPos.x}" y="${(+sPos.y+31).toFixed(1)}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="7.5" fill="var(--text5)">${startDateFmt}</text>`+
-    `<text x="${gPos.x}" y="${(+gPos.y+20).toFixed(1)}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="${isGoalReached?'var(--green)':'var(--text5)'}">Goal CI-${ciGoal}</text>`;
+    `<text x="${sPos.x}" y="${(+sPos.y+20).toFixed(1)}" text-anchor="middle" font-family="Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="9" font-weight="700" fill="var(--text4)">CI-${startCI}</text>`+
+    `<text x="${sPos.x}" y="${(+sPos.y+31).toFixed(1)}" text-anchor="middle" font-family="system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="7.5" fill="var(--text5)">${startDateFmt}</text>`+
+    `<text x="${gPos.x}" y="${(+gPos.y+20).toFixed(1)}" text-anchor="middle" font-family="system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="8" fill="${isGoalReached?'var(--green)':'var(--text5)'}">Goal CI-${ciGoal}</text>`;
 
-  // ── Active milestone info strip (HTML below SVG) ──
-  let infoStrip='';
-  if(_activeMilestoneIdx!==null&&chain[_activeMilestoneIdx]){
-    const m=chain[_activeMilestoneIdx];
-    const dateStr=m.date?new Date(m.date+'T12:00:00').toLocaleDateString('en',{weekday:'short',month:'long',day:'numeric',year:'numeric'}):'Unknown date';
-    const nodeLabel=m.isStart&&_activeMilestoneIdx===0?'Journey Started':m.isCurrent?'Current Level':'Level Reached';
-    const canEdit=(m.histIdx>=0)||!!m.isStart;
-    const editFn=m.isStart?`editStartDate()`:`editTimelineNode(${m.histIdx})`;
-    infoStrip=`
-      <div style="margin:12px 0 0;display:flex;align-items:center;gap:10px;background:var(--acc6);border:1px solid var(--acc30);border-radius:10px;padding:10px 14px;animation:fadeSlideUp .2s ease">
-        <div style="font-family:Cinzel,serif;font-size:16px;font-weight:700;color:var(--accent);flex-shrink:0">CI-${m.ci}</div>
-        <div style="width:1px;height:28px;background:var(--acc30);flex-shrink:0"></div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">${nodeLabel}</div>
-          <div style="font-size:11px;color:var(--text2);font-weight:600">${dateStr}</div>
-        </div>
-        ${canEdit?`<button onclick="${editFn}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">✎ Edit</button>`:''}
-        <button onclick="toggleMilestoneTooltip(${_activeMilestoneIdx})" style="background:none;border:none;font-size:16px;color:var(--text4);cursor:pointer;flex-shrink:0;line-height:1;padding:0 2px">×</button>
-      </div>`;
-  }
+  // ── Active milestone info strip — rendered into a stable container so the
+  // toggle can update it in place without rebuilding the whole tab.
+  const infoStrip=`<div id="milestone-strip-wrap">${buildMilestoneStrip()}</div>`;
 
   // ── Stats cluster ──
   const durationStr=fmtJourneyDuration(startDate);
@@ -2458,36 +2625,50 @@ function renderMasterGauge(){
     ${statsHTML}`;
 }
 
-function renderJourney(){
+function renderOverviewBody(){
   const ci=char.ciLevel||0;
   if(expandedCIRef.size===0)expandedCIRef.add(ci);
   const isOnboarding=!(char.ciHistory||[]).length&&char.sessions===0&&ci===0&&!char.ciSetupDone;
 
+  const currentLevel=LEVELS[ci];
+  const canonicalForCI=photos.find(p=>p.canonical&&p.ci===currentLevel.ci);
+  const canonicalInline=canonicalForCI?`
+    <div onclick="openPhotoViewer(photos.find(x=>x.id===${canonicalForCI.id}),null)" style="display:flex;gap:10px;align-items:center;margin-top:14px;padding:10px;background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;cursor:pointer">
+      <div style="width:52px;height:52px;border-radius:8px;overflow:hidden;border:1px solid var(--acc30);flex-shrink:0">
+        <img src="${canonicalForCI.url}" style="width:100%;height:100%;object-fit:cover" alt="${canonicalForCI.ci}">
+      </div>
+      <div style="flex:1;min-width:0;text-align:left">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin-bottom:3px">Your ${currentLevel.ci} Photo</div>
+        <div style="font-size:11px;color:var(--text4)">${fmtDate(canonicalForCI.date)}</div>
+      </div>
+      <span style="font-size:14px;color:var(--text5);flex-shrink:0">›</span>
+    </div>`:'';
+
   const heroCard=isOnboarding
     ?`<div class="card card-gold" style="padding:32px 20px 28px;text-align:center;margin-bottom:10px">
         <div style="font-size:52px;margin-bottom:16px;opacity:.45">◉</div>
-        <div style="font-family:Cinzel,serif;font-size:17px;color:var(--accent);margin-bottom:10px;letter-spacing:1px">Begin Your Journey</div>
+        <div style="font-family:var(--font-display);font-size:17px;color:var(--accent);margin-bottom:10px;letter-spacing:1px">Begin Your Journey</div>
         <div style="font-size:12px;color:var(--text3);line-height:1.9;margin-bottom:20px">Set your starting and goal CI levels to<br>activate your personal progress gauge.</div>
         <button class="ci-set-btn" id="update-ci-btn" style="font-size:13px;padding:10px 28px">Set Your CI Levels</button>
       </div>`
     :`<div class="card card-gold" style="padding:20px 14px 18px;margin-bottom:10px">
         ${renderMasterGauge()}
+        ${canonicalInline}
         <div style="text-align:center;margin-top:16px">
           <button class="ci-set-btn" id="update-ci-btn" style="font-size:12px;padding:7px 22px">✎ Update CI Level</button>
         </div>
       </div>`;
 
-  const cumulativeLine=char.minutes>0
-    ?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:9px 14px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
-        <strong style="color:var(--accent)">${fmtDur(char.minutes)}</strong> logged across <strong style="color:var(--text1)">${char.sessions}</strong> session${char.sessions!==1?'s':''}${char.streak>1?` · <strong style="color:#F59E0B">${char.streak}-day streak 🔥</strong>`:''}
-      </div>`:'' ;
+  // Cumulative line removed — its content was already present in the
+  // gauge's stats cluster (hours) and lives properly in Activity (sessions)
+  // and Home (streak when relevant). No unique information was lost.
 
   const refGuide=LEVELS.map((l,i)=>{
     const isActive=i===ci;
     const isExpanded=expandedCIRef.has(i);
     return`<div style="border-bottom:1px solid var(--stat-border);${i===LEVELS.length-1?'border-bottom:none':''}">
-      <button onclick="toggleCIRef(${i})" style="width:100%;display:flex;align-items:center;gap:8px;padding:9px 0;background:none;border:none;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif">
-        <div style="font-family:Cinzel,serif;font-size:11px;font-weight:700;color:${isActive?'var(--accent)':'var(--text4)'};width:36px;flex-shrink:0">${l.ci}</div>
+      <button onclick="toggleCIRef(${i})" style="width:100%;display:flex;align-items:center;gap:8px;padding:9px 0;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--font-body)">
+        <div style="font-family:var(--font-display);font-size:11px;font-weight:700;color:${isActive?'var(--accent)':'var(--text4)'};width:36px;flex-shrink:0">${l.ci}</div>
         <div style="flex:1;font-size:11px;color:${isActive?'var(--text2)':'var(--text4)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
           ${i===0?'Starting point — no loose skin present':l.soft?l.soft.slice(0,50)+(l.soft.length>50?'…':''):''}
         </div>
@@ -2498,14 +2679,44 @@ function renderJourney(){
     </div>`;
   }).join('');
 
+  const badgesEarned=char.achievements.length;
+  const badgesTotal=ACHS.length;
+  const badgesStrip=`<div class="card" style="margin-bottom:9px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="setProgressTab('badges')">
+    <div style="font-size:24px;flex-shrink:0">🏅</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:600;color:var(--text1)">${badgesEarned} of ${badgesTotal} badges earned</div>
+      <div style="font-size:10px;color:var(--text4);margin-top:2px">${badgesEarned===badgesTotal?'All badges unlocked 🎉':'Tap to see your achievements'}</div>
+    </div>
+    <span style="font-size:16px;color:var(--text4);flex-shrink:0">›</span>
+  </div>`;
+
   return`<div class="journey-tab">
     ${heroCard}
-    ${cumulativeLine}
     <div class="sec-title">CI Reference</div>
     <div class="card" style="padding:4px 12px">${refGuide}</div>
+    ${badgesStrip}
   </div>`;
 }
 
+function renderJourney(){
+  const subTab=_progressTab||'overview';
+  const subTabBar=`<div style="display:flex;gap:4px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
+    ${[['overview','Overview'],['activity','Activity'],['badges','Badges']].map(([id,label])=>`
+      <button onclick="setProgressTab('${id}')" style="flex:1;padding:8px 4px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font-body);transition:all .15s;
+        background:${subTab===id?'var(--bg-card)':'transparent'};
+        color:${subTab===id?'var(--accent)':'var(--text4)'};
+        box-shadow:${subTab===id?'0 1px 4px rgba(0,0,0,.2)':'none'}">${label}</button>`).join('')}
+  </div>`;
+  if(subTab==='activity')return subTabBar+renderActivityBody();
+  if(subTab==='badges')return subTabBar+renderBadgesBody();
+  return subTabBar+renderOverviewBody();
+}
+function setProgressTab(t){
+  if(_progressTab===t)return;
+  _progressTab=t;
+  const c=document.getElementById('content');
+  if(c&&tab==='journey'){c.innerHTML=renderJourney();attachEvents();}
+}
 function toggleCIRef(i){
   if(expandedCIRef.has(i))expandedCIRef.delete(i);
   else expandedCIRef.add(i);
@@ -2514,139 +2725,202 @@ function toggleCIRef(i){
 }
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
 let compareA=null,compareB=null;
-let expandedEras=new Set(); // tracks which era keys are expanded
+let _compareMode='side'; // 'side' | 'wipe' — persists for the session
+let _wipePos=50; // wipe slider position (0-100)
 
-function groupPhotosIntoEras(sortedPhotos){
-  // Groups photos with ≤30 day gaps into eras, newest first
-  if(!sortedPhotos.length)return[];
-  const eras=[];
-  let current=[sortedPhotos[0]];
-  for(let i=1;i<sortedPhotos.length;i++){
-    const prev=new Date(sortedPhotos[i-1].date+'T12:00:00');
-    const curr=new Date(sortedPhotos[i].date+'T12:00:00');
-    const dayGap=Math.round((prev-curr)/86400000);
-    if(dayGap<=30){
-      current.push(sortedPhotos[i]);
-    } else {
-      eras.push(current);
-      current=[sortedPhotos[i]];
-    }
-  }
-  eras.push(current);
-  return eras;
-}
-
-function eraLabel(photos){
-  // Newest and oldest date in era
-  const dates=photos.map(p=>p.date).sort();
-  const oldest=dates[0],newest=dates[dates.length-1];
-  const oldDt=new Date(oldest+'T12:00:00');
-  const newDt=new Date(newest+'T12:00:00');
-  const fmt=(d,showYear)=>d.toLocaleDateString('en',{month:'short',...(showYear?{year:'numeric'}:{})});
-  if(oldest===newest)return fmt(oldDt,true);
-  if(oldDt.getFullYear()!==newDt.getFullYear())
-    return`${fmt(oldDt,true)} – ${fmt(newDt,true)}`;
-  if(oldDt.getMonth()!==newDt.getMonth())
-    return`${fmt(oldDt,false)} – ${fmt(newDt,true)}`;
-  return fmt(oldDt,true);
-}
-
-function eraKey(era){
-  return era.map(p=>p.id).join('-');
-}
-
-function eraCI(era){
-  // CI range across the era
-  const cis=era.map(p=>parseInt(p.ci.replace('CI-',''))).filter(n=>!isNaN(n));
-  if(!cis.length)return'';
-  const mn=Math.min(...cis),mx=Math.max(...cis);
-  return mn===mx?`CI-${mn}`:`CI-${mn} → CI-${mx}`;
-}
-
-function toggleEra(key){
-  if(expandedEras.has(key))expandedEras.delete(key);
-  else expandedEras.add(key);
-  // Re-render just the photos tab content without full render
+function setPhotoView(m){
+  if(_photoViewMode===m)return;
+  _photoViewMode=m;
+  _photoSelectMode=false;
+  _photoSelectedIds=new Set();
   const c=document.getElementById('content');
   if(c&&tab==='photos'){c.innerHTML=renderPhotos();attachEvents();}
 }
-
+function renderCIFilmstrip(){
+  const groups={};
+  photos.forEach(p=>{
+    const ci=p.ci||'CI-0';
+    if(!groups[ci])groups[ci]=[];
+    groups[ci].push(p);
+  });
+  Object.values(groups).forEach(arr=>arr.sort((a,b)=>b.date.localeCompare(a.date)));
+  const currentIdx=char.ciLevel||0;
+  return LEVELS.map((level,i)=>{
+    const group=groups[level.ci]||[];
+    const isCurrent=i===currentIdx;
+    if(!group.length&&!isCurrent)return '';
+    const ids=group.map(p=>p.id);
+    const eraArg=`[${ids.join(',')}].map(id=>photos.find(x=>x.id===id)).filter(Boolean)`;
+    return`<div style="background:var(--bg-card);border:1px solid ${isCurrent?'var(--acc30)':'var(--stat-border)'};border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:${group.length?'10':'0'}px">
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:${isCurrent?'var(--accent)':'var(--text2)'};min-width:44px">${level.ci}</div>
+        ${isCurrent?`<span style="font-size:9px;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:2px 7px;color:var(--accent);font-weight:600">YOU</span>`:''}
+        <div style="flex:1;font-size:10px;color:var(--text5);text-align:right">${group.length?group.length+' photo'+(group.length!==1?'s':''):'—'}</div>
+      </div>
+      ${group.length?`<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+        ${group.map(p=>{
+          const isCanonical=!!p.canonical;
+          return`<div style="flex:0 0 80px;position:relative">
+            <div onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}),${eraArg})" style="width:80px;height:80px;border-radius:8px;overflow:hidden;border:1.5px solid ${isCanonical?'var(--accent)':'var(--stat-border)'};cursor:pointer">
+              <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
+            </div>
+            ${isCanonical?`<div style="position:absolute;top:-3px;right:-3px;background:var(--accent);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--bg);border:2px solid var(--bg-card)">★</div>`:''}
+            <div style="font-size:9px;color:var(--text5);text-align:center;margin-top:3px">${fmtDate(p.date)}</div>
+          </div>`;
+        }).join('')}
+      </div>`:`<div style="font-size:10px;color:var(--text5);font-style:italic;padding:4px 0">No photos at this level yet</div>`}
+    </div>`;
+  }).filter(Boolean).join('');
+}
+function toggleCanonicalPhoto(id){
+  const photo=photos.find(p=>p.id===id);
+  if(!photo)return;
+  const ci=photo.ci;
+  const isOn=!!photo.canonical;
+  photos=photos.map(p=>{
+    if(p.id===id)return{...p,canonical:!isOn};
+    if(!isOn&&p.canonical&&p.ci===ci)return{...p,canonical:false};
+    return p;
+  });
+  savePhotos();
+  showToast(isOn?'Removed':'★ Set as '+ci+' representative');
+  const viewer=document.getElementById('photo-view');
+  if(viewer){viewer.remove();openPhotoViewer(photos.find(x=>x.id===id),null);return;}
+  render();
+}
 function renderPhotos(){
   const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
-  const eras=groupPhotosIntoEras(sorted);
+  const months=groupPhotosByMonth(sorted);
+  const totalKB=photosTotalKB(photos);
+  const fmtKB=kb=>kb>=1024?`${(kb/1024).toFixed(1)} MB`:`${kb} KB`;
+  const privacy=photoPrivacyMessage();
 
-  const eraHtml=eras.length?eras.map(era=>{
-    const key=eraKey(era);
-    const isExpanded=expandedEras.has(key);
-    const label=eraLabel(era);
-    const ciRange=eraCI(era);
-    const count=era.length;
+  const pinned=sorted.filter(p=>p.pinned);
 
-    // Fan thumbnail — show up to 3 photos stacked/fanned
-    const fanPhotos=era.slice(0,3);
-    const fanHtml=`<div style="position:relative;width:72px;height:72px;flex-shrink:0">
-      ${fanPhotos.map((p,i)=>{
-        const rot=fanPhotos.length===1?0:i===0?-6:i===1?0:6;
-        const tx=fanPhotos.length===1?0:i===0?-4:i===1?0:4;
-        const z=i+1;
-        return`<div style="position:absolute;inset:0;border-radius:8px;overflow:hidden;border:2px solid var(--bg-card);
-          transform:rotate(${rot}deg) translateX(${tx}px);z-index:${z};box-shadow:0 2px 6px rgba(0,0,0,.3)">
-          <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
-        </div>`;
-      }).join('')}
-      ${count>3?`<div style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;color:#fff;z-index:10">+${count-3}</div>`:''}
-    </div>`;
+  // ── Top bar (storage + manage) ──
+  const topBar=photos.length?`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:12px;padding:11px 14px;margin-bottom:9px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:18px;flex-shrink:0">📦</span>
+    <div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text1)">${photos.length} photo${photos.length!==1?'s':''} · ${fmtKB(totalKB)}</div>
+    <button onclick="mountStorageSheet()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0">Manage</button>
+  </div>`:'';
 
-    // Expanded photo list — build era ID list for swipe context
-    const eraIds=era.map(p=>p.id);
-    const expandedHtml=isExpanded?`<div style="margin-top:12px;border-top:1px solid var(--stat-border);padding-top:12px;display:flex;flex-direction:column;gap:12px">
-      ${era.map(p=>`
-        <div style="display:flex;gap:8px;align-items:flex-start">
-          <div style="width:72px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid var(--stat-border);cursor:pointer"
-            onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}),[${eraIds.join(',')}].map(id=>photos.find(x=>x.id===id)).filter(Boolean))">
+  // ── Privacy disclaimer (dynamic) ──
+  const disclaimer=`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--text4);line-height:1.7">
+    ${privacy.icon} <strong style="color:var(--text3)">${privacy.strong}</strong> ${privacy.rest}
+  </div>`;
+
+  // ── Pinned strip ──
+  const pinnedHtml=pinned.length?`
+    <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>⭐ Pinned</span>
+      <span style="font-size:9px;color:var(--text5);font-weight:400;text-transform:none;letter-spacing:0">${pinned.length}</span>
+    </div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      ${pinned.map(p=>`
+        <div style="flex:0 0 100px;position:relative">
+          <div data-photo-id="${p.id}" onclick="openPhotoViewer(photos.find(x=>x.id===${p.id}),null)" style="width:100px;height:100px;border-radius:10px;overflow:hidden;border:1.5px solid var(--acc30);cursor:pointer">
             <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-              <span style="font-family:Cinzel,serif;font-size:10px;font-weight:700;color:var(--accent)">${p.ci}</span>
-              <span style="font-size:10px;color:var(--text5)">${fmtDate(p.date)}</span>
-            </div>
-            ${p.note?`<div style="font-size:10px;color:var(--text4);font-style:italic;line-height:1.5">${p.note}</div>`:''}
-            <button class="del-btn" onclick="confirmDialog('Delete this photo?','This photo will be permanently removed. This cannot be undone.','Delete',()=>deletePhoto(${p.id}))" style="margin-top:6px">Delete</button>
+          <div style="font-size:9px;color:var(--text4);text-align:center;margin-top:4px;line-height:1.3">
+            <span style="font-family:var(--font-display);color:var(--accent);font-weight:700">${p.ci}</span>
+            <span style="display:block;color:var(--text5)">${fmtDate(p.date)}</span>
           </div>
         </div>`).join('')}
-    </div>`:'' ;
+    </div>`:'';
 
-    return`<div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:9px">
-      <div style="display:flex;gap:12px;align-items:center;cursor:pointer" onclick="toggleEra('${key}')">
-        ${fanHtml}
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:3px">${label}</div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${ciRange?`<span style="font-family:Cinzel,serif;font-size:10px;color:var(--accent)">${ciRange}</span>`:''}
-            <span style="font-size:10px;color:var(--text4)">${count} photo${count!==1?'s':''}</span>
-          </div>
-        </div>
-        <div style="font-size:18px;color:var(--text4);flex-shrink:0;transition:transform .2s;transform:rotate(${isExpanded?'90':'0'}deg)">›</div>
+  // ── Month sections ──
+  const monthSections=months.map(m=>{
+    // Photos within this month are already sorted newest-first (see
+    // groupPhotosByMonth). Passing the whole month as the viewer's era lets
+    // the user swipe between photos of the same month — the viewer's swipe
+    // direction matches the gallery's ordering.
+    const monthEraArg=`[${m.photos.map(p=>p.id).join(',')}].map(id=>photos.find(x=>x.id===id)).filter(Boolean)`;
+    const hero=m.photos[0];
+    const rest=m.photos.slice(1);
+    const heroId=hero.id;
+    const isSelected=id=>_photoSelectMode&&_photoSelectedIds.has(id);
+    const rowThumb=(p)=>{const sel=isSelected(p.id);return`
+      <div data-photo-id="${p.id}" style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1.5px solid ${sel?'var(--accent)':'var(--stat-border)'};cursor:pointer"
+        onclick="${_photoSelectMode?`togglePhotoSelect(${p.id})`:`openPhotoViewer(photos.find(x=>x.id===${p.id}),${monthEraArg})`}">
+        <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
+        ${_photoSelectMode?`<div style="position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;border:2px solid ${sel?'var(--accent)':'rgba(255,255,255,.85)'};background:${sel?'var(--accent)':'rgba(0,0,0,.25)'};display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--bg);font-weight:700">${sel?'✓':''}</div>`:''}
+      </div>`;};
+    const heroSel=isSelected(heroId);
+    return`<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:var(--text1)">${m.label}</div>
+        <div style="font-size:10px;color:var(--text4)">${m.photos.length} photo${m.photos.length!==1?'s':''} · ${fmtKB(m.totalKB)}</div>
       </div>
-      ${expandedHtml}
+      <div data-photo-id="${heroId}" style="position:relative;aspect-ratio:1.2;border-radius:12px;overflow:hidden;border:1.5px solid ${heroSel?'var(--accent)':'var(--stat-border)'};margin-bottom:8px;cursor:pointer"
+        onclick="${_photoSelectMode?`togglePhotoSelect(${heroId})`:`openPhotoViewer(photos.find(x=>x.id===${heroId}),${monthEraArg})`}">
+        <img src="${hero.url}" style="width:100%;height:100%;object-fit:cover" alt="${hero.ci}">
+        <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);border-radius:20px;padding:3px 9px;font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--accent);backdrop-filter:blur(6px)">${hero.ci}</div>
+        ${hero.pinned?`<div style="position:absolute;top:8px;right:8px;font-size:16px">⭐</div>`:''}
+        ${_photoSelectMode?`<div style="position:absolute;bottom:8px;right:8px;width:22px;height:22px;border-radius:50%;border:2px solid ${heroSel?'var(--accent)':'rgba(255,255,255,.85)'};background:${heroSel?'var(--accent)':'rgba(0,0,0,.25)'};display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--bg);font-weight:700">${heroSel?'✓':''}</div>`:''}
+        <div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.6);border-radius:20px;padding:3px 9px;font-size:10px;color:rgba(255,255,255,.85);backdrop-filter:blur(6px)">${fmtDate(hero.date)}</div>
+      </div>
+      ${rest.length?`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">${rest.map(rowThumb).join('')}</div>`:''}
     </div>`;
-  }).join(''):`<div class="empty">No progress photos yet.<br>Tap the button above to add your first.</div>`;
+  }).join('');
 
-  const lastPhoto=sorted[0];
-  const daysSincePhoto=lastPhoto?Math.round((new Date()-new Date(lastPhoto.date+'T12:00:00'))/86400000):-1;
-  const photoNudge=daysSincePhoto>=30?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 12px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
-    📅 It's been <strong>${daysSincePhoto} days</strong> since your last photo. A comparison shot now would be a great record of your progress.
-  </div>`:daysSincePhoto===-1?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 12px;margin-bottom:9px;font-size:11px;color:var(--text2);line-height:1.6">
-    💡 A baseline photo today gives you something real to compare against months from now. It's one of the most motivating things you can do.
+  // ── Select-mode action bar ──
+  const selectBar=_photoSelectMode?`
+    <div style="position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:var(--bg-sheet);border:1px solid var(--card-border);border-radius:14px;padding:10px 14px;box-shadow:0 8px 28px rgba(0,0,0,.55);display:flex;align-items:center;gap:10px;z-index:20;min-width:240px;max-width:calc(100% - 24px)">
+      <div style="flex:1;font-size:12px;color:var(--text2);font-weight:600">${_photoSelectedIds.size} selected</div>
+      <button onclick="exitPhotoSelect()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">Cancel</button>
+      <button onclick="bulkDeleteSelectedPhotos()" ${_photoSelectedIds.size?'':'disabled'} style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.3);border-radius:8px;padding:7px 12px;font-size:12px;color:#c0392b;cursor:${_photoSelectedIds.size?'pointer':'default'};font-family:var(--font-body);opacity:${_photoSelectedIds.size?1:.4}">Delete</button>
+    </div>`:'';
+
+  // ── Empty state ──
+  if(!photos.length){
+    return`${disclaimer}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <button class="btn-gold" id="open-photo-guide-btn">📷 Take Photo</button>
+      <button class="btn-ghost" id="open-photo-library-btn" style="font-size:13px">🖼 Choose Existing</button>
+    </div>
+    <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="photo-file-library" accept="image/*" multiple style="display:none">
+    <div style="text-align:center;padding:40px 20px;color:var(--text5);font-size:12px;line-height:1.85">
+      <div style="font-size:44px;margin-bottom:14px;opacity:.4">📸</div>
+      <div style="font-size:14px;color:var(--text3);font-weight:600;margin-bottom:6px">No photos yet</div>
+      <div>Take a baseline photo today — you'll be<br>glad you have it months from now.</div>
+    </div>`;
+  }
+
+  const nudgeDays=photos.length?Math.round((Date.now()-new Date(sorted[0].date+'T12:00:00'))/86400000):-1;
+  const nudge=nudgeDays>=30?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--text2);line-height:1.6">
+    📅 It's been <strong>${nudgeDays} days</strong> since your last photo. A new one would track real change.
   </div>`:'';
 
   const compareBtn=photos.length>=2
     ?`<button class="btn-ghost" id="open-compare-btn" style="width:100%;margin-bottom:8px;font-size:12px">⟷ Compare Two Photos</button>`
     :'';
 
+  const viewToggle=`<div style="display:flex;gap:4px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
+    <button onclick="setPhotoView('month')" style="flex:1;padding:8px 4px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font-body);transition:all .15s;
+      background:${_photoViewMode==='month'?'var(--bg-card)':'transparent'};
+      color:${_photoViewMode==='month'?'var(--accent)':'var(--text4)'};
+      box-shadow:${_photoViewMode==='month'?'0 1px 4px rgba(0,0,0,.2)':'none'}">By Month</button>
+    <button onclick="setPhotoView('ci')" style="flex:1;padding:8px 4px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font-body);transition:all .15s;
+      background:${_photoViewMode==='ci'?'var(--bg-card)':'transparent'};
+      color:${_photoViewMode==='ci'?'var(--accent)':'var(--text4)'};
+      box-shadow:${_photoViewMode==='ci'?'0 1px 4px rgba(0,0,0,.2)':'none'}">By CI Level</button>
+  </div>`;
+
+  const timelineSection=_photoViewMode==='ci'
+    ?`<div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Filmstrip</span>
+        <span style="font-size:9px;color:var(--text5);font-weight:400;text-transform:none;letter-spacing:0">Grouped by CI level</span>
+      </div>${renderCIFilmstrip()}`
+    :`<div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Timeline</span>
+        ${_photoSelectMode?`<span style="font-size:9px;color:var(--accent);font-weight:600;text-transform:none;letter-spacing:0">Tap photos to select</span>`:`<span style="font-size:9px;color:var(--text5);font-weight:400;text-transform:none;letter-spacing:0">Long-press a photo to select multiple</span>`}
+      </div>${monthSections}`;
+
   return`
-  ${photoNudge}
+  ${disclaimer}
+  ${topBar}
+  ${nudge}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
     <button class="btn-gold" id="open-photo-guide-btn">📷 Take Photo</button>
     <button class="btn-ghost" id="open-photo-library-btn" style="font-size:13px">🖼 Choose Existing</button>
@@ -2654,11 +2928,524 @@ function renderPhotos(){
   ${compareBtn}
   <input type="file" id="photo-file" accept="image/*" capture="environment" style="display:none">
   <input type="file" id="photo-file-library" accept="image/*" multiple style="display:none">
-  <div class="sec-title">Photo Timeline</div>
-  <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--text4);line-height:1.7">
-    🔒 <strong style="color:var(--text3)">Your photos are stored only on this device.</strong> They are never uploaded, synced, or shared anywhere. Only you can see them — even we can't access them.
-  </div>
-  ${eraHtml}`;
+  ${pinnedHtml}
+  ${viewToggle}
+  ${timelineSection}
+  ${selectBar}`;
+}
+
+// ── PHOTOS LOCK — crypto + biometric helpers ─────────────────────────────────
+function base64UrlEncode(buf){
+  const bytes=new Uint8Array(buf);
+  let str='';
+  for(let i=0;i<bytes.length;i++)str+=String.fromCharCode(bytes[i]);
+  return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function base64UrlDecode(str){
+  const pad=str.length%4===0?'':'='.repeat(4-(str.length%4));
+  const b64=(str+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const bin=atob(b64);
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return bytes.buffer;
+}
+function randomHex(n){
+  const arr=new Uint8Array(n);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+// Deterministic PIN hash — works in every environment including iOS PWAs.
+// We deliberately avoid crypto.subtle.digest here: iOS standalone PWAs have a
+// documented bug where crypto.subtle is undefined or hangs indefinitely,
+// which was freezing the PIN setup flow after the second PIN entry.
+//
+// A 4-digit PIN only has 10,000 possibilities, so cryptographic strength isn't
+// meaningful — anyone with the salt + hash can brute-force it regardless of
+// algorithm. This produces a stable, deterministic 64-char hex output that
+// behaves identically across every device and browser.
+async function hashPin(pin,salt){
+  const str=salt+':'+pin;
+  let out='';
+  for(let round=0;round<8;round++){
+    let h=2166136261>>>0;
+    const rs=str+'|'+round+'|'+str.length;
+    for(let i=0;i<rs.length;i++){
+      h^=rs.charCodeAt(i);
+      h=Math.imul(h,16777619)>>>0;
+    }
+    h^=h>>>16;h=Math.imul(h,2246822507)>>>0;
+    h^=h>>>13;h=Math.imul(h,3266489909)>>>0;
+    h^=h>>>16;
+    out+=h.toString(16).padStart(8,'0');
+  }
+  return out;
+}
+function biometricAvailable(){
+  return !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
+}
+async function registerBiometric(){
+  if(!biometricAvailable())throw new Error('unsupported');
+  // Ask the platform if a user-verifying platform authenticator exists.
+  // This Promise can hang indefinitely in iOS PWAs — wrap with a timeout.
+  if(PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable){
+    const ok=await Promise.race([
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
+      new Promise(res=>setTimeout(()=>res(false),3000))
+    ]);
+    if(!ok)throw new Error('no-authenticator');
+  }
+  const challenge=crypto.getRandomValues(new Uint8Array(32));
+  const userId=crypto.getRandomValues(new Uint8Array(16));
+  const cred=await navigator.credentials.create({
+    publicKey:{
+      challenge,
+      rp:{name:'RestoreTrack'},
+      user:{id:userId,name:(char.name||'restorer')+'@restoretrack',displayName:char.name||'Restorer'},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
+      timeout:60000,
+      attestation:'none'
+    }
+  });
+  return base64UrlEncode(cred.rawId);
+}
+async function unlockWithBiometric(){
+  if(!biometricAvailable()||!char.photoLockCredentialId)throw new Error('unavailable');
+  const challenge=crypto.getRandomValues(new Uint8Array(32));
+  const credIdBytes=base64UrlDecode(char.photoLockCredentialId);
+  // Race against a 30s timeout — iOS PWAs can hang on credentials.get()
+  const assertion=await Promise.race([
+    navigator.credentials.get({
+      publicKey:{
+        challenge,
+        allowCredentials:[{id:credIdBytes,type:'public-key',transports:['internal']}],
+        userVerification:'required',
+        timeout:30000
+      }
+    }),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('biometric-timeout')),32000))
+  ]);
+  return !!assertion;
+}
+
+// ── PHOTOS LOCK — setup flow ─────────────────────────────────────────────────
+// Tiny router: profile-initiated flows land back on Profile; onboarding-initiated
+// flows (flagged via window._obPhotoLockPostSetup) return to Home instead.
+function _profileFlowDone(){
+  if(window._obPhotoLockPostSetup){
+    window._obPhotoLockPostSetup=false;
+    showProfileScreen=false;
+    render();
+  } else {
+    renderProfileScreen();
+  }
+}
+
+function mountPhotosLockSetup(){
+  const ex=document.getElementById('plock-setup-ov');if(ex)ex.remove();
+  let stage='enter'; // 'enter' | 'confirm'
+  let firstPin='';
+  let tmpPin='';
+  const el=document.createElement('div');el.className='overlay';el.id='plock-setup-ov';
+  el.innerHTML=`<div class="sheet" style="max-height:92vh;padding-bottom:24px">
+    <div class="sheet-handle"></div>
+    <div id="pls-body"></div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  // Backdrop tap routes through _profileFlowDone like the Skip/Enable paths —
+  // otherwise window._obPhotoLockPostSetup can survive a dismissed sheet and
+  // misfire on the NEXT Photos Lock flow, sending the user to Home.
+  el.addEventListener('click',e=>{if(e.target===el){el.remove();_profileFlowDone();}});
+
+  const renderBody=()=>{
+    const body=document.getElementById('pls-body');
+    if(!body)return;
+    const title=stage==='enter'?'Create a PIN':'Confirm your PIN';
+    const subtitle=stage==='enter'?'Choose a 4-digit PIN to lock the Photos tab.':'Enter the same PIN again to confirm.';
+    const dots=Array.from({length:4},(_,i)=>{
+      const filled=i<tmpPin.length;
+      return`<div style="width:16px;height:16px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+    }).join('');
+    const key=label=>`<button type="button" data-setup-pin="${label}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:21px;font-weight:700;color:var(--text1);cursor:pointer;user-select:none;-webkit-user-select:none">${label}</button>`;
+    body.innerHTML=`
+      <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);text-align:center;margin-bottom:6px">${title}</div>
+      <div style="font-size:11px;color:var(--text4);text-align:center;line-height:1.6;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">${subtitle}</div>
+      <div id="setup-pin-dots" style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">${dots}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center;margin-bottom:10px">
+        ${key('1')}${key('2')}${key('3')}
+        ${key('4')}${key('5')}${key('6')}
+        ${key('7')}${key('8')}${key('9')}
+        <div></div>
+        ${key('0')}
+        <button type="button" id="setup-pin-del" style="background:transparent;border:none;color:var(--text4);font-size:21px;cursor:pointer;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body)">⌫</button>
+      </div>
+      <div id="setup-pin-error" style="font-size:11px;color:#c0392b;text-align:center;min-height:16px;margin-bottom:6px"></div>
+      <button class="btn-ghost" id="setup-pin-cancel" style="width:100%;margin-top:4px">Cancel</button>
+    `;
+    body.querySelectorAll('[data-setup-pin]').forEach(btn=>{
+      btn.onclick=()=>{
+        if(tmpPin.length>=4)return;
+        tmpPin+=btn.dataset.setupPin;
+        if(navigator.vibrate)navigator.vibrate(10);
+        updateSetupDots();
+        if(tmpPin.length===4)setTimeout(advance,150);
+      };
+    });
+    document.getElementById('setup-pin-del').onclick=()=>{tmpPin=tmpPin.slice(0,-1);updateSetupDots();};
+    document.getElementById('setup-pin-cancel').onclick=()=>el.remove();
+  };
+
+  const updateSetupDots=()=>{
+    const dots=document.getElementById('setup-pin-dots');
+    if(!dots)return;
+    dots.innerHTML=Array.from({length:4},(_,i)=>{
+      const filled=i<tmpPin.length;
+      return`<div style="width:16px;height:16px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+    }).join('');
+  };
+
+  const advance=async()=>{
+    try{
+      if(stage==='enter'){
+        firstPin=tmpPin;
+        tmpPin='';
+        stage='confirm';
+        renderBody();
+        return;
+      }
+      if(tmpPin!==firstPin){
+        tmpPin='';
+        stage='enter';
+        firstPin='';
+        renderBody();
+        const e2=document.getElementById('setup-pin-error');
+        if(e2)e2.textContent='PINs did not match. Try again.';
+        return;
+      }
+      // Commit
+      const salt=randomHex(16);
+      const hash=await hashPin(tmpPin,salt);
+      char.photoLockSalt=salt;
+      char.photoLockPinHash=hash;
+      char.photoLockEnabled=true;
+      saveChar();
+      el.remove();
+      showToast('🔒 Photos Lock enabled');
+      // Offer biometric setup if available. offerBiometricSetup() is
+      // synchronous — it shows a sheet and resolves through its own
+      // Skip / Enable / backdrop handlers — so there's no await and no
+      // race to run here. Previously this was wrapped in a Promise.race
+      // against a 4s timeout; that guard was dead code because the call
+      // returns undefined (already-resolved), not a promise that can hang.
+      if(biometricAvailable()){
+        offerBiometricSetup();
+      } else {
+        _profileFlowDone();
+      }
+    }catch(e){
+      console.error('[RT] PIN setup error',e);
+      const errEl=document.getElementById('setup-pin-error');
+      if(errEl)errEl.textContent='Something went wrong — please try again';
+      tmpPin='';
+      if(stage==='confirm'){stage='enter';firstPin='';}
+      updateSetupDots();
+    }
+  };
+
+  renderBody();
+}
+
+function offerBiometricSetup(){
+  const ex=document.getElementById('bio-setup-ov');if(ex)ex.remove();
+  const el=document.createElement('div');el.className='overlay';el.id='bio-setup-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:24px">
+    <div class="sheet-handle"></div>
+    <div style="text-align:center;padding:14px 8px 4px">
+      <div style="font-size:38px;margin-bottom:12px">✨</div>
+      <div style="font-family:var(--font-display);font-size:14px;color:var(--text1);margin-bottom:8px">Enable Biometric Unlock?</div>
+      <div style="font-size:12px;color:var(--text4);line-height:1.7;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">Use Face ID or fingerprint to unlock Photos instantly. Your PIN still works as a backup.</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" id="bio-setup-skip" style="flex:1">Skip</button>
+      <button class="btn-gold" id="bio-setup-go" style="flex:1">Enable</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el){el.remove();_profileFlowDone();}});
+  document.getElementById('bio-setup-skip').onclick=()=>{el.remove();_profileFlowDone();};
+  document.getElementById('bio-setup-go').onclick=async()=>{
+    const btn=document.getElementById('bio-setup-go');
+    if(btn){btn.disabled=true;btn.textContent='Setting up…';}
+    try{
+      const credId=await registerBiometric();
+      char.photoLockCredentialId=credId;
+      saveChar();
+      el.remove();
+      showToast('✨ Biometric unlock enabled');
+      _profileFlowDone();
+    }catch(e){
+      console.warn('[RT] biometric setup failed',e);
+      el.remove();
+      showToast('⚠ Biometric setup not available on this device');
+      _profileFlowDone();
+    }
+  };
+}
+
+function disablePhotosLock(){
+  const ex=document.getElementById('plock-disable-ov');if(ex)ex.remove();
+  let pin='';
+  const el=document.createElement('div');el.className='overlay';el.id='plock-disable-ov';
+  const renderBody=()=>{
+    const dots=Array.from({length:4},(_,i)=>{
+      const filled=i<pin.length;
+      return`<div style="width:16px;height:16px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+    }).join('');
+    const key=label=>`<button type="button" data-dis-pin="${label}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:21px;font-weight:700;color:var(--text1);cursor:pointer;user-select:none;-webkit-user-select:none">${label}</button>`;
+    el.innerHTML=`<div class="sheet" style="max-height:92vh;padding-bottom:24px">
+      <div class="sheet-handle"></div>
+      <div style="font-family:var(--font-display);font-size:14px;color:var(--text1);text-align:center;margin-bottom:6px">Confirm your PIN</div>
+      <div style="font-size:11px;color:var(--text4);text-align:center;line-height:1.6;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">Enter your PIN to turn Photos Lock off.</div>
+      <div id="dis-pin-dots" style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">${dots}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center;margin-bottom:10px">
+        ${key('1')}${key('2')}${key('3')}
+        ${key('4')}${key('5')}${key('6')}
+        ${key('7')}${key('8')}${key('9')}
+        <div></div>
+        ${key('0')}
+        <button type="button" id="dis-pin-del" style="background:transparent;border:none;color:var(--text4);font-size:21px;cursor:pointer;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body)">⌫</button>
+      </div>
+      <div id="dis-pin-error" style="font-size:11px;color:#c0392b;text-align:center;min-height:16px;margin-bottom:6px"></div>
+      <button class="btn-ghost" id="dis-pin-cancel" style="width:100%;margin-top:4px">Cancel</button>
+    </div>`;
+    el.querySelectorAll('[data-dis-pin]').forEach(btn=>{
+      btn.onclick=()=>{
+        if(pin.length>=4)return;
+        pin+=btn.dataset.disPin;
+        if(navigator.vibrate)navigator.vibrate(10);
+        updateDots();
+        if(pin.length===4)setTimeout(verify,150);
+      };
+    });
+    document.getElementById('dis-pin-del').onclick=()=>{pin=pin.slice(0,-1);updateDots();};
+    document.getElementById('dis-pin-cancel').onclick=()=>el.remove();
+  };
+  const updateDots=()=>{
+    const dots=document.getElementById('dis-pin-dots');
+    if(!dots)return;
+    dots.innerHTML=Array.from({length:4},(_,i)=>{
+      const filled=i<pin.length;
+      return`<div style="width:16px;height:16px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+    }).join('');
+  };
+  const verify=async()=>{
+    try{
+      const hash=await hashPin(pin,char.photoLockSalt);
+      if(hash===char.photoLockPinHash){
+        char.photoLockEnabled=false;
+        char.photoLockPinHash='';
+        char.photoLockSalt='';
+        char.photoLockCredentialId='';
+        _photosUnlocked=false;
+        saveChar();
+        el.remove();
+        showToast('🔓 Photos Lock disabled');
+        renderProfileScreen();
+      }else{
+        pin='';
+        updateDots();
+        const errEl=document.getElementById('dis-pin-error');
+        if(errEl)errEl.textContent='Incorrect PIN';
+      }
+    }catch(e){
+      console.error('[RT] PIN verify error',e);
+      pin='';
+      updateDots();
+      const errEl=document.getElementById('dis-pin-error');
+      if(errEl)errEl.textContent='Something went wrong — try again';
+    }
+  };
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+  renderBody();
+}
+
+// ── PHOTOS LOCK — reusable unlock gate ───────────────────────────────────────
+// Returns a Promise that resolves true once unlocked (or if lock is off),
+// false if the user cancels. Used to gate sensitive actions like Cloud Backup.
+function requirePhotoUnlock(){
+  return new Promise((resolve)=>{
+    if(!char.photoLockEnabled||_photosUnlocked){resolve(true);return;}
+    const ex=document.getElementById('unlock-gate-ov');if(ex)ex.remove();
+    let pin='';
+    const el=document.createElement('div');el.className='overlay';el.id='unlock-gate-ov';
+    const updateDots=()=>{
+      const dots=document.getElementById('gate-pin-dots');
+      if(!dots)return;
+      dots.innerHTML=Array.from({length:4},(_,i)=>{
+        const filled=i<pin.length;
+        return`<div style="width:16px;height:16px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+      }).join('');
+    };
+    const renderBody=()=>{
+      const dots=Array.from({length:4},(_,i)=>{
+        const filled=i<pin.length;
+        return`<div style="width:16px;height:16px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+      }).join('');
+      const key=label=>`<button type="button" data-gate-pin="${label}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:21px;font-weight:700;color:var(--text1);cursor:pointer;user-select:none;-webkit-user-select:none">${label}</button>`;
+      el.innerHTML=`<div class="sheet" style="max-height:92vh;padding-bottom:24px">
+        <div class="sheet-handle"></div>
+        <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);text-align:center;margin-bottom:6px">🔒 Unlock to Continue</div>
+        <div style="font-size:11px;color:var(--text4);text-align:center;line-height:1.6;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">Enter your PIN to continue.</div>
+        <div id="gate-pin-dots" style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">${dots}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center;margin-bottom:10px">
+          ${key('1')}${key('2')}${key('3')}
+          ${key('4')}${key('5')}${key('6')}
+          ${key('7')}${key('8')}${key('9')}
+          <div></div>
+          ${key('0')}
+          <button type="button" id="gate-pin-del" style="background:transparent;border:none;color:var(--text4);font-size:21px;cursor:pointer;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body)">⌫</button>
+        </div>
+        <div id="gate-pin-error" style="font-size:11px;color:#c0392b;text-align:center;min-height:16px;margin-bottom:6px"></div>
+        <button class="btn-ghost" id="gate-pin-cancel" style="width:100%;margin-top:4px">Cancel</button>
+      </div>`;
+      el.querySelectorAll('[data-gate-pin]').forEach(btn=>{
+        btn.onclick=()=>{
+          if(pin.length>=4)return;
+          pin+=btn.dataset.gatePin;
+          if(navigator.vibrate)navigator.vibrate(10);
+          updateDots();
+          if(pin.length===4)setTimeout(verify,150);
+        };
+      });
+      document.getElementById('gate-pin-del').onclick=()=>{pin=pin.slice(0,-1);updateDots();};
+      document.getElementById('gate-pin-cancel').onclick=()=>{el.remove();resolve(false);};
+    };
+    const verify=async()=>{
+      try{
+        const hash=await hashPin(pin,char.photoLockSalt);
+        if(hash===char.photoLockPinHash){
+          _photosUnlocked=true;
+          el.remove();
+          resolve(true);
+        }else{
+          pin='';
+          updateDots();
+          const errEl=document.getElementById('gate-pin-error');
+          if(errEl)errEl.textContent='Incorrect PIN';
+        }
+      }catch(e){
+        console.error('[RT] unlock gate error',e);
+        pin='';
+        updateDots();
+        const errEl=document.getElementById('gate-pin-error');
+        if(errEl)errEl.textContent='Something went wrong';
+      }
+    };
+    document.getElementById('root').appendChild(el);
+    renderBody();
+  });
+}
+
+// ── PHOTOS LOCK SCREEN ────────────────────────────────────────────────────────
+function renderPhotoLockScreen(){
+  const hasBio=!!char.photoLockCredentialId&&biometricAvailable();
+  const dots=Array.from({length:4},(_,i)=>{
+    const filled=i<_pinBuf.length;
+    return`<div style="width:14px;height:14px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+  }).join('');
+  const key=label=>`<button type="button" data-pin="${label}" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text1);cursor:pointer;transition:all .1s;user-select:none;-webkit-user-select:none">${label}</button>`;
+  return`<div style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px;opacity:.7">🔒</div>
+    <div style="font-family:var(--font-display);font-size:16px;color:var(--text1);margin-bottom:6px">Photos Locked</div>
+    <div style="font-size:12px;color:var(--text4);line-height:1.7;max-width:280px;margin-bottom:26px">Enter your PIN to unlock. Photos stay locked until you close the app.</div>
+
+    <div id="pin-dots" style="display:flex;gap:12px;margin-bottom:26px">${dots}</div>
+
+    ${hasBio?`<button id="lock-bio-btn" type="button" style="display:flex;align-items:center;gap:8px;background:var(--acc12);border:1px solid var(--acc30);border-radius:12px;padding:11px 18px;color:var(--accent);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:20px">
+      <span style="font-size:16px">✨</span> Unlock with biometrics
+    </button>
+    <div style="display:flex;align-items:center;gap:10px;width:100%;max-width:260px;margin-bottom:20px">
+      <div style="flex:1;height:1px;background:var(--stat-border)"></div>
+      <div style="font-size:10px;color:var(--text5);text-transform:uppercase;letter-spacing:1.2px">or</div>
+      <div style="flex:1;height:1px;background:var(--stat-border)"></div>
+    </div>`:''}
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;justify-items:center;margin-bottom:6px">
+      ${key('1')}${key('2')}${key('3')}
+      ${key('4')}${key('5')}${key('6')}
+      ${key('7')}${key('8')}${key('9')}
+      <div></div>
+      ${key('0')}
+      <button type="button" id="pin-del" style="background:transparent;border:none;color:var(--text4);font-size:22px;cursor:pointer;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-family:var(--font-body)">⌫</button>
+    </div>
+
+    <div id="pin-error" style="font-size:11px;color:#c0392b;min-height:16px;margin-top:14px"></div>
+  </div>`;
+}
+function updatePinDots(){
+  const dots=document.getElementById('pin-dots');
+  if(!dots)return;
+  dots.innerHTML=Array.from({length:4},(_,i)=>{
+    const filled=i<_pinBuf.length;
+    return`<div style="width:14px;height:14px;border-radius:50%;background:${filled?'var(--accent)':'transparent'};border:2px solid ${filled?'var(--accent)':'var(--stat-border)'};transition:all .15s"></div>`;
+  }).join('');
+}
+function attachPhotoLockEvents(){
+  const c=document.getElementById('content');
+  if(!c)return;
+  _pinBuf='';
+  c.querySelectorAll('[data-pin]').forEach(btn=>{
+    btn.onclick=()=>{
+      if(_pinBuf.length>=4)return;
+      _pinBuf+=btn.dataset.pin;
+      if(navigator.vibrate)navigator.vibrate(10);
+      updatePinDots();
+      if(_pinBuf.length===4)setTimeout(verifyPinEntry,120);
+    };
+  });
+  document.getElementById('pin-del')?.addEventListener('click',()=>{
+    _pinBuf=_pinBuf.slice(0,-1);
+    updatePinDots();
+  });
+  document.getElementById('lock-bio-btn')?.addEventListener('click',async()=>{
+    try{
+      const ok=await unlockWithBiometric();
+      if(ok){_photosUnlocked=true;_pinBuf='';render();}
+    }catch(e){
+      console.warn('[RT] biometric unlock failed',e);
+      showToast('⚠ Biometric unlock failed — use your PIN');
+    }
+  });
+}
+async function verifyPinEntry(){
+  const entered=_pinBuf;
+  const errEl=document.getElementById('pin-error');
+  try{
+    const hash=await hashPin(entered,char.photoLockSalt);
+    if(hash===char.photoLockPinHash){
+      _photosUnlocked=true;
+      _pinBuf='';
+      if(navigator.vibrate)navigator.vibrate([30,20,30]);
+      render();
+    }else{
+      _pinBuf='';
+      updatePinDots();
+      if(errEl)errEl.textContent='Incorrect PIN';
+      if(navigator.vibrate)navigator.vibrate([60,40,60]);
+    }
+  }catch(e){
+    console.warn('[RT] pin verify error',e);
+    _pinBuf='';
+    updatePinDots();
+    if(errEl)errEl.textContent='Something went wrong';
+  }
+}
+
+// ── PHOTO GHOST HELPER ────────────────────────────────────────────────────────
+function getLatestPhotoForGhost(){
+  if(!photos.length)return null;
+  return [...photos].sort((a,b)=>b.date.localeCompare(a.date))[0];
 }
 
 // ── PHOTO GUIDE SHEET ──────────────────────────────────────────────────────────
@@ -2674,7 +3461,7 @@ function mountPhotoGuideSheet(){
   if(photoGuideStep===1){
     el.innerHTML=`<div class="sheet">
       <div class="sheet-handle"></div>
-      <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:4px">Progress Photo</div>
+      <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:4px">Progress Photo</div>
       <div style="font-size:11px;color:var(--text4);margin-bottom:16px">Consistent photos are the clearest way to see your progress. Before you shoot:</div>
 
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
@@ -2714,66 +3501,175 @@ function mountPhotoGuideSheet(){
   } else if(photoGuideStep===2){
     if(!pendingPhotoCI)pendingPhotoCI=LEVELS[char.ciLevel||0].ci;
 
-    // Queue state — which photo are we on?
     const queueTotal=photoQueue.length;
     const queueIdx=queueTotal>0?photoQueue.findIndex(q=>q.data===pendingPhotoData):0;
     const isQueued=queueTotal>1;
     const isLast=!isQueued||queueIdx===queueTotal-1;
+    const tagGhostPhoto=getLatestPhotoForGhost();
 
-    const ciCards=LEVELS.map((l,i)=>{
-      const isSel=pendingPhotoCI===l.ci;
-      return`<div data-pci="${l.ci}" onclick="pendingPhotoCI='${l.ci}';document.querySelectorAll('#photo-guide-ov .pci-card').forEach(c=>{const s=c.dataset.pci===pendingPhotoCI;c.style.background=s?'var(--acc12)':'var(--bg-stat)';c.style.borderColor=s?'var(--acc30)':'var(--stat-border)';c.querySelector('.pci-label').style.color=s?'var(--accent)':'var(--text3)';c.querySelector('.pci-check').textContent=s?'✓':'';c.querySelector('.pci-check').style.background=s?'var(--accent)':'transparent';c.querySelector('.pci-check').style.borderColor=s?'var(--accent)':'var(--stat-border)';})"
-        class="pci-card" style="background:${isSel?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--acc30)':'var(--stat-border)'};border-radius:10px;padding:9px 11px;cursor:pointer;margin-bottom:6px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-          <div class="pci-label" style="font-family:Cinzel,serif;font-size:12px;font-weight:700;color:${isSel?'var(--accent)':'var(--text3)'}">${l.ci}</div>
-          <div class="pci-check" style="width:15px;height:15px;border-radius:50%;border:2px solid ${isSel?'var(--accent)':'var(--stat-border)'};background:${isSel?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--bg);flex-shrink:0">${isSel?'✓':''}</div>
-        </div>
-        <div style="font-size:10px;color:var(--text4);line-height:1.6">${ciDesc(l)}</div>
-      </div>`;
-    }).join('');
+    const headerBtn='background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:15px;transition:all .15s;padding:0;flex-shrink:0';
 
-    el.innerHTML=`<div class="sheet" style="max-height:88vh">
+    el.innerHTML=`<div class="sheet" style="max-height:94vh;display:flex;flex-direction:column;padding-bottom:18px">
       <div class="sheet-handle"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Tag Your Photo</div>
-        ${isQueued?`<div style="font-size:11px;color:var(--text4);background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:3px 10px">${queueIdx+1} of ${queueTotal}</div>`:''}
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-shrink:0">
+        <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);flex-shrink:0">Tag Your Photo</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          ${isQueued?`<div style="font-size:10px;color:var(--text4);background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 9px;white-space:nowrap">${queueIdx+1}/${queueTotal}</div>`:''}
+          ${tagGhostPhoto?`<button type="button" id="tag-ghost-btn" title="Ghost overlay" style="${headerBtn}">👻</button>`:''}
+          ${!isQueued?`<button type="button" id="tag-retake-btn" title="Retake" style="${headerBtn}">↺</button>`:''}
+        </div>
       </div>
 
-      ${isQueued?`<div style="height:4px;background:var(--bg-stat);border-radius:2px;overflow:hidden;margin-bottom:12px">
+      ${isQueued?`<div style="height:4px;background:var(--bg-stat);border-radius:2px;overflow:hidden;margin-bottom:10px;flex-shrink:0">
         <div style="height:100%;background:var(--accent);border-radius:2px;width:${Math.round(((queueIdx+1)/queueTotal)*100)}%;transition:width .3s"></div>
       </div>`:''}
 
-      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
-        <img src="${pendingPhotoData}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--acc30);flex-shrink:0" alt="Preview">
-        <div style="font-size:10px;color:var(--text4);line-height:1.7;padding-top:2px">Select the CI level that best matches this photo. Date it correctly if it was taken in the past.</div>
+      <div style="flex:1;overflow-y:auto;padding-right:2px;min-height:0">
+
+        <div style="position:relative;border-radius:12px;overflow:hidden;background:#000;margin-bottom:14px;aspect-ratio:1;max-height:44vh;display:flex;align-items:center;justify-content:center">
+          <img src="${pendingPhotoData}" style="width:100%;height:100%;object-fit:contain;display:block" alt="Preview">
+          ${tagGhostPhoto?`<img id="tag-ghost-img" src="${tagGhostPhoto.url}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;pointer-events:none;transition:opacity .25s" alt="">`:''}
+        </div>
+
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);margin-bottom:8px">CI Level</div>
+        <div id="tag-ci-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:10px">
+          ${Array.from({length:11},(_,i)=>`<button type="button" data-ci="CI-${i}" onclick="pendingPhotoCI='CI-${i}';window._tagRefreshCI()" style="padding:10px 0;border-radius:8px;font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;background:var(--bg-stat);border:1px solid var(--stat-border);color:var(--text3)">${i}</button>`).join('')}
+        </div>
+        <div id="tag-ci-desc" style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.65;margin-bottom:14px;min-height:70px;max-height:90px;overflow-y:auto"></div>
+
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button type="button" id="tag-date-toggle" style="flex:1;text-align:left;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px 12px;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:8px;min-width:0">
+            <span style="font-size:14px;flex-shrink:0">📅</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:1px">Date</div>
+              <div id="tag-date-display" style="font-size:12px;font-weight:600;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Today</div>
+            </div>
+          </button>
+          <button type="button" id="tag-note-toggle" style="flex:1;text-align:left;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px 12px;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:8px;min-width:0">
+            <span style="font-size:14px;flex-shrink:0">📝</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:1px">Note</div>
+              <div id="tag-note-display" style="font-size:12px;font-weight:600;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Add note</div>
+            </div>
+          </button>
+        </div>
+        <div id="tag-date-editor" style="display:none;margin-bottom:10px">
+          <input type="date" id="photo-date-inp" value="${today()}" max="${today()}"
+            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:var(--font-body)">
+        </div>
+        <div id="tag-note-editor" style="display:none;margin-bottom:10px">
+          <textarea id="photo-note-inp" placeholder="Method, how long in, anything relevant..." style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:13px;width:100%;outline:none;font-family:var(--font-body);min-height:70px;resize:vertical"></textarea>
+        </div>
+
       </div>
 
-      <div style="max-height:32vh;overflow-y:auto;padding-right:2px;margin-bottom:12px">${ciCards}</div>
-
-      <div style="margin-bottom:10px">
-        <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Photo date</div>
-        <input type="date" id="photo-date-inp" value="${today()}" max="${today()}"
-          style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif">
-        <div style="font-size:9px;color:var(--text5);margin-top:4px">Change this for older photos.</div>
-      </div>
-
-      <input type="text" id="photo-note-inp" placeholder="Optional note — method, how long in, anything relevant..." style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 11px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:12px">
-
-      <div style="display:flex;gap:8px">
-        <button class="btn-ghost" id="photo-cancel-queue" style="flex:0 0 80px">${isQueued?'Cancel all':'↺ Retake'}</button>
-        <button class="btn-gold" id="photo-confirm-save" style="flex:1">${isLast?'Save to Timeline':'Save & Next →'}</button>
+      <div style="display:flex;gap:8px;padding-top:14px;border-top:1px solid var(--stat-border);flex-shrink:0;margin-top:6px">
+        <button class="btn-ghost" id="photo-cancel-queue" style="flex:0 0 84px">${isQueued?'Cancel all':'Cancel'}</button>
+        <button class="btn-gold" id="photo-confirm-save" style="flex:1">${isLast?'✓ Save to Timeline':'✓ Save & Next'}</button>
       </div>
     </div>`;
     document.getElementById('root').appendChild(el);
 
+    // ── CI grid refresher ──
+    window._tagRefreshCI=()=>{
+      document.querySelectorAll('#tag-ci-grid button').forEach(b=>{
+        const sel=b.dataset.ci===pendingPhotoCI;
+        b.style.background=sel?'var(--accent)':'var(--bg-stat)';
+        b.style.borderColor=sel?'var(--accent)':'var(--stat-border)';
+        b.style.color=sel?'var(--bg)':'var(--text3)';
+      });
+      const l=LEVELS.find(x=>x.ci===pendingPhotoCI);
+      const desc=document.getElementById('tag-ci-desc');
+      if(l&&desc){
+        desc.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px">${l.ci}</div><div style="color:var(--text3)">${ciDesc(l)}</div>`;
+      }
+    };
+    window._tagRefreshCI();
+
+    // ── Ghost toggle (header button) ──
+    let _tagGhostOn=false;
+    const _tagGhostBtn=document.getElementById('tag-ghost-btn');
+    const _tagGhostImg=document.getElementById('tag-ghost-img');
+    const _paintGhostBtn=()=>{
+      if(!_tagGhostBtn)return;
+      if(_tagGhostOn){
+        _tagGhostBtn.style.background='var(--accent)';
+        _tagGhostBtn.style.borderColor='var(--accent)';
+        _tagGhostBtn.style.color='var(--bg)';
+      }else{
+        _tagGhostBtn.style.background='var(--bg-stat)';
+        _tagGhostBtn.style.borderColor='var(--stat-border)';
+        _tagGhostBtn.style.color='var(--text3)';
+      }
+    };
+    if(_tagGhostImg&&char.ghostOverlay!==false&&!photoQueue.length){
+      _tagGhostOn=true;
+      _tagGhostImg.style.opacity='0.4';
+      _paintGhostBtn();
+    }
+    if(_tagGhostBtn){
+      _tagGhostBtn.onclick=()=>{
+        _tagGhostOn=!_tagGhostOn;
+        if(_tagGhostImg)_tagGhostImg.style.opacity=_tagGhostOn?'0.4':'0';
+        _paintGhostBtn();
+      };
+    }
+
+    // ── Date toggle ──
+    const _dateToggle=document.getElementById('tag-date-toggle');
+    const _dateEditor=document.getElementById('tag-date-editor');
+    const _dateDisplay=document.getElementById('tag-date-display');
+    const _dateInput=document.getElementById('photo-date-inp');
+    _dateToggle.onclick=()=>{
+      const open=_dateEditor.style.display==='none';
+      _dateEditor.style.display=open?'block':'none';
+      if(open&&_dateInput)_dateInput.focus();
+    };
+    _dateInput?.addEventListener('input',()=>{
+      const v=_dateInput.value||today();
+      _dateDisplay.textContent=v===today()?'Today':fmtDateLong(v);
+      _dateDisplay.style.color=v===today()?'var(--text1)':'var(--accent)';
+      _dateToggle.style.borderColor=v===today()?'var(--stat-border)':'var(--acc30)';
+    });
+
+    // ── Note toggle ──
+    const _noteToggle=document.getElementById('tag-note-toggle');
+    const _noteEditor=document.getElementById('tag-note-editor');
+    const _noteDisplay=document.getElementById('tag-note-display');
+    const _noteInput=document.getElementById('photo-note-inp');
+    _noteToggle.onclick=()=>{
+      const open=_noteEditor.style.display==='none';
+      _noteEditor.style.display=open?'block':'none';
+      if(open&&_noteInput)_noteInput.focus();
+    };
+    _noteInput?.addEventListener('input',()=>{
+      const v=_noteInput.value.trim();
+      _noteDisplay.textContent=v||'Add note';
+      _noteDisplay.style.color=v?'var(--accent)':'var(--text3)';
+      _noteToggle.style.borderColor=v?'var(--acc30)':'var(--stat-border)';
+    });
+
+    // ── Retake ──
+    document.getElementById('tag-retake-btn')?.addEventListener('click',()=>{
+      photoQueue=[];
+      pendingPhotoData=null;
+      pendingPhotoCI=null;
+      photoGuideStep=1;
+      el.remove();
+      const input=document.getElementById('photo-file');
+      if(input)input.click();
+    });
+
+    // ── Cancel ──
     document.getElementById('photo-cancel-queue').onclick=()=>{
-      // Cancel — clear queue and go back
       photoQueue=[];
       photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;
       el.remove();
-      if(!isQueued)mountPhotoGuideSheet(); // single photo — back to guide
-      // multi — just close, user can restart
+      if(!isQueued)mountPhotoGuideSheet();
     };
+
+    // ── Save ──
     document.getElementById('photo-confirm-save').onclick=async ()=>{
       const btn=document.getElementById('photo-confirm-save');
       if(btn){btn.disabled=true;btn.textContent='Saving…';}
@@ -2781,15 +3677,9 @@ function mountPhotoGuideSheet(){
       const dateVal=document.getElementById('photo-date-inp')?.value||today();
       if(!pendingPhotoData||!pendingPhotoCI){if(btn)btn.disabled=false;return;}
 
-      // Compress this photo now (works for both single and queue)
-      let comp=await compressPhoto(pendingPhotoData,1200,0.72);
-      if(dataUrlSizeKB(comp)>150)comp=await compressPhoto(pendingPhotoData,900,0.60);
-      if(dataUrlSizeKB(comp)>150)comp=await compressPhoto(pendingPhotoData,700,0.50);
-      if(dataUrlSizeKB(comp)>150)comp=await compressPhoto(pendingPhotoData,600,0.42);
+      const comp=await compressForPhoto(pendingPhotoData);
 
       if(isQueued&&!isLast){
-        // Stage this photo in memory only — do NOT save to IDB, do NOT call render()
-        // (calling render() here would destroy the guide sheet for the next photo)
         photoQueue[queueIdx].staged={ci:pendingPhotoCI,date:dateVal,url:comp,note,id:Date.now()};
         const nextIdx=queueIdx+1;
         pendingPhotoData=photoQueue[nextIdx].data;
@@ -2797,7 +3687,6 @@ function mountPhotoGuideSheet(){
         el.remove();
         mountPhotoGuideSheet();
       } else {
-        // Last photo (or single photo) — collect all staged + this one, save in one batch
         const lastPhoto={ci:pendingPhotoCI,date:dateVal,url:comp,note,id:Date.now()};
         const allNew=isQueued
           ?[...photoQueue.filter(q=>q.staged).map(q=>q.staged),lastPhoto]
@@ -2824,26 +3713,103 @@ function mountPhotoGuideSheet(){
 }
 
 // ── COMPARE PICKER ─────────────────────────────────────────────────────────────
+function subtractDays(dateStr,days){
+  const d=new Date(dateStr+'T12:00:00');
+  d.setDate(d.getDate()-days);
+  return localDateStr(d);
+}
+function findClosestPhoto(targetDate,list){
+  const targetMs=new Date(targetDate+'T12:00:00').getTime();
+  let best=null,bestDiff=Infinity;
+  list.forEach(p=>{
+    const pMs=new Date(p.date+'T12:00:00').getTime();
+    const diff=Math.abs(pMs-targetMs);
+    if(diff<bestDiff){bestDiff=diff;best=p;}
+  });
+  return best;
+}
+function buildCompareShortcuts(){
+  const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
+  if(sorted.length<2)return[];
+  const latest=sorted[0];
+  const oldest=sorted[sorted.length-1];
+  const spanDays=Math.round((new Date(latest.date+'T12:00:00')-new Date(oldest.date+'T12:00:00'))/86400000);
+  const out=[];
+  const seen=new Set([latest.id]);
+  // Latest vs First
+  out.push({id:'first',label:'Latest vs First',sub:`${fmtDate(oldest.date)} → ${fmtDate(latest.date)}`,latestId:latest.id,olderId:oldest.id});
+  seen.add(oldest.id);
+  // Latest vs ~1 month
+  if(spanDays>=20){
+    const cand=findClosestPhoto(subtractDays(latest.date,30),sorted.slice(1));
+    if(cand&&!seen.has(cand.id)){
+      out.push({id:'30d',label:'Latest vs ~1 month ago',sub:`${fmtDate(cand.date)} → ${fmtDate(latest.date)}`,latestId:latest.id,olderId:cand.id});
+      seen.add(cand.id);
+    }
+  }
+  // Latest vs ~3 months
+  if(spanDays>=60){
+    const cand=findClosestPhoto(subtractDays(latest.date,90),sorted.slice(1));
+    if(cand&&!seen.has(cand.id)){
+      out.push({id:'90d',label:'Latest vs ~3 months ago',sub:`${fmtDate(cand.date)} → ${fmtDate(latest.date)}`,latestId:latest.id,olderId:cand.id});
+    }
+  }
+  return out;
+}
+function runCompareShortcut(latestId,olderId){
+  const latest=photos.find(p=>p.id===latestId);
+  const older=photos.find(p=>p.id===olderId);
+  if(!latest||!older||latest.id===older.id)return;
+  // older = Before (A), latest = After (B). openCompareViewer sorts anyway.
+  compareA=older;compareB=latest;
+  const ex=document.getElementById('compare-pick-ov');if(ex)ex.remove();
+  openCompareViewer();
+}
+function compareClearA(){
+  compareA=null;
+  compareB=null;
+  updateComparePickUI();
+}
 function openComparePicker(){
   const ex=document.getElementById('compare-pick-ov');if(ex)ex.remove();
   compareA=null;compareB=null;
   const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
+  const shortcuts=buildCompareShortcuts();
   const el=document.createElement('div');el.className='overlay';el.id='compare-pick-ov';
 
   const thumbs=sorted.map(p=>`
     <div id="cpt-${p.id}" onclick="comparePickTap(${p.id})"
       style="cursor:pointer;border-radius:8px;overflow:hidden;position:relative;border:2px solid transparent;transition:border-color .15s;aspect-ratio:1">
       <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="${p.ci}">
-      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);padding:3px 5px;font-size:9px;font-family:Cinzel,serif;color:#fff;text-align:center">${p.ci}<br><span style="font-size:8px;opacity:.8;font-family:DM Sans,sans-serif">${p.date}</span></div>
-      <div id="cpt-badge-${p.id}" style="display:none;position:absolute;top:4px;right:4px;background:var(--accent);color:var(--bg);border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;font-family:Cinzel,serif"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);padding:3px 5px;font-size:9px;font-family:var(--font-display);color:#fff;text-align:center">${p.ci}<br><span style="font-size:8px;opacity:.8;font-family:var(--font-body)">${p.date}</span></div>
+      <div id="cpt-badge-${p.id}" style="display:none;position:absolute;top:4px;right:4px;background:var(--accent);color:var(--bg);border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;font-family:var(--font-display)"></div>
     </div>`).join('');
 
-  el.innerHTML=`<div class="sheet" style="max-height:85vh">
+  const shortcutsHtml=shortcuts.length?`
+    <div id="compare-shortcuts" style="margin-bottom:12px;flex-shrink:0">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text5);margin-bottom:7px">Quick compare</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${shortcuts.map(s=>`
+          <button onclick="runCompareShortcut(${s.latestId},${s.olderId})" style="display:flex;align-items:center;gap:10px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;font-family:var(--font-body);transition:border-color .15s">
+            <span style="font-size:16px;flex-shrink:0">⚖</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:600;color:var(--text1)">${s.label}</div>
+              <div style="font-size:10px;color:var(--text4);margin-top:1px">${s.sub}</div>
+            </div>
+            <span style="font-size:14px;color:var(--accent);flex-shrink:0">→</span>
+          </button>`).join('')}
+      </div>
+      <div style="text-align:center;margin-top:10px;font-size:10px;color:var(--text5)">— or pick your own below —</div>
+    </div>`:'';
+
+  el.innerHTML=`<div class="sheet" style="max-height:88vh;display:flex;flex-direction:column">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:4px">Compare Photos</div>
-    <div style="font-size:11px;color:var(--text4);margin-bottom:12px" id="compare-instr">Tap to select your <strong style="color:var(--text2)">first</strong> photo (Before)</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;overflow-y:auto;max-height:52vh;padding:2px">${thumbs}</div>
-    <div style="display:flex;gap:8px;margin-top:14px">
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:10px;flex-shrink:0">Compare Photos</div>
+    <div id="compare-apreview" style="display:none;flex-shrink:0"></div>
+    ${shortcutsHtml}
+    <div style="font-size:11px;color:var(--text4);margin-bottom:10px;flex-shrink:0" id="compare-instr">Tap to select your <strong style="color:var(--text2)">first</strong> photo (Before)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;overflow-y:auto;flex:1;min-height:120px;padding:2px">${thumbs}</div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-shrink:0">
       <button class="btn-ghost" id="compare-cancel-btn" style="flex:0 0 80px">Cancel</button>
       <button class="btn-gold" id="compare-go-btn" style="flex:1" disabled>Compare</button>
     </div>
@@ -2858,8 +3824,9 @@ function openComparePicker(){
 function comparePickTap(id){
   const photo=photos.find(p=>p.id===id);if(!photo)return;
   if(compareA&&compareA.id===id){
-    // deselect A
+    // Deselect A — clears B too since B was paired with it
     compareA=null;
+    compareB=null;
     updateComparePickUI();return;
   }
   if(compareB&&compareB.id===id){
@@ -2880,17 +3847,42 @@ function updateComparePickUI(){
     const isA=compareA&&compareA.id===p.id;
     const isB=compareB&&compareB.id===p.id;
     el.style.borderColor=isA?'var(--accent)':isB?'#22a85a':'transparent';
+    el.style.boxShadow=isA?'0 0 0 2px var(--acc30)':'none';
     if(badge){
-      if(isA){badge.style.display='flex';badge.textContent='A';}
-      else if(isB){badge.style.display='flex';badge.textContent='B';}
+      if(isA){badge.style.display='flex';badge.textContent='A';badge.style.background='var(--accent)';badge.style.color='var(--bg)';}
+      else if(isB){badge.style.display='flex';badge.textContent='B';badge.style.background='#22a85a';badge.style.color='#fff';}
       else badge.style.display='none';
     }
   });
+
+  // Persistent A preview + hide shortcuts once A is set
+  const preview=document.getElementById('compare-apreview');
+  const shortcuts=document.getElementById('compare-shortcuts');
+  if(preview){
+    if(compareA){
+      preview.style.display='block';
+      preview.innerHTML=`<div style="display:flex;align-items:center;gap:10px;background:var(--acc6);border:1px solid var(--acc30);border-radius:10px;padding:8px 10px;margin-bottom:10px">
+        <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;border:1.5px solid var(--accent);flex-shrink:0">
+          <img src="${compareA.url}" style="width:100%;height:100%;object-fit:cover" alt="${compareA.ci}">
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:700">Before (A)</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text1);margin-top:2px">${compareA.ci} · ${fmtDate(compareA.date)}</div>
+        </div>
+        <button onclick="compareClearA()" title="Clear" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:26px;height:26px;cursor:pointer;color:var(--text3);font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+      </div>`;
+      if(shortcuts)shortcuts.style.display='none';
+    } else {
+      preview.style.display='none';
+      if(shortcuts)shortcuts.style.display='block';
+    }
+  }
+
   const instr=document.getElementById('compare-instr');
   const goBtn=document.getElementById('compare-go-btn');
   if(!compareA&&!compareB&&instr)instr.innerHTML='Tap to select your <strong style="color:var(--text2)">first</strong> photo (Before)';
-  else if(compareA&&!compareB&&instr)instr.innerHTML='Now select your <strong style="color:var(--text2)">second</strong> photo (After)';
-  else if(compareA&&compareB&&instr)instr.innerHTML='Ready to compare — tap <strong style="color:var(--text2)">Compare</strong>';
+  else if(compareA&&!compareB&&instr)instr.innerHTML='Now tap the <strong style="color:var(--text2)">second</strong> photo (After)';
+  else if(compareA&&compareB&&instr)instr.innerHTML='Ready — tap <strong style="color:var(--text2)">Compare</strong>';
   if(goBtn)goBtn.disabled=!(compareA&&compareB);
 }
 
@@ -2899,6 +3891,7 @@ function openCompareViewer(){
   let a=compareA,b=compareB;
   // Sort so older = left by default
   if(a.date>b.date){const tmp=a;a=b;b=tmp;}
+  _wipePos=50; // reset slider position for a fresh comparison
 
   function buildViewer(pA,pB){
     const el=document.getElementById('compare-view-ov');
@@ -2910,20 +3903,32 @@ function openCompareViewer(){
     const ciB=parseInt(pB.ci.replace('CI-',''));
     const ciChange=ciB-ciA;
     const ciNote=ciChange>0?`<span style="color:#22a85a;font-weight:600">+${ciChange} CI level${ciChange>1?'s':''}</span>`:ciChange<0?`<span style="color:#c0392b">${ciChange} CI</span>`:`<span style="color:var(--text4)">Same CI</span>`;
+    const isWipe=_compareMode==='wipe';
 
-    el.querySelector('.compare-inner').innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 4px">
-        <div style="font-family:Cinzel,serif;font-size:13px;color:var(--accent)">Progress Comparison</div>
-        <button onclick="document.getElementById('compare-view-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 12px;color:var(--text3);font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif">Close</button>
+    const viewerHtml=isWipe?`
+      <div id="wipe-container" style="position:relative;width:100%;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#000;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ew-resize">
+        <img src="${pB.url}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none" alt="${pB.ci}">
+        <img id="wipe-fg" src="${pA.url}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;clip-path:inset(0 ${100-_wipePos}% 0 0)" alt="${pA.ci}">
+        <div id="wipe-line" style="position:absolute;top:0;bottom:0;left:${_wipePos}%;width:2px;background:rgba(255,255,255,.95);box-shadow:0 0 10px rgba(0,0,0,.6);transform:translateX(-1px);pointer-events:none"></div>
+        <div id="wipe-handle" style="position:absolute;top:50%;left:${_wipePos}%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.95);box-shadow:0 3px 14px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#0D0B14;font-size:15px;font-weight:700;pointer-events:none">⇔</div>
+        <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.65);border-radius:20px;padding:4px 10px;font-family:var(--font-display);font-size:11px;font-weight:700;color:#fff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none">BEFORE · ${pA.ci}</div>
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.65);border-radius:20px;padding:4px 10px;font-family:var(--font-display);font-size:11px;font-weight:700;color:#fff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none">AFTER · ${pB.ci}</div>
+        <div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.55);border-radius:20px;padding:3px 9px;font-size:10px;color:rgba(255,255,255,.9);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none">${fmtDate(pA.date)}</div>
+        <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);border-radius:20px;padding:3px 9px;font-size:10px;color:rgba(255,255,255,.9);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none">${fmtDate(pB.date)}</div>
       </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--text5);text-align:center;margin-top:8px">Drag the slider to reveal — left is Before, right is After</div>
+      ${(pA.note||pB.note)?`<div style="display:flex;gap:10px;margin-top:8px;font-size:10px;color:var(--text4);line-height:1.5">
+        ${pA.note?`<div style="flex:1;min-width:0"><span style="color:var(--text5)">Before:</span> ${htmlEsc(pA.note.slice(0,50))}</div>`:''}
+        ${pB.note?`<div style="flex:1;min-width:0;text-align:right"><span style="color:var(--text5)">After:</span> ${htmlEsc(pB.note.slice(0,50))}</div>`:''}
+      </div>`:''}
+    `:`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
           <div style="background:var(--bg-stat);border-radius:10px;border:2px solid var(--acc30);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:140px">
             <img src="${pA.url}" style="width:100%;height:auto;max-height:200px;object-fit:contain;display:block" alt="${pA.ci}">
           </div>
           <div style="text-align:center;margin-top:5px">
-            <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent)">${pA.ci}</div>
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--accent)">${pA.ci}</div>
             <div style="font-size:10px;color:var(--text4)">${fmtDate(pA.date)}</div>
             ${pA.note?`<div style="font-size:9px;color:var(--text5);font-style:italic;margin-top:2px">${pA.note.slice(0,30)}</div>`:''}
           </div>
@@ -2933,20 +3938,79 @@ function openCompareViewer(){
             <img src="${pB.url}" style="width:100%;height:auto;max-height:200px;object-fit:contain;display:block" alt="${pB.ci}">
           </div>
           <div style="text-align:center;margin-top:5px">
-            <div style="font-family:Cinzel,serif;font-size:13px;font-weight:700;color:var(--accent)">${pB.ci}</div>
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--accent)">${pB.ci}</div>
             <div style="font-size:10px;color:var(--text4)">${fmtDate(pB.date)}</div>
             ${pB.note?`<div style="font-size:9px;color:var(--text5);font-style:italic;margin-top:2px">${pB.note.slice(0,30)}</div>`:''}
           </div>
         </div>
       </div>
+    `;
 
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-around;text-align:center;margin-bottom:12px">
+    el.querySelector('.compare-inner').innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 4px">
+        <div style="font-family:var(--font-display);font-size:13px;color:var(--accent)">Progress Comparison</div>
+        <button onclick="document.getElementById('compare-view-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 12px;color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font-body)">Close</button>
+      </div>
+
+      <div style="display:flex;gap:4px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
+        <button id="cmp-mode-side" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-body);transition:all .15s;
+          background:${!_compareMode||_compareMode==='side'?'var(--bg-card)':'transparent'};
+          color:${!_compareMode||_compareMode==='side'?'var(--accent)':'var(--text4)'};
+          box-shadow:${!_compareMode||_compareMode==='side'?'0 1px 4px rgba(0,0,0,.2)':'none'}">Side-by-side</button>
+        <button id="cmp-mode-wipe" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-body);transition:all .15s;
+          background:${_compareMode==='wipe'?'var(--bg-card)':'transparent'};
+          color:${_compareMode==='wipe'?'var(--accent)':'var(--text4)'};
+          box-shadow:${_compareMode==='wipe'?'0 1px 4px rgba(0,0,0,.2)':'none'}">Wipe</button>
+      </div>
+
+      ${viewerHtml}
+
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-around;text-align:center;margin:12px 0">
         <div><div style="font-size:11px;color:var(--text4)">Time span</div><div style="font-size:13px;font-weight:600;color:var(--text1);margin-top:2px">${span}</div></div>
         <div style="width:1px;background:var(--stat-border)"></div>
         <div><div style="font-size:11px;color:var(--text4)">CI change</div><div style="font-size:13px;font-weight:600;margin-top:2px">${ciNote}</div></div>
       </div>
 
-      <button onclick="swapCompare()" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px;color:var(--text3);font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif">⇄ Swap Before / After</button>`;
+      <button onclick="swapCompare()" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--font-body)">⇄ Swap Before / After</button>`;
+
+    // Mode toggle
+    document.getElementById('cmp-mode-side').onclick=()=>{_compareMode='side';buildViewer(window._compareA,window._compareB);};
+    document.getElementById('cmp-mode-wipe').onclick=()=>{_compareMode='wipe';buildViewer(window._compareA,window._compareB);};
+
+    // Wipe drag handling (only in wipe mode)
+    if(isWipe){
+      const container=document.getElementById('wipe-container');
+      const fg=document.getElementById('wipe-fg');
+      const line=document.getElementById('wipe-line');
+      const handle=document.getElementById('wipe-handle');
+      if(container&&fg&&line&&handle){
+        let dragging=false;
+        const updateWipe=(clientX)=>{
+          const rect=container.getBoundingClientRect();
+          let pct=((clientX-rect.left)/rect.width)*100;
+          pct=Math.max(0,Math.min(100,pct));
+          _wipePos=pct;
+          fg.style.clipPath=`inset(0 ${100-pct}% 0 0)`;
+          line.style.left=pct+'%';
+          handle.style.left=pct+'%';
+        };
+        container.addEventListener('pointerdown',e=>{
+          dragging=true;
+          try{container.setPointerCapture(e.pointerId);}catch{}
+          updateWipe(e.clientX);
+        });
+        container.addEventListener('pointermove',e=>{
+          if(!dragging)return;
+          updateWipe(e.clientX);
+        });
+        const endDrag=e=>{
+          dragging=false;
+          try{container.releasePointerCapture(e.pointerId);}catch{}
+        };
+        container.addEventListener('pointerup',endDrag);
+        container.addEventListener('pointercancel',endDrag);
+      }
+    }
   }
 
   const wrapper=document.createElement('div');
@@ -2954,9 +4018,9 @@ function openCompareViewer(){
   wrapper.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;align-items:flex-end;justify-content:center;max-width:480px;margin:0 auto;';
   wrapper.innerHTML=`<div class="compare-inner" style="background:var(--bg-sheet);border:1px solid var(--card-border);border-radius:18px 18px 0 0;padding:18px 14px 28px;width:100%;max-height:92vh;overflow-y:auto"></div>`;
   document.getElementById('root').appendChild(wrapper);
+  window._compareA=a;window._compareB=b;
   buildViewer(a,b);
 
-  window._compareA=a;window._compareB=b;
   window.swapCompare=()=>{
     const tmp=window._compareA;window._compareA=window._compareB;window._compareB=tmp;
     buildViewer(window._compareA,window._compareB);
@@ -2964,168 +4028,296 @@ function openCompareViewer(){
 }
 
 // ── REPORTS ────────────────────────────────────────────────────────────────────
+function refreshProgressIfActive(){
+  const c=document.getElementById('content');
+  if(c&&tab==='journey'&&_progressTab==='activity'){c.innerHTML=renderJourney();attachEvents();}
+}
 function repNavPrev(){
   const firstLog=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
   const cur=`${_repYear}-${String(_repMonth+1).padStart(2,'0')}`;
-  if(cur<=firstLog)return; // already at or before first log month
+  if(cur<=firstLog)return;
   _repMonth--;if(_repMonth<0){_repMonth=11;_repYear--;}
-  const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}
+  refreshProgressIfActive();
 }
 function repNavNext(){
   const now=new Date();
   if(_repYear===now.getFullYear()&&_repMonth===now.getMonth())return;
   _repMonth++;if(_repMonth>11){_repMonth=0;_repYear++;}
-  const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}
+  refreshProgressIfActive();
 }
-function renderReports(){
+function setRepScope(s){
+  if(_repScope===s)return;
+  _repScope=s;
+  _repCalExpanded=false;
+  if(s==='month'){
+    const now=new Date();
+    _repYear=now.getFullYear();
+    _repMonth=now.getMonth();
+  }
+  refreshProgressIfActive();
+}
+function toggleRepCal(){
+  _repCalExpanded=!_repCalExpanded;
+  refreshProgressIfActive();
+}
+function renderActivityBody(){
   const td=today();
+  const scope=_repScope||'week';
   const liveMins=liveTimerTodayMins();
-  const wDays=thisWeekDays();
-  const _fmtWD=d=>{const p=d.split('-');return`${parseInt(p[2])} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1])-1]}`;};
-  const weekRangeLabel=`${_fmtWD(wDays[0])} – ${_fmtWD(wDays[6])}`;
-  const wData=wDays.map(d=>{
-    const isT=d===td;
-    const dl=logs.filter(l=>l.date===d);
-    const cm={};
-    dl.forEach(l=>{if(l.cat)cm[l.cat]=(cm[l.cat]||0)+l.dur;});
-    if(activeTimer&&activeTimer.startedAt){const _dlm=liveTimerMinsForDate(d);if(_dlm>0){const lc=activeTimer.cat||'manual';cm[lc]=(cm[lc]||0)+_dlm;}}
-    const total=Object.values(cm).reduce((a,b)=>a+b,0);
-    return{d,total,cm,isT};
-  });
-  const maxM=Math.max(...wData.map(w=>w.total),1);
-  const bars=wData.map(({d,total,cm,isT})=>{
+
+  // ── Scope toggle ──
+  const scopeBar=`<div style="display:flex;gap:4px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
+    ${[['week','This Week'],['month','Month'],['all','All Time']].map(([id,label])=>`
+      <button onclick="setRepScope('${id}')" style="flex:1;padding:8px 4px;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font-body);transition:all .15s;
+        background:${scope===id?'var(--bg-card)':'transparent'};
+        color:${scope===id?'var(--accent)':'var(--text4)'};
+        box-shadow:${scope===id?'0 1px 4px rgba(0,0,0,.2)':'none'}">${label}</button>`).join('')}
+  </div>`;
+
+  // ── Scope data ──
+  let scopedLogs, barData, heroTitle, heroMins, comparisonLine, showCalendar=false, calendarMonthKey;
+
+  if(scope==='week'){
+    const wDays=thisWeekDays();
+    const wSet=new Set(wDays);
+    scopedLogs=logs.filter(l=>wSet.has(l.date));
+    barData=wDays.map(d=>{
+      const cm={};
+      logs.filter(l=>l.date===d).forEach(l=>{if(l.cat)cm[l.cat]=(cm[l.cat]||0)+l.dur;});
+      if(d===td&&activeTimer&&activeTimer.startedAt){
+        const _dlm=liveTimerMinsForDate(d);
+        if(_dlm>0){const lc=activeTimer.cat||'manual';cm[lc]=(cm[lc]||0)+_dlm;}
+      }
+      const total=Object.values(cm).reduce((a,b)=>a+b,0);
+      return{label:dayLbl(d),total,isCurrent:d===td,segments:Object.entries(cm).map(([cid,mins])=>({cat:catFor(cid),mins}))};
+    });
+    const thisWeekMins=barData.reduce((a,b)=>a+b.total,0);
+    heroTitle='This Week';
+    heroMins=thisWeekMins;
+    // Factual summary, no comparison. A multi-day T-tape session lands its
+    // hours in whichever week the calendar line falls — comparing weeks
+    // would report a routine change that didn't happen.
+    const _weekActiveDays=new Set(logs.filter(l=>wSet.has(l.date)).map(l=>l.date)).size;
+    const _weekParts=[];
+    if(_weekActiveDays)_weekParts.push(`${_weekActiveDays} active day${_weekActiveDays!==1?'s':''}`);
+    if(thisWeekMins)_weekParts.push(`${fmtDur(thisWeekMins)} under tension`);
+    comparisonLine=_weekParts.length?_weekParts.join(' · '):'No sessions logged this week yet';
+    showCalendar=false;
+  } else if(scope==='month'){
+    const monthKey=`${_repYear}-${String(_repMonth+1).padStart(2,'0')}`;
+    scopedLogs=logs.filter(l=>l.date.slice(0,7)===monthKey);
+    const daysInMonth=new Date(_repYear,_repMonth+1,0).getDate();
+    barData=[];
+    for(let start=1;start<=daysInMonth;start+=7){
+      const end=Math.min(start+6,daysInMonth);
+      const days=[];
+      for(let d=start;d<=end;d++)days.push(`${monthKey}-${String(d).padStart(2,'0')}`);
+      const dSet=new Set(days);
+      const cm={};
+      logs.filter(l=>dSet.has(l.date)).forEach(l=>{if(l.cat)cm[l.cat]=(cm[l.cat]||0)+l.dur;});
+      if(dSet.has(td)&&activeTimer&&activeTimer.startedAt){
+        const _dlm=liveTimerMinsForDate(td);
+        if(_dlm>0){const lc=activeTimer.cat||'manual';cm[lc]=(cm[lc]||0)+_dlm;}
+      }
+      const total=Object.values(cm).reduce((a,b)=>a+b,0);
+      barData.push({label:`${start}–${end}`,total,isCurrent:false,segments:Object.entries(cm).map(([cid,mins])=>({cat:catFor(cid),mins}))});
+    }
+    const thisMonthMins=scopedLogs.reduce((a,l)=>a+l.dur,0);
+    const isCurrentMonth=(_repYear===new Date().getFullYear()&&_repMonth===new Date().getMonth());
+    heroTitle=new Date(_repYear,_repMonth,1).toLocaleDateString('en',{month:'long',year:'numeric'});
+    heroMins=thisMonthMins+(isCurrentMonth?liveMins:0);
+    const _monthActiveDays=new Set(scopedLogs.map(l=>l.date)).size;
+    const _monthParts=[];
+    if(_monthActiveDays)_monthParts.push(`${_monthActiveDays} active day${_monthActiveDays!==1?'s':''}`);
+    if(thisMonthMins)_monthParts.push(`${fmtDur(thisMonthMins)} under tension`);
+    comparisonLine=_monthParts.length?_monthParts.join(' · '):'No sessions logged this month yet';
+    showCalendar=true;
+    calendarMonthKey=monthKey;
+  } else {
+    scopedLogs=logs;
+    const now=new Date();
+    barData=[];
+    const firstLogDate=logs.length?logs[logs.length-1].date:'';
+    let monthCount=12;
+    if(firstLogDate){
+      const f=new Date(firstLogDate+'T12:00:00');
+      const diff=(now.getFullYear()-f.getFullYear())*12+(now.getMonth()-f.getMonth())+1;
+      monthCount=Math.min(12,Math.max(1,diff));
+    }
+    for(let i=monthCount-1;i>=0;i--){
+      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const cm={};
+      logs.filter(l=>l.date.slice(0,7)===key).forEach(l=>{if(l.cat)cm[l.cat]=(cm[l.cat]||0)+l.dur;});
+      const total=Object.values(cm).reduce((a,b)=>a+b,0);
+      barData.push({label:d.toLocaleDateString('en',{month:'short'}),total,isCurrent:i===0,segments:Object.entries(cm).map(([cid,mins])=>({cat:catFor(cid),mins}))});
+    }
+    heroTitle='All Time';
+    heroMins=logs.reduce((a,l)=>a+l.dur,0)+liveMins;
+    // Count distinct active days, not log entries. A 72-hour T-tape session
+    // is one entry but three days of real tension — session counts misread
+    // long-wear work as low activity.
+    const _allActiveDays=new Set(logs.map(l=>l.date)).size;
+    const _startFmt=char.startDate
+      ?new Date(char.startDate+'T12:00:00').toLocaleDateString('en',{month:'short',year:'numeric'})
+      :'';
+    comparisonLine=_allActiveDays
+      ?`${_allActiveDays} active day${_allActiveDays!==1?'s':''}${_startFmt?` since ${_startFmt}`:''}`
+      :'Your journey starts with the first session.';
+    showCalendar=false;
+  }
+
+  // ── Hero card ──
+  const heroCard=`<div class="card" style="margin-bottom:12px;padding:20px 16px;text-align:center">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">${heroTitle}</div>
+    <div style="font-family:var(--font-display);font-size:36px;font-weight:900;color:var(--accent);line-height:1;margin-bottom:8px">${fmtDur(heroMins)}</div>
+    <div style="font-size:11px;color:var(--text4)">${comparisonLine}</div>
+  </div>`;
+
+  // ── Bar chart ──
+  const maxM=Math.max(...barData.map(w=>w.total),1);
+  const bars=barData.map(({label,total,segments,isCurrent})=>{
     const totalH=total>0?Math.max(2,Math.round((total/maxM)*88)):0;
     let segs='';
     if(total>0){
-      const ents=Object.entries(cm).sort((a,b)=>b[1]-a[1]);
+      const sorted=[...segments].sort((a,b)=>b.mins-a.mins);
       let used=0;
-      ents.forEach(([cid,mins],idx)=>{
-        const c=catFor(cid);
-        const last=idx===ents.length-1;
+      sorted.forEach(({cat,mins},idx)=>{
+        const last=idx===sorted.length-1;
         const sh=last?(totalH-used):Math.max(1,Math.round((mins/total)*totalH));
         used+=sh;
-        segs+=`<div style="height:${sh}px;background:${c.color};width:100%;flex-shrink:0" title="${c.label}: ${fmtDur(mins)}"></div>`;
+        segs+=`<div style="height:${sh}px;background:${cat.color};width:100%;flex-shrink:0" title="${cat.label}: ${fmtDur(mins)}"></div>`;
       });
     }
-    return`<div class="bar-col"><div class="bar-val">${total>0?fmtDur(total):''}</div><div style="display:flex;flex-direction:column-reverse;height:${totalH}px;width:100%;border-radius:3px 3px 0 0;overflow:hidden">${segs}</div><div class="bar-lbl" style="color:${isT?'var(--accent)':'var(--text4)'}">${dayLbl(d)}</div></div>`;
+    return`<div class="bar-col"><div class="bar-val">${total>0?fmtDur(total):''}</div><div style="display:flex;flex-direction:column-reverse;height:${totalH}px;width:100%;border-radius:3px 3px 0 0;overflow:hidden">${segs}</div><div class="bar-lbl" style="color:${isCurrent?'var(--accent)':'var(--text4)'}">${label}</div></div>`;
   }).join('');
-  // Calendar month key — needed for both monthly breakdown and calendar
-  const year=_repYear,month=_repMonth;
-  const calMonthKeyEarly=`${year}-${String(month+1).padStart(2,'0')}`;
+  const barCard=`<div class="card" style="margin-bottom:12px">${barData.some(d=>d.total>0)?`<div class="bar-wrap">${bars}</div>`:`<div style="text-align:center;padding:26px 16px;color:var(--text5);font-size:12px;line-height:1.7"><div style="font-size:26px;margin-bottom:8px;opacity:.5">📊</div>No sessions in this period yet.<br><span style="font-size:10px;color:var(--text6)">Start a session to see your activity here.</span></div>`}</div>`;
 
-  // Method breakdown — ALL TIME
+  // ── Method Breakdown (scoped) ──
   const methodTotals={};
-  logs.forEach(l=>{
+  scopedLogs.forEach(l=>{
     if(!l.method)return;
     if(!methodTotals[l.method])methodTotals[l.method]={mins:0,cat:l.cat};
     methodTotals[l.method].mins+=l.dur;
   });
+  const liveInScope=(scope==='week')||(scope==='month'&&calendarMonthKey===td.slice(0,7))||(scope==='all');
+  if(liveInScope&&activeTimer&&activeTimer.startedAt){
+    const lm=activeTimer.method||'Session';
+    const lc=activeTimer.cat||'manual';
+    const lmins=liveTimerTodayMins();
+    if(lmins>0){
+      if(!methodTotals[lm])methodTotals[lm]={mins:0,cat:lc};
+      methodTotals[lm].mins+=lmins;
+    }
+  }
   const usedMethods=Object.entries(methodTotals).sort((a,b)=>b[1].mins-a[1].mins);
-  const totMethodM=usedMethods.reduce((a,[,v])=>a+v.mins,0)||1;
-  const catBars=usedMethods.map(([method,{mins,cat}])=>{
+  const totM=usedMethods.reduce((a,[,v])=>a+v.mins,0)||1;
+  const methodBars=usedMethods.map(([method,{mins,cat}])=>{
     const c=catFor(cat);
-    const p=Math.round((mins/totMethodM)*100);
+    const p=Math.round((mins/totM)*100);
+    const pLabel=(p===0&&mins>0)?'<1%':`${p}%`;
     return`<div style="margin-bottom:9px">
       <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
         <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${method}</span>
-        <span style="color:${c.color};flex-shrink:0">${fmtDur(mins)} · ${p}%</span>
+        <span style="color:${c.color};flex-shrink:0">${fmtDur(mins)} · ${pLabel}</span>
       </div>
       <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
     </div>`;
   }).join('');
+  const scopedMins=scopedLogs.reduce((a,l)=>a+l.dur,0);
+  // Count distinct active days, not log entries — one 72-hour T-tape session
+  // is a single entry but three days of real tension.
+  const scopedDays=new Set(scopedLogs.map(l=>l.date)).size;
+  const methodCard=`<div class="card" style="margin-bottom:12px">
+    ${methodBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:14px;line-height:1.7">No methods logged in this period.</div>`}
+    ${usedMethods.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${scopedDays} active day${scopedDays!==1?'s':''} · ${fmtDur(scopedMins)} total</div>`:''}
+  </div>`;
 
-  // Method breakdown — THIS WEEK (matches the "This Week" bar graph above it, so the colors line up)
-  const weekLogs=logs.filter(l=>wDays.includes(l.date));
-  const weekMethodTotals={};
-  weekLogs.forEach(l=>{
-    if(!l.method)return;
-    if(!weekMethodTotals[l.method])weekMethodTotals[l.method]={mins:0,cat:l.cat};
-    weekMethodTotals[l.method].mins+=l.dur;
-  });
-  let weekLiveMins=0;
-  if(activeTimer&&activeTimer.startedAt){
-    wDays.forEach(d=>{
-      const _dlm=liveTimerMinsForDate(d);
-      if(_dlm>0){
-        weekLiveMins+=_dlm;
-        const lm=activeTimer.method||'Session';
-        if(!weekMethodTotals[lm])weekMethodTotals[lm]={mins:0,cat:activeTimer.cat||'manual'};
-        weekMethodTotals[lm].mins+=_dlm;
-      }
+  // ── Calendar (month scope only, collapsed by default) ──
+  let calendarBlock='';
+  if(showCalendar){
+    const [yy,mm]=calendarMonthKey.split('-').map(Number);
+    const year=yy, month=mm-1;
+    const daysInM=new Date(year,month+1,0).getDate();
+    const calDays=[];
+    const firstDow=new Date(year,month,1).getDay();
+    for(let i=0;i<firstDow;i++)calDays.push(null);
+    for(let d=1;d<=daysInM;d++)calDays.push(`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+    const activeDays=new Set(logs.map(l=>l.date));
+    if(activeTimer&&activeTimer.startedAt){
+      const _sMs=activeTimer.wallStart||Date.now()-(timerSecs*1000);
+      let _cur=new Date(_sMs);const _now=new Date();
+      while(_cur<=_now){activeDays.add(localDateStr(_cur));_cur.setDate(_cur.getDate()+1);}
+    }
+    const goalDaysSet=new Set();
+    const _retainingExcl=char.countRetainingInGoal===false;
+    calDays.filter(Boolean).forEach(d=>{
+      const _logM=logs.filter(l=>l.date===d&&(!_retainingExcl||l.cat!=='retaining')).reduce((a,l)=>a+l.dur,0);
+      const _liveM=(!_retainingExcl||activeTimer?.cat!=='retaining')?liveTimerMinsForDate(d):0;
+      if(_logM+_liveM>=(char.dailyGoalMin||120))goalDaysSet.add(d);
     });
+    const restDaySet=new Set(char.restDays||[]);
+    const dayMinsMap={};
+    logs.filter(l=>l.date.slice(0,7)===calendarMonthKey).forEach(l=>{dayMinsMap[l.date]=(dayMinsMap[l.date]||0)+l.dur;});
+    if(activeTimer&&activeTimer.startedAt){
+      calDays.filter(Boolean).forEach(d=>{const _dlm=liveTimerMinsForDate(d);if(_dlm>0)dayMinsMap[d]=(dayMinsMap[d]||0)+_dlm;});
+    }
+    const calDots=calDays.map(d=>{
+      if(d===null)return`<div></div>`;
+      const dayNum=parseInt(d.split('-')[2]);
+      const isGoal=goalDaysSet.has(d),isRest=restDaySet.has(d),isActive=activeDays.has(d),isToday=d===td;
+      const dayNote=char.dayNotes&&char.dayNotes[d];
+      const noteColor=dayNote?.color||null;
+      const dayMins=dayMinsMap[d]||0;
+      const barPct=Math.min(100,Math.round((dayMins/(char.dailyGoalMin||120))*100));
+      const bg=noteColor?noteColor+'99':isGoal?'rgba(34,168,90,.55)':isRest?'rgba(100,120,200,.4)':isActive?'var(--acc45)':'var(--bg-stat)';
+      const border=isToday?'1.5px solid var(--accent)':noteColor?`1px solid ${noteColor}`:'1px solid transparent';
+      const textCol=noteColor||isGoal||isRest||isActive?'rgba(255,255,255,.9)':(isToday?'var(--accent)':'var(--text5)');
+      const noteDot=dayNote?`<span style="position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.85)"></span>`:'';
+      const miniBar=dayMins>0?`<div style="position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 3px 3px;background:rgba(0,0,0,.2)"><div style="height:100%;width:${barPct}%;background:${isGoal?'rgba(34,168,90,.9)':'rgba(255,255,255,.55)'};border-radius:0 0 3px 3px;transition:width .3s"></div></div>`:'';
+      return`<div onclick="showDayDetail('${d}')"
+        style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative;overflow:hidden"
+        title="${d}">${dayNum}${noteDot}${miniBar}</div>`;
+    }).join('');
+    const activeCount=calDays.filter(d=>d&&activeDays.has(d)).length;
+    const nowD=new Date(),todayYear=nowD.getFullYear(),todayMonth=nowD.getMonth();
+    const canGoNext=!(year===todayYear&&month===todayMonth);
+    const firstLogDate=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
+    const canGoPrev=(`${year}-${String(month+1).padStart(2,'0')}`)>firstLogDate;
+    const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const monthName=`${monthNames[month]} ${year}`;
+    calendarBlock=`
+      <div class="sec-title">Activity</div>
+      <div class="card" style="margin-bottom:12px">
+        <button onclick="toggleRepCal()" style="width:100%;display:flex;align-items:center;gap:10px;padding:0;background:none;border:none;cursor:pointer;font-family:var(--font-body);text-align:left">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:3px">${activeCount} of ${daysInM} days active</div>
+            <div style="font-size:10px;color:var(--text4)">${monthName}</div>
+          </div>
+          <span style="font-size:11px;color:var(--text5);transform:rotate(${_repCalExpanded?'180':'0'}deg);transition:transform .2s">▾</span>
+        </button>
+        ${_repCalExpanded?`
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px;padding-top:12px;border-top:1px solid var(--stat-border)">
+            <button onclick="repNavPrev()" ${!canGoPrev?'disabled':''} style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoPrev?'var(--text2)':'var(--text6)'};cursor:${canGoPrev?'pointer':'default'};font-family:var(--font-body);opacity:${canGoPrev?1:0.35}">‹</button>
+            <span style="font-size:11px;font-weight:600;color:var(--text2)">${monthName}</span>
+            <button onclick="repNavNext()" ${!canGoNext?'disabled':''} style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoNext?'var(--text2)':'var(--text6)'};cursor:${canGoNext?'pointer':'default'};font-family:var(--font-body);opacity:${canGoNext?1:0.35}">›</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text5);margin-bottom:4px"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+          <div class="cal-grid">${calDots}</div>
+          <div style="display:flex;gap:10px;margin-top:7px;font-size:9px;color:var(--text4);flex-wrap:wrap">
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--acc45);vertical-align:middle;margin-right:3px"></span>Active</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(34,168,90,.55);vertical-align:middle;margin-right:3px"></span>Goal met</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(100,120,200,.4);vertical-align:middle;margin-right:3px"></span>Rest day</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.6);border:1px solid var(--text4);vertical-align:middle;margin-right:3px"></span>Has note</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:transparent;border:1.5px solid var(--accent);vertical-align:middle;margin-right:3px"></span>Today</span>
+          </div>
+        `:''}
+      </div>`;
   }
-  const usedWeekMethods=Object.entries(weekMethodTotals).sort((a,b)=>b[1].mins-a[1].mins);
-  const totWeekM=usedWeekMethods.reduce((a,[,v])=>a+v.mins,0)||1;
-  const catBarsWeek=usedWeekMethods.map(([method,{mins,cat}])=>{
-    const c=catFor(cat);
-    const p=Math.round((mins/totWeekM)*100);
-    return`<div style="margin-bottom:9px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
-        <span style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:8px">${method}</span>
-        <span style="color:${c.color};flex-shrink:0">${fmtDur(mins)} · ${p}%</span>
-      </div>
-      <div style="height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${c.color};width:${p}%;transition:width .6s"></div></div>
-    </div>`;
-  }).join('');
 
-  // Calendar — navigable month
-  // (year and month already set above)
-  const daysInMonth=new Date(year,month+1,0).getDate();
-  const firstDow=new Date(year,month,1).getDay(); // 0=Sun
-  const calDays=[];
-  // Leading empty slots for alignment
-  for(let i=0;i<firstDow;i++)calDays.push(null);
-  for(let d=1;d<=daysInMonth;d++){
-    const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    calDays.push(ds);
-  }
-  const activeDays=new Set(logs.map(l=>l.date));
-if(activeTimer&&activeTimer.startedAt){
-  const _sMs=activeTimer.wallStart||Date.now()-(timerSecs*1000);
-  let _cur=new Date(_sMs);const _now=new Date();
-  while(_cur<=_now){activeDays.add(localDateStr(_cur));_cur.setDate(_cur.getDate()+1);}
-}  const goalDaysSet=new Set();
-  calDays.filter(Boolean).forEach(d=>{
-  const _logM=logs.filter(l=>l.date===d).reduce((a,l)=>a+l.dur,0);
-  if(_logM+liveTimerMinsForDate(d)>=(char.dailyGoalMin||120))goalDaysSet.add(d);
-});
-  const restDaySet=new Set(char.restDays||[]);
-  // Build per-day minutes map for mini progress bars
-  const dayMinsMap={};
-  logs.filter(l=>l.date.slice(0,7)===calMonthKeyEarly).forEach(l=>{
-    dayMinsMap[l.date]=(dayMinsMap[l.date]||0)+l.dur;
-  });
-  if(activeTimer&&activeTimer.startedAt){
-  calDays.filter(Boolean).forEach(d=>{
-    const _dlm=liveTimerMinsForDate(d);
-    if(_dlm>0)dayMinsMap[d]=(dayMinsMap[d]||0)+_dlm;
-  });
-}
-  const calDots=calDays.map(d=>{
-    if(d===null)return`<div></div>`;
-    const dayNum=parseInt(d.split('-')[2]);
-    const isGoal=goalDaysSet.has(d),isRest=restDaySet.has(d),isActive=activeDays.has(d),isToday=d===td;
-    const dayNote=char.dayNotes&&char.dayNotes[d];
-    const noteColor=dayNote?.color||null;
-    const dayMins=dayMinsMap[d]||0;
-    const barPct=Math.min(100,Math.round((dayMins/(char.dailyGoalMin||120))*100));
-    const bg=noteColor?noteColor+'99':isGoal?'rgba(34,168,90,.55)':isRest?'rgba(100,120,200,.4)':isActive?'var(--acc45)':'var(--bg-stat)';
-    const border=isToday?'1.5px solid var(--accent)':noteColor?`1px solid ${noteColor}`:'1px solid transparent';
-    const textCol=noteColor||isGoal||isRest||isActive?'rgba(255,255,255,.9)':(isToday?'var(--accent)':'var(--text5)');
-    const noteDot=dayNote?`<span style="position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.85)"></span>`:'';
-    const miniBar=dayMins>0?`<div style="position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 3px 3px;background:rgba(0,0,0,.2)"><div style="height:100%;width:${barPct}%;background:${isGoal?'rgba(34,168,90,.9)':'rgba(255,255,255,.55)'};border-radius:0 0 3px 3px;transition:width .3s"></div></div>`:'';
-    return`<div onclick="showDayDetail('${d}')"
-      style="aspect-ratio:1;border-radius:4px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px;font-weight:${isToday?700:500};color:${textCol};transition:opacity .15s;user-select:none;position:relative;overflow:hidden"
-      title="${d}">${dayNum}${noteDot}${miniBar}</div>`;
-  }).join('');
-  
-  const weekTotal=wData.reduce((a,w)=>a+w.total,0);
-  const calMonthKey=`${year}-${String(month+1).padStart(2,'0')}`;
-  const isCurrentMonth=(calMonthKey===td.slice(0,7));
-  const monthTotal=logs.filter(l=>l.date.slice(0,7)===calMonthKey).reduce((a,l)=>a+l.dur,0)+(isCurrentMonth?liveMins:0);
-  // Session History — grouped by method, expandable
+  // ── Session History (scoped) ──
   const histByMethod={};
-  logs.forEach(l=>{
+  scopedLogs.forEach(l=>{
     if(!histByMethod[l.method])histByMethod[l.method]={cat:l.cat,sessions:[]};
     histByMethod[l.method].sessions.push(l);
   });
@@ -3147,10 +4339,10 @@ if(activeTimer&&activeTimer.startedAt){
           </div>
         </div>`).join('');
       const firstPage=renderRows(sess.slice(0,PAGE));
-      const moreBtn=sess.length>PAGE?`<button onclick="(function(){var el=document.getElementById('${uid}-more');el.style.display='block';this.remove();})()" style="width:100%;padding:8px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;margin-top:4px">Show all ${sess.length} sessions ▾</button><div id="${uid}-more" style="display:none">${renderRows(sess.slice(PAGE))}</div>`:'';
+      const moreBtn=sess.length>PAGE?`<button onclick="(function(){var el=document.getElementById('${uid}-more');el.style.display='block';this.remove();})()" style="width:100%;padding:8px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);margin-top:4px">Show all ${sess.length} sessions ▾</button><div id="${uid}-more" style="display:none">${renderRows(sess.slice(PAGE))}</div>`:'';
       return`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:10px;margin-bottom:7px;overflow:hidden">
         <button onclick="(function(){var d=document.getElementById('${uid}');d.style.display=d.style.display==='none'?'block':'none';})()"
-          style="width:100%;display:flex;gap:10px;align-items:center;padding:10px;background:none;border:none;cursor:pointer;text-align:left;font-family:DM Sans,sans-serif">
+          style="width:100%;display:flex;gap:10px;align-items:center;padding:10px;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--font-body)">
           <div style="width:32px;height:32px;border-radius:7px;background:${cat.color}18;border:1px solid ${cat.color}33;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${cat.icon}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text1)">${method}</div>
@@ -3164,79 +4356,16 @@ if(activeTimer&&activeTimer.startedAt){
   const _histSorted=Object.entries(histByMethod).sort((a,b)=>b[1].sessions[0].date.localeCompare(a[1].sessions[0].date)||b[1].sessions[0].id-a[1].sessions[0].id);
   const histHtml=_histSorted.length
     ?_histSorted.slice(0,3).map(_buildHCard).join('')+(_histSorted.length>3
-      ?`<div id="hist-rest" style="display:none">${_histSorted.slice(3).map(_buildHCard).join('')}</div><button onclick="document.getElementById('hist-rest').style.display='block';this.remove()" style="width:100%;padding:10px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;margin-bottom:7px">Show ${_histSorted.length-3} more method${_histSorted.length-3!==1?'s':''} ▾</button>`:'')
-    :`<div class="empty">No sessions logged yet.</div>`;
+      ?`<div id="hist-rest" style="display:none">${_histSorted.slice(3).map(_buildHCard).join('')}</div><button onclick="document.getElementById('hist-rest').style.display='block';this.remove()" style="width:100%;padding:10px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);margin-bottom:7px">Show ${_histSorted.length-3} more method${_histSorted.length-3!==1?'s':''} ▾</button>`:'')
+    :`<div class="empty">No sessions in this period.</div>`;
 
-  // ── CI PROGRESSION CHART ──
-
-  // Notes viewer — sessions that have notes, full text
-  const _allNotes=logs.filter(l=>l.notes&&l.notes.trim().length>0);
-  const _buildNote=l=>{const cat=catFor(l.cat);return`<div style="padding:9px 0;border-bottom:1px solid var(--stat-border)"><div style="display:flex;align-items:center;gap:7px;margin-bottom:4px"><span style="font-size:13px">${cat.icon}</span><span style="font-size:11px;font-weight:600;color:var(--text2)">${l.method}</span><span style="font-size:10px;color:var(--text5);margin-left:auto">${fmtDate(l.date)} · ${fmtMin(l.dur)}</span><button class="edit-btn" data-id="${l.id}" style="display:flex;align-items:center;flex-shrink:0">${IC.edit(12)}</button></div><div style="font-size:11px;color:var(--text3);line-height:1.6;font-style:italic">${htmlEsc(l.notes)}</div></div>`;};
-  const notesHtml=_allNotes.length
-    ?_allNotes.slice(0,3).map(_buildNote).join('')+(_allNotes.length>3
-      ?`<div id="notes-rest" style="display:none">${_allNotes.slice(3).map(_buildNote).join('')}</div><button onclick="document.getElementById('notes-rest').style.display='block';this.remove()" style="width:100%;padding:9px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;margin-top:4px">View all ${_allNotes.length} notes ▾</button>`:'')
-    :`<div style="color:var(--text5);font-size:11px;text-align:center;padding:12px">No session notes yet.</div>`;
-
-  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const monthName=`${monthNames[month]} ${year}`;
-  const nowD=new Date(),todayYear=nowD.getFullYear(),todayMonth=nowD.getMonth();
-  const canGoNext=!(year===todayYear&&month===todayMonth);
-  const firstLogDate=logs.length?logs[logs.length-1].date.slice(0,7):'2020-01';
-  const canGoPrev=(`${year}-${String(month+1).padStart(2,'0')}`)>firstLogDate;
-  return`<div class="page-title">Reports</div>
-  ${buildWeeklySummary()}
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
-    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">This Week</div>
-    <div style="font-size:11px;font-weight:600;color:var(--text2)">${weekRangeLabel}</div>
-  </div>
-  <div class="card"><div class="bar-wrap">${bars}</div></div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
-    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
-    <div style="font-size:10px;color:var(--accent);font-weight:600">This Week</div>
-  </div>
-  <div class="card">
-    ${catBarsWeek||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions logged this week.</div>`}
-    ${weekLogs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${weekLogs.length} sessions · ${fmtDur(weekLogs.reduce((a,l)=>a+l.dur,0)+weekLiveMins)} total</div>`:''}
-  </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
-    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Method Breakdown</div>
-    <div style="font-size:10px;color:var(--text4);font-weight:600">All Time</div>
-  </div>
-  <div class="card">
-    ${catBars||`<div style="color:var(--text5);font-size:11px;text-align:center;padding:10px">No sessions yet.</div>`}
-    ${logs.length?`<div style="border-top:1px solid var(--stat-border);margin-top:6px;padding-top:6px;font-size:10px;color:var(--text5);text-align:right">${logs.length} sessions · ${fmtDur(logs.reduce((a,l)=>a+l.dur,0))} total</div>`:''}
-  </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
-    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4)">Activity</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="repNavPrev()" ${!canGoPrev?'disabled':''} style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoPrev?'var(--text2)':'var(--text6)'};cursor:${canGoPrev?'pointer':'default'};font-family:DM Sans,sans-serif;opacity:${canGoPrev?1:0.35}">‹</button>
-      <span style="font-size:11px;font-weight:600;color:var(--text2);min-width:100px;text-align:center">${monthName}</span>
-      <button onclick="repNavNext()" ${!canGoNext?'disabled':''} style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:4px 10px;font-size:13px;color:${canGoNext?'var(--text2)':'var(--text6)'};cursor:${canGoNext?'pointer':'default'};font-family:DM Sans,sans-serif;opacity:${canGoNext?1:0.35}">›</button>
-    </div>
-  </div>
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text5);margin-bottom:4px"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
-    <div class="cal-grid">${calDots}</div>
-    <div style="display:flex;gap:10px;margin-top:7px;font-size:9px;color:var(--text4);flex-wrap:wrap">
-      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--acc45);vertical-align:middle;margin-right:3px"></span>Active</span>
-      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(34,168,90,.55);vertical-align:middle;margin-right:3px"></span>Goal met</span>
-      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:rgba(100,120,200,.4);vertical-align:middle;margin-right:3px"></span>Rest day</span>
-      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.6);border:1px solid var(--text4);vertical-align:middle;margin-right:3px"></span>Has note</span>
-    </div>
-  </div>
-  <div class="sec-title">Session History</div>${histHtml}
-  <div class="sec-title">Session Notes</div>
-  <div class="card" style="padding:8px 12px">${notesHtml}</div>
-  <div class="sec-title">Export Data</div>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text1)">Session Log — CSV</div>
-        <div style="font-size:10px;color:var(--text4);margin-top:2px;line-height:1.5">${logs.length} sessions · Opens in Excel or Google Sheets for your own analysis. Not a backup — use the backup in your profile for that.</div>
-      </div>
-      <button class="btn-outline" id="export-btn" style="flex-shrink:0">📊 Export</button>
-    </div>
-  </div>`;
+  return`${scopeBar}
+  ${heroCard}
+  ${barCard}
+  <div class="sec-title">Method Breakdown</div>
+  ${methodCard}
+  ${calendarBlock}
+  <div class="sec-title">Session History</div>${histHtml}`;
 }
 function showDayDetail(dateStr){
   const ex=document.getElementById('day-detail-ov');if(ex)ex.remove();
@@ -3250,7 +4379,6 @@ function showDayDetail(dateStr){
   const goalMet=totalMins>=goal;
 
   // Format date nicely
-  const d=new Date(dateStr+'T12:00:00');
   const dateLabel=new Date(dateStr+'T12:00:00').toLocaleDateString('en',{weekday:'long'})+', '+fmtDateLong(dateStr);
 
   const statusBadge=isToday
@@ -3288,7 +4416,7 @@ function showDayDetail(dateStr){
     <div style="margin-bottom:12px">
       <div style="font-size:12px;color:var(--text4);margin-bottom:4px">${dateLabel}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        ${totalMins>0?`<div style="font-family:Cinzel,serif;font-size:20px;font-weight:700;color:var(--accent)">${fmtDur(totalMins)}</div>`:''}
+        ${totalMins>0?`<div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--accent)">${fmtDur(totalMins)}</div>`:''}
         ${statusBadge}
       </div>
       ${totalMins>0&&!goalMet?`<div style="font-size:10px;color:var(--text5);margin-top:4px">${fmtMin(goal-totalMins)} short of daily goal</div>`:''}
@@ -3300,8 +4428,8 @@ function showDayDetail(dateStr){
     </div>`:''}
     <div id="day-note-area" style="margin-top:12px">
       ${dayNote
-        ?`<button onclick="showDayNoteEditor('${dateStr}')" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✏ Edit note</button>`
-        :`<button onclick="showDayNoteEditor('${dateStr}')" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">📝 Add a note for this day</button>`
+        ?`<button onclick="showDayNoteEditor('${dateStr}')" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">✏ Edit note</button>`
+        :`<button onclick="showDayNoteEditor('${dateStr}')" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">📝 Add a note for this day</button>`
       }
     </div>
     <button class="btn-ghost" onclick="document.getElementById('day-detail-ov').remove()" style="width:100%;margin-top:8px">Close</button>
@@ -3334,7 +4462,7 @@ function deleteDaySession(id){
       rebuildCharFromLogs();
       document.getElementById('day-detail-ov')?.remove();
       showToast('Session deleted');
-      if(tab==='reports'){const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}}
+      if(tab==='journey'&&_progressTab==='activity'){const c=document.getElementById('content');if(c){c.innerHTML=renderJourney();attachEvents();}}
     }
   );
 }
@@ -3349,7 +4477,7 @@ function showDayNoteEditor(dateStr){
   el.className='overlay';el.id='note-editor-ov';
   el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:2px">Day Note</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:2px">Day Note</div>
     <div style="font-size:11px;color:var(--text4);margin-bottom:14px">${label}</div>
     <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Colour</div>
     <div id="note-color-row" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
@@ -3360,9 +4488,9 @@ function showDayNoteEditor(dateStr){
     </div>
     <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Note</div>
     <textarea id="day-note-inp" placeholder="How did you feel? Anything notable about today..."
-      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:13px;width:100%;outline:none;resize:vertical;min-height:80px;font-family:'DM Sans',sans-serif;margin-bottom:14px">${existing?htmlEsc(existing.note):''}</textarea>
+      style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:13px;width:100%;outline:none;resize:vertical;min-height:80px;font-family:var(--font-body);margin-bottom:14px">${existing?htmlEsc(existing.note):''}</textarea>
     <div style="display:flex;gap:8px">
-      ${existing?`<button onclick="deleteDayNote('${dateStr}')" style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Delete</button>`:''}
+      ${existing?`<button onclick="deleteDayNote('${dateStr}')" style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#a03232;cursor:pointer;font-family:var(--font-body)">Delete</button>`:''}
       <button class="btn-ghost" onclick="document.getElementById('note-editor-ov').remove()" style="flex:1">Cancel</button>
       <button class="btn-gold" onclick="saveDayNote('${dateStr}')" style="flex:2">Save Note</button>
     </div>
@@ -3389,8 +4517,7 @@ function saveDayNote(dateStr){
   document.getElementById('note-editor-ov')?.remove();
   document.getElementById('day-detail-ov')?.remove();
   showToast('📝 Note saved');
-  // Refresh calendar if on reports tab
-  if(tab==='reports'){const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}}
+  if(tab==='journey'&&_progressTab==='activity'){const c=document.getElementById('content');if(c){c.innerHTML=renderJourney();attachEvents();}}
 }
 
 function deleteDayNote(dateStr){
@@ -3398,37 +4525,54 @@ function deleteDayNote(dateStr){
   delete char.dayNotes[dateStr];
   saveChar();
   document.getElementById('note-editor-ov')?.remove();
-  document.getElementById('day-detail-ov')?.remove();
+  document.getElementById('day-detail-ov')?.remove(); 
   showToast('Note deleted');
-  if(tab==='reports'){const c=document.getElementById('content');if(c){c.innerHTML=renderReports();attachEvents();}}
+  if(tab==='journey'&&_progressTab==='activity'){const c=document.getElementById('content');if(c){c.innerHTML=renderJourney();attachEvents();}}
 }
 
 let expandedBadgeGroups=new Set(['first']); // first-steps open by default
 function toggleBadgeGroup(id){
   if(expandedBadgeGroups.has(id))expandedBadgeGroups.delete(id);
   else expandedBadgeGroups.add(id);
-  // Re-render just the badges tab content
+  // Re-render the Progress tab (badges sub-tab) content
   const c=document.getElementById('content');
-  if(c&&tab==='ach')c.innerHTML=renderAch();
+  if(c&&tab==='journey'&&_progressTab==='badges'){c.innerHTML=renderJourney();attachEvents();}
 }
 
-function renderAch(){
+function renderBadgesBody(){
   const unlocked=char.achievements.length;
   const pct=Math.round(unlocked/ACHS.length*100);
 
+  // Group definitions — just ids and labels. Badge membership is derived from
+  // each ACHS entry's own `g:` field, so adding a new badge only requires
+  // adding it to ACHS (with a `g:` value) — the wall picks it up automatically.
   const groups=[
-    {id:'first',  label:'🌱 First Steps',   ids:['first','rest1','photo1']},
-    {id:'sess',   label:'◉ Sessions',        ids:['s10','s25','s50','s100','s200','s365','s500']},
-    {id:'time',   label:'⏱ Time',            ids:['h1','h10','h25','h50','h100','h250','h500','h1000']},
-    {id:'streak', label:'🔥 Streaks',        ids:['str3','str7','str14','str30','str60','str90','str180','str365']},
-    {id:'goal',   label:'🎯 Daily Goal',     ids:['goal5','goal30','goal100','goal365']},
-    {id:'method', label:'🧪 Methods',        ids:['meth3','meth5']},
-    {id:'photo',  label:'📸 Photos',         ids:['photo5','photo10']},
-    {id:'ci',     label:'◑ CI Progress',     ids:['ci1','ci2','ci3','ci4','ci5','ci6','ci7','ci8','ci9','ci10']},
+    {id:'first',  label:'🌱 First Steps'},
+    {id:'sess',   label:'◉ Sessions'},
+    {id:'time',   label:'⏱ Time'},
+    {id:'streak', label:'🔥 Streaks'},
+    {id:'goal',   label:'🎯 Daily Goal'},
+    {id:'method', label:'🧪 Methods'},
+    {id:'photo',  label:'📸 Photos'},
+    {id:'ci',     label:'◑ CI Progress'},
   ];
 
+  // Bucket each badge by its `g:` field. A badge with a missing or unknown
+  // group lands in an auto-generated "Other" group and logs a warning, so
+  // nothing silently disappears from the wall.
+  const knownGroupIds=new Set(groups.map(g=>g.id));
+  const grouped={};
+  for(const a of ACHS){
+    const gid=knownGroupIds.has(a.g)?a.g:'other';
+    if(gid==='other'&&a.g!=='other'){
+      console.warn(`[RT] Badge "${a.id}" has missing or unknown group "${a.g}" — placed in "Other".`);
+    }
+    (grouped[gid]=grouped[gid]||[]).push(a);
+  }
+  if(grouped.other&&grouped.other.length)groups.push({id:'other',label:'• Other'});
+
   const groupHtml=groups.map(g=>{
-    const groupAchs=ACHS.filter(a=>g.ids.includes(a.id));
+    const groupAchs=grouped[g.id]||[];
     const groupUnlocked=groupAchs.filter(a=>char.achievements.includes(a.id)).length;
     const isOpen=expandedBadgeGroups.has(g.id);
     const groupPct=Math.round(groupUnlocked/groupAchs.length*100);
@@ -3444,7 +4588,7 @@ function renderAch(){
 
     return`<div style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;margin-bottom:8px;overflow:hidden">
       <button onclick="toggleBadgeGroup('${g.id}')"
-        style="width:100%;display:flex;align-items:center;gap:10px;padding:12px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left">
+        style="width:100%;display:flex;align-items:center;gap:10px;padding:12px;background:none;border:none;cursor:pointer;font-family:var(--font-body);text-align:left">
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:700;color:var(--text1)">${g.label}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
@@ -3460,14 +4604,423 @@ function renderAch(){
     </div>`;
   }).join('');
 
-  return`<div class="page-title">Badges</div>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+  return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
     <div style="flex:1;height:7px;background:var(--bg-stat);border-radius:4px;overflow:hidden">
       <div style="height:100%;background:linear-gradient(90deg,var(--acc18),var(--accent));width:${pct}%;border-radius:4px;transition:width .6s"></div>
     </div>
     <div style="font-size:11px;color:var(--text4);flex-shrink:0">${unlocked} / ${ACHS.length}</div>
   </div>
   ${groupHtml}`;
+}
+
+// ── ONBOARDING (new user) ─────────────────────────────────────────────────────
+// Four-step wizard: You → Journey → Methods → Ready.
+// State lives on window._ob* so step navigation doesn't require a full re-render.
+// Everything commits via createProfile() at the very end.
+const OB_STEPS=4;
+
+function renderOnboarding(){
+  // Fresh state each time we enter onboarding
+  window._obStep=1;
+  window._obCurrent=null;
+  window._obStartMode='same';
+  window._obStart=null;
+  window._obGoal=10;
+  window._obDailyGoal=120;
+  window._obName='';
+  window._obMethods=new Set();
+  window._obCustomMethods=new Set();
+
+  document.getElementById('root').innerHTML=`<div class="pscreen" id="ob-screen">
+    <div style="text-align:center;margin-bottom:20px;margin-top:4px">
+      <div style="font-family:var(--font-display);font-size:24px;color:var(--accent);letter-spacing:3px;margin-bottom:6px">◉ RESTORETRACK</div>
+      <div id="ob-step-dots" style="display:flex;gap:6px;justify-content:center;margin-top:12px"></div>
+    </div>
+    <div id="ob-step-body" style="width:100%"></div>
+    <div id="ob-step-nav" style="width:100%;margin-top:14px"></div>
+    <div style="width:100%;margin-top:24px;padding-top:16px;border-top:1px solid var(--stat-border);text-align:center">
+      <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.7">Already have a profile from another device?</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn-ghost" id="ob-cloud-restore" style="padding:8px 14px;font-size:11px">☁ Restore from Cloud</button>
+        <button class="btn-ghost" id="ob-import-backup" style="padding:8px 14px;font-size:11px">Import Backup File</button>
+      </div>
+      <div style="font-size:9px;color:var(--text6);margin-top:10px;line-height:1.6">Cloud restore requires the same Google account used when you backed up.</div>
+      <input type="file" id="ob-restore-file" accept=".json" style="display:none">
+    </div>
+  </div>`;
+
+  document.getElementById('ob-cloud-restore')?.addEventListener('click',onboardingCloudRestore);
+  document.getElementById('ob-import-backup')?.addEventListener('click',()=>document.getElementById('ob-restore-file').click());
+  document.getElementById('ob-restore-file')?.addEventListener('change',e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{importBackup(ev.target.result);};
+    reader.readAsText(file);e.target.value='';
+  });
+
+  obRenderStep();
+}
+
+function obRenderDots(){
+  const el=document.getElementById('ob-step-dots');
+  if(!el)return;
+  el.innerHTML=Array.from({length:OB_STEPS},(_,i)=>{
+    const active=(i+1)===window._obStep;
+    const done=(i+1)<window._obStep;
+    return`<div style="width:${active?'20px':'8px'};height:8px;border-radius:4px;background:${active?'var(--accent)':done?'var(--acc45)':'var(--stat-border)'};transition:all .25s"></div>`;
+  }).join('');
+}
+
+function obRenderNav(){
+  const el=document.getElementById('ob-step-nav');
+  if(!el)return;
+  const step=window._obStep;
+  const isFirst=step===1;
+  const isLast=step===OB_STEPS;
+  if(isFirst){
+    el.innerHTML=`<button class="btn-gold" id="ob-next" style="width:100%;padding:14px;font-size:14px;letter-spacing:.5px">Continue</button>`;
+  } else if(isLast){
+    el.innerHTML=`<button class="btn-gold" id="ob-commit" style="width:100%;padding:14px;font-size:14px;letter-spacing:.5px;margin-bottom:8px">Enter RestoreTrack</button>
+      <button class="btn-ghost" id="ob-back" style="width:100%;padding:11px;font-size:12px">← Back</button>`;
+  } else {
+    el.innerHTML=`<button class="btn-gold" id="ob-next" style="width:100%;padding:14px;font-size:14px;letter-spacing:.5px;margin-bottom:8px">Continue</button>
+      <button class="btn-ghost" id="ob-back" style="width:100%;padding:11px;font-size:12px">← Back</button>`;
+  }
+  document.getElementById('ob-next')?.addEventListener('click',obNext);
+  document.getElementById('ob-back')?.addEventListener('click',obBack);
+  document.getElementById('ob-commit')?.addEventListener('click',obCommit);
+}
+
+function obNext(){
+  if(window._obStep>=OB_STEPS)return;
+  if(window._obStep===1){
+    const name=(document.getElementById('ob-name')?.value||'').trim();
+    if(!name){showToast('Please enter a name');return;}
+    window._obName=name;
+  }
+  if(window._obStep===2){
+    if(window._obCurrent===null){showToast('Pick your current CI level');return;}
+  }
+  window._obStep++;
+  obRenderStep();
+}
+
+function obBack(){
+  if(window._obStep<=1)return;
+  window._obStep--;
+  obRenderStep();
+}
+
+function obRenderStep(){
+  obRenderDots();
+  obRenderNav();
+  const body=document.getElementById('ob-step-body');
+  if(!body)return;
+  if(window._obStep===1)body.innerHTML=obStepYou();
+  else if(window._obStep===2)body.innerHTML=obStepJourney();
+  else if(window._obStep===3)body.innerHTML=obStepMethods();
+  else if(window._obStep===4)body.innerHTML=obStepReady();
+  if(window._obStep===1)obWireYou();
+  else if(window._obStep===2)obWireJourney();
+  else if(window._obStep===3)obWireMethods();
+}
+
+// ── Step 1: You (name + theme) ──
+function obStepYou(){
+  const themeChips=THEMES.map(t=>`<div class="theme-chip${currentTheme===t.id?' sel':''}" data-tid="${t.id}" onclick="selectTheme('${t.id}')">
+    <div class="theme-swatch" style="background:${t.bg}">
+      <div style="display:flex;gap:3px"><div class="tdot" style="background:${t.accent}"></div><div class="tdot" style="background:${t.mid}"></div><div class="tdot" style="background:${t.text}"></div></div>
+      <div class="theme-lbl" style="color:${t.text}">${t.name}</div>
+    </div>
+  </div>`).join('');
+
+  return`<div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:22px;margin-bottom:12px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:10px">Your Name</div>
+    <input class="gold-inp" id="ob-name" placeholder="Display name" maxlength="20" value="${htmlEsc(window._obName||'')}" style="font-size:15px;margin-bottom:24px">
+
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">Choose Your Theme</div>
+    <div style="font-size:11px;color:var(--text4);margin-bottom:12px;line-height:1.6">Pick the vibe that feels right — you can change this anytime.</div>
+    <div class="theme-row" style="margin-bottom:0">${themeChips}</div>
+  </div>`;
+}
+
+function obWireYou(){
+  document.getElementById('ob-name')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();obNext();}
+  });
+}
+
+// ── Step 2: Journey (CI + daily goal) ──
+function obStepJourney(){
+  const gridBtn=(val,selected,fn)=>
+    `<button onclick="${fn}" style="padding:9px 0;border-radius:8px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;background:${selected?'var(--accent)':'var(--bg-stat)'};border:1px solid ${selected?'var(--accent)':'var(--stat-border)'};color:${selected?'var(--bg)':'var(--text3)'}">${val}</button>`;
+
+  const currentGrid=Array.from({length:11},(_,i)=>gridBtn(i,i===window._obCurrent,`obSetCurrent(${i})`)).join('');
+  const currentDesc=window._obCurrent===null
+    ?'<span style="color:var(--text5)">Tap a level to see its description.</span>'
+    :`<span style="color:var(--text1);font-weight:600">${LEVELS[window._obCurrent].ci}</span><br><span style="color:var(--text3)">${ciDesc(LEVELS[window._obCurrent])}</span>`;
+
+  const showStart=window._obStartMode==='lower'&&window._obCurrent!==null&&window._obCurrent>0;
+  const startGrid=showStart
+    ?Array.from({length:window._obCurrent},(_,i)=>gridBtn(i,i===window._obStart,`obSetStart(${i})`)).join('')
+    :'';
+  const startBlock=window._obCurrent!==null&&window._obCurrent>0?`
+    <div style="margin-bottom:18px">
+      <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:8px">Did you start at a lower CI level?</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button data-choice="same" class="ob-start-btn" style="flex:1;padding:9px;border-radius:8px;font-size:11px;cursor:pointer;background:${window._obStartMode==='same'?'var(--accent)':'var(--bg-stat)'};border:1px solid ${window._obStartMode==='same'?'var(--accent)':'var(--stat-border)'};color:${window._obStartMode==='same'?'var(--bg)':'var(--text3)'};font-family:var(--font-body);font-weight:600;transition:all .15s">No, I'm starting now</button>
+        <button data-choice="lower" class="ob-start-btn" style="flex:1;padding:9px;border-radius:8px;font-size:11px;cursor:pointer;background:${window._obStartMode==='lower'?'var(--accent)':'var(--bg-stat)'};border:1px solid ${window._obStartMode==='lower'?'var(--accent)':'var(--stat-border)'};color:${window._obStartMode==='lower'?'var(--bg)':'var(--text3)'};font-family:var(--font-body);font-weight:600;transition:all .15s">Yes, I started lower</button>
+      </div>
+      ${showStart?`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px">${startGrid}</div>`:''}
+    </div>`:'';
+
+  const showGoal=window._obCurrent!==null&&window._obCurrent<10;
+  const minGoal=window._obCurrent!==null?window._obCurrent+1:1;
+  const goalGrid=showGoal
+    ?Array.from({length:11-minGoal},(_,i)=>gridBtn(minGoal+i,minGoal+i===window._obGoal,`obSetGoal(${minGoal+i})`)).join('')
+    :'';
+  const goalBlock=showGoal?`
+    <div style="margin-bottom:18px">
+      <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:8px">What's your goal?</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">${goalGrid}</div>
+    </div>`:'';
+
+  const presets=[30,60,90,120,180];
+  const presetBtns=presets.map(v=>{
+    const sel=window._obDailyGoal===v;
+    return`<button data-ob-preset="${v}" onclick="obSetDailyGoal(${v})" style="padding:10px 0;border-radius:8px;font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;background:${sel?'var(--accent)':'var(--bg-stat)'};border:1px solid ${sel?'var(--accent)':'var(--stat-border)'};color:${sel?'var(--bg)':'var(--text3)'}">${v}</button>`;
+  }).join('');
+
+  return`
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:22px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">Your CI Journey</div>
+      <div style="font-size:11px;color:var(--text4);margin-bottom:16px;line-height:1.65">The Coverage Index runs from CI-0 (no loose skin) to CI-10 (fully restored). You can adjust any of these later.</div>
+
+      <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:8px">Where are you now?</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:10px">${currentGrid}</div>
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--text3);line-height:1.6;min-height:70px;margin-bottom:16px">${currentDesc}</div>
+
+      ${startBlock}
+      ${goalBlock}
+
+      <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:8px">Daily goal</div>
+      <div style="font-size:10px;color:var(--text4);margin-bottom:10px;line-height:1.6">A personal target, not a prescription. Pick something you can hit most days — you can change it anytime.</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:8px">${presetBtns}</div>
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center">
+        <span style="font-size:10px;color:var(--text5)">Custom:</span>
+        <input type="number" id="ob-goal-input" min="5" max="1440" value="${window._obDailyGoal}" class="goal-inp" style="width:70px">
+        <span style="font-size:10px;color:var(--text5)">minutes</span>
+      </div>
+    </div>`;
+}
+
+function obWireJourney(){
+  document.querySelectorAll('.ob-start-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      window._obStartMode=btn.dataset.choice;
+      if(window._obStartMode==='same')window._obStart=null;
+      obRenderStep();
+    };
+  });
+  const inp=document.getElementById('ob-goal-input');
+  if(inp){
+    inp.addEventListener('input',()=>{
+      const v=Math.max(5,Math.min(1440,parseInt(inp.value)||120));
+      window._obDailyGoal=v;
+      document.querySelectorAll('[data-ob-preset]').forEach(b=>{
+        const num=parseInt(b.dataset.obPreset);
+        const sel=num===v;
+        b.style.background=sel?'var(--accent)':'var(--bg-stat)';
+        b.style.borderColor=sel?'var(--accent)':'var(--stat-border)';
+        b.style.color=sel?'var(--bg)':'var(--text3)';
+      });
+    });
+  }
+}
+
+function obSetCurrent(val){
+  const prev=window._obCurrent;
+  window._obCurrent=val;
+  if(prev!==val){
+    if(window._obStart!==null&&window._obStart>=val)window._obStart=null;
+    if(window._obGoal<=val)window._obGoal=Math.min(10,val+1);
+  }
+  if(val===0)window._obStartMode='same';
+  obRenderStep();
+}
+function obSetStart(val){window._obStart=val;obRenderStep();}
+function obSetGoal(val){window._obGoal=val;obRenderStep();}
+function obSetDailyGoal(val){window._obDailyGoal=val;obRenderStep();}
+
+// ── Step 3: Methods ──
+function obStepMethods(){
+  return`
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:22px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">Your Methods <span style="color:var(--text5);font-weight:400;letter-spacing:0;text-transform:none">— optional</span></div>
+      <div style="font-size:11px;color:var(--text4);margin-bottom:14px;line-height:1.65">Add the methods or devices you use or plan to use. This keeps the session screen focused — you can add more anytime.</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input id="ob-method-input" class="gold-inp" placeholder="Type a method or device…" maxlength="40" list="ob-method-suggestions" autocomplete="off" style="flex:1;margin:0;font-size:12px;padding:9px 10px">
+        <button type="button" id="ob-method-add" class="btn-outline" style="padding:0 14px;white-space:nowrap;font-size:12px">+ Add</button>
+      </div>
+      <datalist id="ob-method-suggestions"></datalist>
+      <div id="ob-methods-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:48px;padding:10px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px"></div>
+    </div>`;
+}
+
+function obWireMethods(){
+  const knownCats=CATS.filter(c=>c.id!=='custom');
+  const allKnown=knownCats.flatMap(c=>c.methods);
+
+  const datalist=document.getElementById('ob-method-suggestions');
+  if(datalist)datalist.innerHTML=allKnown.map(m=>`<option value="${htmlEsc(m)}">`).join('');
+
+  const renderList=()=>{
+    const list=document.getElementById('ob-methods-list');
+    if(!list)return;
+    if(!window._obMethods.size){
+      list.innerHTML='<span style="font-size:11px;color:var(--text5);font-style:italic">Nothing added yet — you can add methods later.</span>';
+      return;
+    }
+    list.innerHTML=Array.from(window._obMethods).map(m=>{
+      const cat=knownCats.find(c=>c.methods.includes(m));
+      const color=cat?cat.color:'#E879F9';
+      const icon=cat?cat.icon:'🛠️';
+      const esc=htmlEsc(m);
+      const escAttr=esc.replace(/'/g,'&#39;');
+      return`<span style="display:inline-flex;align-items:center;gap:5px;background:${color}22;border:1px solid ${color}55;border-radius:20px;padding:5px 9px;font-size:11px;color:${color};font-family:var(--font-body)">
+        <span>${icon}</span><span>${esc}</span>
+        <button type="button" onclick="obRemoveMethod('${escAttr}')" style="background:none;border:none;color:${color};cursor:pointer;font-size:12px;padding:0 0 0 2px;line-height:1;opacity:.7">✕</button>
+      </span>`;
+    }).join('');
+  };
+  renderList();
+
+  const add=()=>{
+    const inp=document.getElementById('ob-method-input');
+    const raw=(inp?.value||'').trim();
+    if(!raw)return;
+    // Match against known methods case-insensitively — if we find one, we use
+    // its canonical spelling so future session logging stays consistent. If not,
+    // whatever they typed is saved as-is and flagged as a custom method.
+    const match=allKnown.find(m=>m.toLowerCase()===raw.toLowerCase());
+    if(match){
+      if(!window._obMethods.has(match))window._obMethods.add(match);
+    } else {
+      if(!window._obMethods.has(raw)){
+        window._obMethods.add(raw);
+        window._obCustomMethods.add(raw);
+      }
+    }
+    if(inp){inp.value='';inp.focus();}
+    renderList();
+  };
+
+  document.getElementById('ob-method-add').onclick=add;
+  document.getElementById('ob-method-input')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();add();}
+  });
+
+  window.obRemoveMethod=(name)=>{
+    window._obMethods.delete(name);
+    window._obCustomMethods.delete(name);
+    renderList();
+  };
+}
+
+// ── Step 4: Ready ──
+function obStepReady(){
+  const cur=window._obCurrent;
+  const start=(window._obStartMode==='lower'&&window._obStart!==null)?window._obStart:cur;
+  const goal=Math.max(window._obGoal,cur>=10?10:cur+1);
+  const startLabel=start===cur?`Starting at ${LEVELS[cur].ci}`:`Started at ${LEVELS[start].ci} · now at ${LEVELS[cur].ci}`;
+  const methodCount=window._obMethods.size;
+
+  return`
+    <div style="width:100%;background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:14px;padding:22px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px">You're Set</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:14px">Welcome, ${htmlEsc(window._obName||'Restorer')}.</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--stat-border)">
+          <span style="font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px">Journey</span>
+          <span style="font-size:12px;color:var(--text1);font-weight:600">${startLabel}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--stat-border)">
+          <span style="font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px">Goal</span>
+          <span style="font-size:12px;color:var(--accent);font-weight:600">${LEVELS[goal].ci}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--stat-border)">
+          <span style="font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px">Daily goal</span>
+          <span style="font-size:12px;color:var(--text1);font-weight:600">${window._obDailyGoal} min</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0">
+          <span style="font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:.7px">Methods</span>
+          <span style="font-size:12px;color:var(--text1);font-weight:600">${methodCount?`${methodCount} added`:'None yet'}</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:20px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px">Good to Know</div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px">
+        <span style="font-size:18px;flex-shrink:0;line-height:1">🔒</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:3px">Your data stays private</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6">Sessions, photos, and notes are stored on this device only. Cloud backup is optional and off by default.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px">
+        <span style="font-size:18px;flex-shrink:0;line-height:1">🧠</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:3px">A Coach is built in</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6">Tap the 🧠 icon anywhere to ask about methods, timelines, plateaus, or motivation — any time.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0;line-height:1">📅</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:3px">The timeline is not linear</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6">First visible changes usually appear around 3–6 months. Take a baseline photo soon — you'll thank yourself later.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--stat-border);border-radius:14px;padding:16px 18px;margin-bottom:12px">
+      <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+        <input type="checkbox" id="ob-photolock" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:2px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:3px">🔒 Enable Photos Lock</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6">Optional 4-digit PIN that protects the Photos tab when the app opens. You can turn it on or off anytime from Profile → Photos Lock.</div>
+        </div>
+      </label>
+    </div>
+
+    <div style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:12px;padding:12px 16px;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--text4);line-height:1.75;text-align:center">
+        RestoreTrack is a personal tracker, not medical advice.<br>See a clinician for medical concerns.
+      </div>
+    </div>`;
+}
+
+function obCommit(){
+  const n=(window._obName||'').trim();
+  if(!n){showToast('Please enter a name');window._obStep=1;obRenderStep();return;}
+  if(window._obCurrent===null){showToast('Please pick your current CI level');window._obStep=2;obRenderStep();return;}
+  const cur=window._obCurrent;
+  const start=(window._obStartMode==='lower'&&window._obStart!==null)?window._obStart:cur;
+  const goal=Math.max(window._obGoal,cur>=10?10:cur+1);
+  const dg=Math.max(5,Math.min(1440,window._obDailyGoal||120));
+  const wantPhotoLock=!!document.getElementById('ob-photolock')?.checked;
+  createProfile(n,start,cur,goal,Array.from(window._obMethods),Array.from(window._obCustomMethods),dg);
+  if(wantPhotoLock){
+    // Flag so mountPhotosLockSetup knows to return to Home, not Profile.
+    window._obPhotoLockPostSetup=true;
+    setTimeout(()=>mountPhotosLockSetup(),500);
+  } else {
+    setTimeout(()=>showToast(`Welcome, ${n} 👋`),300);
+  }
 }
 
 // ── PROFILE SCREEN ─────────────────────────────────────────────────────────────
@@ -3481,159 +5034,169 @@ function renderProfileScreen(){
   </div>`).join('');
 
   if(isNewUser){
-    // ── ONBOARDING ──────────────────────────────────────────────────────────────
-    document.getElementById('root').innerHTML=`<div class="pscreen">
-      <div style="text-align:center;margin-bottom:24px;margin-top:8px">
-        <div style="font-family:Cinzel,serif;font-size:28px;color:var(--accent);letter-spacing:3px;margin-bottom:12px">◉ RESTORETRACK</div>
-        <div style="font-size:13px;color:var(--text3);line-height:1.9;max-width:300px;margin:0 auto">Built by restorers, for restorers.<br><span style="color:var(--text5);font-size:11px">Free. Private. No account required.</span></div>
-      </div>
-
-      <div style="width:100%;background:var(--bg-stat);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        ${[['📊','Track CI progress','CI-0 through CI-10'],['⏱','Precision Logging','Timer + manual logging'],['📸','Photo journal','Visual progress over time'],['👥','Community','Restore with others']].map(([icon,title,sub])=>`
-          <div style="display:flex;gap:8px;align-items:flex-start">
-            <span style="font-size:16px;flex-shrink:0">${icon}</span>
-            <div>
-              <div style="font-size:11px;font-weight:600;color:var(--text2)">${title}</div>
-              <div style="font-size:9px;color:var(--text5);margin-top:1px">${sub}</div>
-            </div>
-          </div>`).join('')}
-      </div>
-
-      <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:20px;margin-bottom:16px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:12px;text-align:center">Create Your Profile</div>
-        <div style="font-size:11px;color:var(--text4);margin-bottom:12px;text-align:center;line-height:1.6">One profile, one journey.</div>
-        <input class="gold-inp" id="new-name" placeholder="Profile name" maxlength="20" style="text-align:center;font-size:16px;margin-bottom:12px">
-        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px;text-align:center">Choose a theme</div>
-        <div class="theme-row" style="margin-bottom:0">${chips}</div>
-      </div>
-
-      <button class="btn-gold" id="create-btn" style="width:100%;padding:14px;font-size:15px;letter-spacing:1px">Begin Your Journey</button>
-
-      <div style="margin-top:18px;text-align:center;width:100%">
-        <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.7">Already have a profile — new phone, new browser, or reinstalled the app?</div>
-        <button class="btn-ghost" id="cloud-restore-onboard-btn" style="padding:9px 20px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-bottom:14px">
-          <svg width="13" height="13" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.66h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          ☁ Restore from Cloud
-        </button>
-        <div style="font-size:9px;color:var(--text5);margin-bottom:14px;line-height:1.6">Only works if you backed up with this Google account before, from Profile → Cloud Backup.</div>
-        <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.7">Or transfer manually using a backup file:</div>
-        <button class="btn-ghost" id="restore-btn" style="padding:8px 20px;font-size:12px">⬆ Import Backup File</button>
-        <input type="file" id="restore-file" accept=".json" style="display:none">
-      </div>
-    </div>`;
-    document.getElementById('create-btn').onclick=()=>{
-      const n=document.getElementById('new-name').value.trim();
-      if(!n){showToast('Please enter your name');return;}
-      createProfile(n);
-    };
-    document.getElementById('new-name').onkeydown=e=>{if(e.key==='Enter'){const n=e.target.value.trim();if(n)createProfile(n);}};
-    document.getElementById('cloud-restore-onboard-btn').addEventListener('click',onboardingCloudRestore);
-    document.getElementById('restore-btn').addEventListener('click',()=>document.getElementById('restore-file').click());
-    document.getElementById('restore-file').addEventListener('change',e=>{
-      const file=e.target.files[0];if(!file)return;
-      const reader=new FileReader();
-      reader.onload=ev=>{importBackup(ev.target.result);};
-      reader.readAsText(file);e.target.value='';
-    });
+    renderOnboarding();
     return;
   }
 
   // ── SETTINGS PANEL (existing user) ─────────────────────────────────────────
   const joined=profiles[0]?.createdAt||today();
+  const hoursLabel=char.minutes<60?`${char.minutes}m`:`${Math.floor(char.minutes/60)}h`;
+  const _secLabel=(text)=>`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin:20px 0 8px;padding-left:2px">${text}</div>`;
   document.getElementById('root').innerHTML=`<div class="pscreen">
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="font-family:Cinzel,serif;font-size:18px;color:var(--accent);letter-spacing:2px;margin-bottom:4px">◉ RESTORETRACK <span style="font-size:10px;opacity:.4;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0">v2.5.2</span></div>
+    <div style="width:100%;position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:18px;min-height:32px">
+      <button id="cancel-p" style="position:absolute;left:0;top:50%;transform:translateY(-50%);background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);padding:0;font-family:var(--font-body);font-size:16px;line-height:1">‹</button>
+      <div style="font-family:var(--font-display);font-size:18px;color:var(--accent);letter-spacing:2px">◉ RESTORETRACK</div>
     </div>
 
-    <!-- Profile card -->
-    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:18px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+    <!-- Hero card -->
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:18px;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:14px">
         <div class="pavatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${char.name.charAt(0).toUpperCase()}</div>
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:16px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.name}</div>
-          <div style="font-size:10px;color:var(--text4);margin-top:3px">${LEVELS[char.ciLevel||0].ci} · ${char.sessions} session${char.sessions!==1?'s':''} · Since ${fmtDate(joined)}</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:3px">${LEVELS[char.ciLevel||0].ci} · ${char.sessions} session${char.sessions!==1?'s':''}</div>
+          <div style="font-size:10px;color:var(--text5);margin-top:2px">Since ${fmtDate(joined)}</div>
         </div>
+        <button onclick="showRenameInline()" title="Rename" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text4);flex-shrink:0;padding:0">${IC.edit(14)}</button>
       </div>
-      <div id="rename-inline" style="display:none;margin-bottom:10px">
+      <div id="rename-inline" style="display:none;margin-top:14px">
         <div style="display:flex;gap:7px">
           <input id="rename-val" class="gold-inp" style="flex:1;margin:0;font-size:13px;padding:8px 10px" maxlength="20" placeholder="New name..." value="${char.name}">
-          <button onclick="saveRenameInline()" style="background:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif">Save</button>
-          <button onclick="document.getElementById('rename-inline').style.display='none'" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text4);cursor:pointer;font-family:DM Sans,sans-serif">✕</button>
+          <button onclick="saveRenameInline()" style="background:var(--accent);border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--bg);cursor:pointer;font-family:var(--font-body)">Save</button>
+          <button onclick="document.getElementById('rename-inline').style.display='none'" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text4);cursor:pointer;font-family:var(--font-body)">✕</button>
         </div>
       </div>
-      <button onclick="showRenameInline()" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✏ Rename</button>
+      <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;margin-top:16px;padding-top:16px;border-top:1px solid var(--stat-border)">
+        <div style="text-align:center;padding:2px 4px">
+          <div style="font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--text1);line-height:1">${hoursLabel}</div>
+          <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.7px;margin-top:6px">Hours</div>
+        </div>
+        <div style="background:var(--stat-border)"></div>
+        <div style="text-align:center;padding:2px 4px">
+          <div style="font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--accent);line-height:1">${char.achievements.length}<span style="font-size:13px;color:var(--text4);font-weight:600">/${ACHS.length}</span></div>
+          <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.7px;margin-top:6px">Badges</div>
+        </div>
+        <div style="background:var(--stat-border)"></div>
+        <div style="text-align:center;padding:2px 4px">
+          <div style="font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--text1);line-height:1">${photos.length}</div>
+          <div style="font-size:9px;color:var(--text5);text-transform:uppercase;letter-spacing:.7px;margin-top:6px">Photos</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Appearance -->
-    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:10px">Appearance</div>
+    ${_secLabel('Appearance')}
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px">
       <div class="theme-row" style="margin-bottom:0">${chips}</div>
     </div>
 
-    <!-- Feedback -->
-    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Feedback & Bug Reports</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Spotted a bug? Have a suggestion? Want to see something new? I read every message personally.</div>
-      <button id="feedback-btn" class="btn-ghost" style="width:100%;padding:10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px">
-        ✉ Send Feedback
-      </button>
-    </div>
-
-<!-- Cloud Backup -->
-    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:8px">☁ Cloud Backup</div>
-      ${fbIsGoogle && fbUID ? `
-        <div style="background:rgba(34,168,90,.08);border:1px solid rgba(34,168,90,.25);border-radius:8px;padding:7px 10px;margin-bottom:10px;font-size:10px;color:var(--green);display:flex;align-items:center;gap:6px">
-          <span style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0"></span>
-          Connected as ${htmlEsc(fbUserEmail||'your Google account')}
+    ${_secLabel('Privacy')}
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:16px;flex-shrink:0">🔒</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text1)">Photos Lock</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:2px">${char.photoLockEnabled?'On · Locked on app open':'Off · Tap below to enable'}</div>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
-          Your data is backed up to your Google account — sessions, settings, and photos. Restore anytime on any device by signing in with the same Google account.
-        </div>
-        ${char.lastCloudBackup ? `<div style="font-size:10px;color:var(--green);margin-bottom:10px">✓ Last backup: ${new Date(char.lastCloudBackup).toLocaleDateString()}</div>` : `<div style="font-size:10px;color:var(--text5);margin-bottom:10px">No cloud backup yet — back up now.</div>`}
-        <div style="background:rgba(212,102,153,.06);border:1px solid rgba(212,102,153,.2);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text3);line-height:1.6">
-          🔒 <strong style="color:var(--text2)">Privacy note:</strong> Your photos are encrypted in transit and stored privately under your Google account. Only you can access them — not other users or the app owner.
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button class="btn-gold" id="cloud-backup-btn" style="flex:1;padding:10px;font-size:12px">☁ Back Up Now</button>
-          <button class="btn-ghost" id="cloud-restore-btn" style="flex:1;padding:10px;font-size:12px">☁ Restore from Cloud</button>
-        </div>
-        <button onclick="signOutDevice()" style="width:100%;background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif;text-decoration:underline;padding:4px">Sign out of this device</button>
-      ` : `
-        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:7px 10px;margin-bottom:10px;font-size:10px;color:var(--text4);display:flex;align-items:center;gap:6px">
-          <span style="width:7px;height:7px;border-radius:50%;background:var(--text5);flex-shrink:0"></span>
-          Not connected to Google
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.7">
-          Back up your entire profile — sessions, photos, and progress — to your Google account. Restore instantly on any device.
-        </div>
-        <div style="font-size:10px;color:var(--text5);background:var(--bg-stat);border-radius:8px;padding:9px 12px;margin-bottom:10px;line-height:1.6">
-          Requires joining the Community (free) — this connects your Google account securely.
-        </div>
-        <button class="btn-ghost" onclick="tab='community';showProfileScreen=false;render()" style="width:100%;padding:10px;font-size:12px">Join Community to Enable →</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6">
+        ${char.photoLockEnabled?'Unlock with biometrics or your 4-digit PIN when the app opens.':'Protect your photos with biometrics or a 4-digit PIN.'}
+      </div>
+      ${char.photoLockEnabled?`
+        ${biometricAvailable()?`<button id="plock-bio-btn" class="btn-outline" style="width:100%;padding:10px;font-size:12px;margin-bottom:8px">${char.photoLockCredentialId?'✓ Biometric enabled — tap to change':'✨ Enable biometric unlock'}</button>`:''}
+        ${char.photoLockCredentialId?`<button id="plock-bio-remove-btn" style="background:none;border:none;color:var(--text5);font-size:11px;cursor:pointer;font-family:var(--font-body);padding:0;margin-bottom:10px;display:block;width:100%;text-align:center;text-decoration:underline;text-underline-offset:3px">Remove biometric unlock</button>`:''}
+        <button id="plock-change-btn" class="btn-outline" style="width:100%;padding:10px;font-size:12px;margin-bottom:8px">Change PIN</button>
+        <button id="plock-disable-btn" class="btn-ghost" style="width:100%;padding:10px;font-size:12px">Turn Off Photos Lock</button>
+      `:`
+        <button id="plock-enable-btn" class="btn-gold" style="width:100%;padding:11px;font-size:13px">Enable Photos Lock</button>
       `}
     </div>
 
-    <!-- Local Backup -->
-    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">Local Backup (File)</div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6">Full backup saved as a file on your device. Use this for manual transfers or as an extra copy.</div>
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:10px;color:var(--text4);line-height:1.6">
-        💡 <strong style="color:var(--text3)">Using multiple browsers or the Home Screen app?</strong> Each one stores data separately. Export a backup in one and import it in the other to transfer your profile.
+    ${_secLabel('Backup & Data')}
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--stat-border)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">☁️</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text1)">Cloud backup</div>
+            <div style="font-size:11px;color:${fbIsGoogle&&fbUID?'var(--green)':'var(--text4)'};margin-top:2px;display:flex;align-items:center;gap:5px">
+              <span style="width:6px;height:6px;border-radius:50%;background:${fbIsGoogle&&fbUID?'var(--green)':'var(--text5)'};flex-shrink:0"></span>
+              ${fbIsGoogle&&fbUID?`Connected as ${htmlEsc(fbUserEmail||'your Google account')}`:'Not connected'}
+            </div>
+          </div>
+        </div>
+        ${fbIsGoogle&&fbUID?`
+          ${char.lastCloudBackup?`<div style="font-size:10px;color:var(--green);margin-top:10px">✓ Last backup: ${new Date(char.lastCloudBackup).toLocaleDateString()}</div>`:`<div style="font-size:10px;color:var(--text5);margin-top:10px">No backup yet — back up now.</div>`}
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn-gold" id="cloud-backup-btn" style="flex:1;padding:10px;font-size:12px">Back Up Now</button>
+            <button class="btn-ghost" id="cloud-restore-btn" style="flex:1;padding:10px;font-size:12px">Restore</button>
+          </div>
+          <button onclick="signOutDevice()" style="background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body);padding:0;margin-top:10px;text-decoration:underline">Sign out of this device</button>
+        `:`
+          <div style="font-size:11px;color:var(--text4);margin-top:10px;line-height:1.65">
+            Back up your sessions, photos, and progress to your Google account — restore on any device with the same account.
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 11px">
+            🔒 <strong style="color:var(--text2)">Private to you.</strong> Connecting also enables Community — use it or stay hidden. Your data is never shared.
+          </div>
+          <button class="btn-gold" onclick="tab='community';showProfileScreen=false;render()" style="width:100%;padding:11px;font-size:13px;margin-top:12px">Connect Google Account →</button>
+        `}
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-outline" id="backup-btn" style="flex:1;padding:10px">⬇ Export Backup</button>
-        <button class="btn-ghost" id="restore-btn" style="flex:1;padding:10px;font-size:12px">⬆ Import Backup</button>
-      </div>
+
+      <button id="backup-btn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--stat-border);cursor:pointer;text-align:left;font-family:var(--font-body)">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">⬇</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text1)">Export backup file</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">Save a full copy to this device</div>
+        </div>
+        <span style="font-size:14px;color:var(--text5);flex-shrink:0">›</span>
+      </button>
+
+      <button id="restore-btn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--stat-border);cursor:pointer;text-align:left;font-family:var(--font-body)">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">⬆</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text1)">Import backup file</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">Restore from a saved .json file</div>
+        </div>
+        <span style="font-size:14px;color:var(--text5);flex-shrink:0">›</span>
+      </button>
+
+      <button id="export-btn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--font-body)">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">📊</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text1)">Export sessions (CSV)</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">Opens in Excel or Sheets · not a backup</div>
+        </div>
+        <span style="font-size:14px;color:var(--text5);flex-shrink:0">›</span>
+      </button>
+
       <input type="file" id="restore-file" accept=".json" style="display:none">
     </div>
+    <div style="font-size:10px;color:var(--text5);margin-top:8px;padding:0 4px;line-height:1.6">
+      Your data lives on this device. Nothing is uploaded unless you set up Cloud Backup.
+    </div>
 
-    <button id="cancel-p" style="background:none;border:none;color:var(--text4);font-size:13px;margin-top:4px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:10px">← Back to app</button>
+    ${_secLabel('Support')}
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px">
+      <button id="feedback-btn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--stat-border);cursor:pointer;text-align:left;font-family:var(--font-body)">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">✉</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text1)">Send feedback</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">I read every message personally</div>
+        </div>
+        <span style="font-size:14px;color:var(--text5);flex-shrink:0">›</span>
+      </button>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">ℹ</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text2)">RestoreTrack v2.5.2</div>
+          <div style="font-size:10px;color:var(--text5);margin-top:2px">Personal tracker · Not medical advice</div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Delete — buried at the bottom, intentionally low-key until needed -->
-    <div style="width:100%;margin-top:8px;padding-top:16px;border-top:1px solid var(--stat-border);text-align:center">
-      <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.6">This will permanently erase all your data.<br>Your community presence will also be removed.</div>
-      <button onclick="confirmDeleteProfile()" style="background:none;border:1px solid rgba(200,50,50,.25);border-radius:8px;padding:9px 20px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Delete My Profile</button>
+    <div style="width:100%;margin-top:20px;padding-top:20px;border-top:1px solid var(--stat-border);text-align:center">
+      <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.6">This will permanently erase all your data, photos, and community presence.</div>
+      <button onclick="confirmDeleteProfile()" style="background:none;border:1px solid rgba(200,50,50,.25);border-radius:8px;padding:9px 20px;font-size:12px;color:#a03232;cursor:pointer;font-family:var(--font-body)">Delete My Profile</button>
     </div>
   </div>`;
 
@@ -3645,7 +5208,33 @@ function renderProfileScreen(){
   });
 
   document.getElementById('cancel-p')?.addEventListener('click',()=>{showProfileScreen=false;render();});
+  document.getElementById('plock-enable-btn')?.addEventListener('click',()=>{mountPhotosLockSetup();});
+  document.getElementById('plock-disable-btn')?.addEventListener('click',()=>{disablePhotosLock();});
+  document.getElementById('plock-change-btn')?.addEventListener('click',()=>{mountPhotosLockSetup();});
+  document.getElementById('plock-bio-btn')?.addEventListener('click',async()=>{
+    // Toggle / re-register biometric
+    try{
+      const credId=await registerBiometric();
+      char.photoLockCredentialId=credId;
+      saveChar();
+      showToast('✨ Biometric unlock enabled');
+      renderProfileScreen();
+    }catch(e){
+      console.warn('[RT] biometric register failed',e);
+      showToast('⚠ Biometric setup not available');
+    }
+  });
+  document.getElementById('plock-bio-remove-btn')?.addEventListener('click',()=>{
+    // Clear only the biometric credential. The PIN stays — this just removes
+    // the quick-unlock convenience so the user can re-register if Face ID
+    // changes, or drop back to PIN-only without disabling Photos Lock entirely.
+    char.photoLockCredentialId='';
+    saveChar();
+    showToast('✓ Biometric unlock removed');
+    renderProfileScreen();
+  });
   document.getElementById('backup-btn')?.addEventListener('click',exportBackup);
+  document.getElementById('export-btn')?.addEventListener('click',exportCSV);
   document.getElementById('cloud-backup-btn')?.addEventListener('click',cloudBackupSave);
   document.getElementById('cloud-restore-btn')?.addEventListener('click',cloudBackupRestore);
   document.getElementById('restore-btn')?.addEventListener('click',()=>document.getElementById('restore-file').click());
@@ -3667,6 +5256,11 @@ async function cloudBackupSave() {
     return;
   }
   if (!currentPid) return;
+  // If Photos Lock is on and photos exist, require unlock before uploading.
+  if (char.photoLockEnabled && !_photosUnlocked && photos.length) {
+    const ok = await requirePhotoUnlock();
+    if (!ok) return;
+  }
 
   const btn = document.getElementById('cloud-backup-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Backing up…'; }
@@ -3698,7 +5292,7 @@ async function cloudBackupSave() {
         if (dataUrlSizeKB(url) > 150) url = await compressPhoto(url, 700, 0.50);
       const ref = db.collection('user_backups').doc(fbUID)
         .collection('photos').doc(String(p.id));
-      photoBatch.set(ref, { ci: p.ci, date: p.date, note: p.note || '', url });
+      photoBatch.set(ref, { ci: p.ci, date: p.date, note: p.note || '', url, pinned: !!p.pinned, canonical: !!p.canonical });
     }
     await photoBatch.commit();
 
@@ -3911,7 +5505,7 @@ function renderCISheet(){
     if(section==='current'&&val<_editStartCI)dis=true;
     if(section==='goal'&&(val<=_editStartCI||val<_editCurrentCI))dis=true;
     return`<button onclick="${dis?'':(`editCIVal('${section}',${val})`)}"
-      style="padding:9px 2px;border-radius:8px;font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:${dis?'not-allowed':'pointer'};text-align:center;
+      style="padding:9px 2px;border-radius:8px;font-family:var(--font-display);font-size:11px;font-weight:700;cursor:${dis?'not-allowed':'pointer'};text-align:center;
       background:${isSel?'var(--accent)':'var(--bg-stat)'};
       border:1px solid ${isSel?'var(--accent)':'var(--stat-border)'};
       color:${isSel?'var(--bg)':'var(--text3)'};
@@ -3921,14 +5515,14 @@ function renderCISheet(){
   const el=document.createElement('div');el.className='overlay';el.id='ci-ov';
   el.innerHTML=`<div class="sheet" style="max-height:90vh">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);text-align:center;margin-bottom:4px">Set CI Levels</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);text-align:center;margin-bottom:4px">Set CI Levels</div>
     <div style="font-size:11px;color:var(--text4);text-align:center;margin-bottom:16px;line-height:1.6">Start, Current, and Goal define your journey arc.</div>
 
     <!-- Start CI -->
     <div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4)">Start CI</div>
-        <span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:2px 10px;font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--text3)">CI-${_editStartCI}</span>
+        <span style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:2px 10px;font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text3)">CI-${_editStartCI}</span>
         <span style="font-size:10px;color:var(--text5)">Where you began</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
@@ -3940,7 +5534,7 @@ function renderCISheet(){
     <div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent)">Current CI</div>
-        <span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:2px 10px;font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent)">CI-${_editCurrentCI}</span>
+        <span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:2px 10px;font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--accent)">CI-${_editCurrentCI}</span>
         <span style="font-size:10px;color:var(--text5)">Where you are now</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
@@ -3952,7 +5546,7 @@ function renderCISheet(){
     <div style="margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4)">Goal CI</div>
-        <span style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:20px;padding:2px 10px;font-family:Cinzel,serif;font-size:11px;font-weight:700;color:var(--accent)">CI-${_editGoalCI}</span>
+        <span style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:20px;padding:2px 10px;font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--accent)">CI-${_editGoalCI}</span>
         <span style="font-size:10px;color:var(--text5)">Your target</span>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
@@ -4067,10 +5661,6 @@ function calcManualPreview(){
 function updateManualPreview(){
   const el=document.getElementById('manual-duration-preview');
   if(el)el.innerHTML=calcManualPreview();
-  const logBtn=document.getElementById('s-log');
-  if(logBtn)logBtn.disabled=!(sheetMethod&&sheetCat&&calcManualMins()>0);
-  const startFromBtn=document.getElementById('s-start-from');
-  if(startFromBtn)startFromBtn.disabled=!(sheetMethod&&sheetCat&&manualStart);
 }
 function beginSessionFrom(dateStr,timeStr){
   if(!sheetMethod||!sheetCat||!timeStr)return;
@@ -4078,7 +5668,7 @@ function beginSessionFrom(dateStr,timeStr){
   if(isNaN(startMs))return;
   const elapsedMs=Math.max(0,Date.now()-startMs);
   const elapsedSecs=Math.floor(elapsedMs/1000);
-  activeTimer={startedAt:Date.now()-elapsedMs,wallStart:Date.now()-elapsedMs,method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0};
+  activeTimer={startedAt:Date.now()-elapsedMs,wallStart:Date.now()-elapsedMs,method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0,pauseIntervals:[],pausedAt:null};
   timerSecs=elapsedSecs;
   saveTimer(activeTimer);startInterval();
   showSessionSheet=false;manualStillActive=false;
@@ -4093,61 +5683,152 @@ function beginSessionFrom(dateStr,timeStr){
 function mountSheet(){
   const ex=document.getElementById('sov');if(ex)ex.remove();
   const customMethods=char.customMethods||[];
-  const allCats=CATS.map(c=>c.id==='custom'?{...c,methods:customMethods}:c);
-  const cat=allCats.find(c=>c.id===sheetCat);
-  const catPills=allCats.map(c=>`<div class="mcat-pill${sheetCat===c.id?' active':''}"
-    style="${sheetCat===c.id?`border-color:${c.color};color:${c.color};background:${c.color}14`:''}"
-    onclick="sheetCat='${c.id}';sheetMethod='';refreshSheet()">
-    ${c.icon} ${c.label}
-  </div>`).join('');
-  const methPills=cat?cat.methods.map(m=>`<div class="meth-pill${sheetMethod===m?' active':''}"
-    style="${sheetMethod===m&&cat?`border-color:${cat.color};background:${cat.color}14;color:${cat.color}`:''}"
-    onclick="sheetMethod=this.dataset.m;refreshSheet()" data-m="${m.replace(/"/g,'&quot;')}">
-    ${m}${cat.id==='custom'?`<span onclick="event.stopPropagation();deleteCustomMethod(this.closest('[data-m]').dataset.m)" style="opacity:.5;font-size:10px;cursor:pointer;margin-left:2px">✕</span>`:''}
-  </div>`).join(''):'';
-  const customForm=sheetCat==='custom'?`
-    <div style="border-top:1px solid var(--stat-border);margin-top:10px;padding-top:10px">
-      <div style="font-size:10px;color:var(--text4);margin-bottom:7px">🛠️ Create a custom method</div>
-      <div style="display:flex;gap:7px;margin-bottom:7px">
-        <input class="gold-inp" id="cust-inp" placeholder="e.g. My Modified Squeeze..." style="margin:0;flex:1;font-size:12px;padding:7px 10px">
-        <button class="btn-outline" id="add-cust-btn" style="white-space:nowrap;padding:7px 12px">＋ Add</button>
+  const preferred=char.preferredMethods||[];
+  const showAll=!!window._sheetShowAll;
+
+  // No preferred methods & not opted into browse-all → prompt to open editor
+  if(!preferred.length && !showAll){
+    const el=document.createElement('div');el.className='overlay';el.id='sov';
+    el.innerHTML=`<div class="sheet" style="padding-bottom:24px">
+      <div class="sheet-handle"></div>
+      <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:8px">New Session</div>
+      <div style="text-align:center;padding:16px 8px 6px">
+        <div style="font-size:34px;margin-bottom:12px">🛠️</div>
+        <div style="font-size:13px;color:var(--text1);font-weight:600;margin-bottom:8px">Add your methods first</div>
+        <div style="font-size:11px;color:var(--text4);line-height:1.7;margin-bottom:18px">Pick the methods or devices you actually use — the session screen will only show what you choose.</div>
       </div>
-      <label style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);cursor:pointer">
-        <input type="checkbox" id="save-cust-chk" checked style="accent-color:var(--accent);cursor:pointer">
-        Save to profile for reuse
-      </label>
-    </div>`:'';
+      <button id="sov-add-methods" class="btn-gold" style="width:100%;margin-bottom:7px">+ Add Methods</button>
+      <button id="sov-browse-all" class="btn-ghost" style="width:100%;margin-bottom:7px">Browse all methods anyway</button>
+      <button id="sov-cancel-empty" class="btn-ghost" style="width:100%">Cancel</button>
+    </div>`;
+    document.getElementById('root').appendChild(el);
+    document.getElementById('sov-add-methods').onclick=()=>{mountMethodEditor();};
+    document.getElementById('sov-browse-all').onclick=()=>{window._sheetShowAll=true;refreshSheet();};
+    document.getElementById('sov-cancel-empty').onclick=()=>{showSessionSheet=false;render();};
+    return;
+  }
+
+  // Build the categories to display
+  let visibleCats;
+  if(showAll){
+    // Browse-all is the built-in library. A user's own methods aren't part
+    // of that library — they live in the normal view and the Manage methods
+    // editor, and adding them here would just duplicate those paths.
+    visibleCats=CATS.filter(c=>c.id!=='custom');
+  } else {
+    visibleCats=CATS.filter(c=>c.id!=='custom').map(c=>({
+      ...c,
+      methods:c.methods.filter(m=>preferred.includes(m))
+    })).filter(c=>c.methods.length>0);
+    // Only surface custom methods the user marked as preferred
+    const preferredCustom=preferred.filter(m=>customMethods.includes(m));
+    if(preferredCustom.length){
+      const customCat=CATS.find(c=>c.id==='custom');
+      visibleCats.push({...customCat,methods:preferredCustom});
+    }
+  }
+
+  const cat=visibleCats.find(c=>c.id===sheetCat);
+
+  // Preferred mode → flat grid (no category tabs).
+  // Browse-all mode → keep category tabs + methods within selected category.
+  // Consistent card treatment for both views. Category color is passed in as
+  // a CSS variable so the selected state takes on the category's identity
+  // rather than a generic accent.
+  const buildMethodCard=(method,cat)=>{
+    const sel=sheetMethod===method;
+    const catColor=(cat&&cat.color)||'#888';
+    const catBg=`${catColor}14`;
+    return`<button type="button" class="method-card${sel?' selected':''}"
+      style="--card-accent:${catColor};--card-accent-bg:${catBg}"
+      onclick="sheetMethod=this.dataset.m;sheetCat=this.dataset.c;refreshSheet()"
+      data-m="${htmlEsc(method)}"
+      data-c="${cat.id}">
+      <span class="method-icon" style="color:${catColor}">${(cat&&cat.icon)||'•'}</span>
+      <span class="method-info">
+        <span class="method-name">${method}</span>
+        <span class="method-cat">${(cat&&cat.label)||''}</span>
+      </span>
+      <span class="method-check">✓</span>
+    </button>`;
+  };
+
+  let methodPickerHtml;
+  if(showAll){
+    const catPills=visibleCats.map(c=>{
+      const sel=sheetCat===c.id;
+      const pillStyle=sel?`border-color:${c.color};color:${c.color};background:${c.color}14`:'';
+      return`<div class="mcat-pill${sel?' active':''}"
+        style="${pillStyle}"
+        onclick="sheetCat='${c.id}';sheetMethod='';refreshSheet()">
+        ${c.icon} ${c.label}
+      </div>`;
+    }).join('');
+    const cards=cat?cat.methods.map(m=>buildMethodCard(m,cat)).join(''):'';
+    const pickerInner=cat
+      ?`<div class="meth-grid">${cards}</div>`
+      :`<div style="text-align:center;padding:20px 16px;color:var(--text5);font-size:11px;line-height:1.7">
+          <div style="font-size:22px;margin-bottom:6px;opacity:.4">↑</div>
+          Pick a category above to see its methods.
+        </div>`;
+    methodPickerHtml=`<div class="mcat-row">${catPills}</div>${pickerInner}`;
+  } else {
+    const flat=[];
+    visibleCats.forEach(c=>c.methods.forEach(m=>flat.push({method:m,cat:c})));
+    if(flat.length){
+      const cards=flat.map(({method,cat})=>buildMethodCard(method,cat)).join('');
+      methodPickerHtml=`<div class="meth-grid">${cards}</div>`;
+    } else {
+      methodPickerHtml=`<div style="text-align:center;padding:24px 16px">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.5">🛠️</div>
+        <div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:4px">No methods added yet</div>
+        <div style="font-size:11px;color:var(--text5);line-height:1.6">Tap <strong style="color:var(--text4)">Manage methods</strong> below to add your first one.</div>
+      </div>`;
+    }
+  }
+
   const isTimer=logMode==='timer';
-  const canGo=!!(sheetMethod&&sheetCat);
+
+  // Quiet text-style secondary actions under the picker. The dashed buttons
+  // these replace read as empty-state placeholders even when the grid above
+  // was full. As plain links they stay available but recede.
+  const _linkStyle='background:none;border:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:var(--font-body);padding:4px 6px;display:inline-flex;align-items:center;gap:5px;transition:color .15s';
+  const browseLink=preferred.length
+    ? (showAll
+        ? `<button onclick="window._sheetShowAll=false;refreshSheet()" style="${_linkStyle}"><span style="opacity:.7">←</span> Back to my methods</button>`
+        : `<button onclick="window._sheetShowAll=true;refreshSheet()" style="${_linkStyle}"><span style="opacity:.7">⊕</span> Browse all methods</button>`)
+    : '';
+  const browseBtn=`<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:14px;margin-bottom:10px">
+    ${browseLink}
+    ${browseLink?`<span style="color:var(--stat-border);font-size:12px">·</span>`:''}
+    <button onclick="mountMethodEditor()" style="${_linkStyle}"><span style="opacity:.7">✎</span> Manage methods</button>
+  </div>`;
+
   const el=document.createElement('div');el.className='overlay';el.id='sov';
   el.innerHTML=`<div class="sheet">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:12px">New Session</div>
-    <div class="mode-row">
-      <div class="mode-pill${logMode==='timer'?' active':''}" id="mp-timer">▶ Timer</div>
-      <div class="mode-pill${logMode==='manual'?' active':''}" id="mp-manual">✏ Log Past Time</div>
-    </div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:12px">${isTimer?'New Session':'Log a Past Session'}</div>
     <div class="sec-title" style="margin-top:4px">Method</div>
-    <div class="mcat-row">${catPills}</div>
-    ${cat?`<div class="meth-grid">${methPills}</div>${customForm}`:`<div style="color:var(--text5);font-size:11px;padding:6px 2px">Pick a category above.</div>`}
+    ${methodPickerHtml}
+    ${browseBtn}
     ${!isTimer?`<div class="sec-title" style="margin-top:10px">When did you start?</div>
     <div class="card" style="padding:14px">
       <div style="margin-bottom:12px">
         <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Start</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <input type="date" id="m-start-date" value="${manualStartDate||today()}" max="${today()}"
-            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif">
+            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:var(--font-body)">
           <input type="time" id="m-start" value="${manualStart}"
-            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:700;width:100%;outline:none;font-family:'Cinzel',serif;text-align:center">
+            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:700;width:100%;outline:none;font-family:var(--font-display);text-align:center">
         </div>
       </div>
       <div id="end-col" style="${manualStillActive?'opacity:.35;pointer-events:none':''}margin-bottom:12px">
         <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">End</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <input type="date" id="m-end-date" value="${manualEndDate||today()}" max="${today()}"
-            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:'DM Sans',sans-serif">
+            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:var(--font-body)">
           <input type="time" id="m-end" value="${manualEnd}"
-            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:700;width:100%;outline:none;font-family:'Cinzel',serif;text-align:center">
+            style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:8px 8px;color:var(--accent);font-size:13px;font-weight:700;width:100%;outline:none;font-family:var(--font-display);text-align:center">
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:8px 0;border-top:1px solid var(--stat-border)">
@@ -4162,17 +5843,28 @@ function mountSheet(){
     <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn-ghost" id="s-cancel" style="flex:0 0 76px">Cancel</button>
       <div style="flex:1">${isTimer
-        ?`<button class="btn-green" id="s-start" style="margin:0" ${!canGo?'disabled':''}>${IC.play(14)} Start Timer</button>`
+        ?`<button class="btn-green" id="s-start" style="margin:0">${IC.play(14)} Start Timer</button>`
         :manualStillActive
-          ?`<button class="btn-green" id="s-start-from" style="margin:0" ${!canGo||!manualStart?'disabled':''}>${IC.play(14)} Start from here</button>`
-          :`<button class="btn-gold" id="s-log" ${!canGo||!calcManualMins()?'disabled':''}>✓ Log Session</button>`
+          ?`<button class="btn-green" id="s-start-from" style="margin:0">${IC.play(14)} Start from here</button>`
+          :`<button class="btn-gold" id="s-log">✓ Log Session</button>`
       }</div>
+    </div>
+    <div style="text-align:center;margin-top:14px;padding-bottom:4px">
+      <button id="s-switch-mode" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:var(--font-body);cursor:pointer;padding:6px 8px;text-decoration:underline;text-underline-offset:3px;transition:color .15s">
+        ${isTimer?'or log a past session →':'or start a live session →'}
+      </button>
     </div>
   </div>`;
   document.getElementById('root').appendChild(el);
-  document.getElementById('mp-timer').onclick=()=>{logMode='timer';manualStillActive=false;refreshSheet();};
-  document.getElementById('mp-manual').onclick=()=>{logMode='manual';refreshSheet();};
-  document.getElementById('s-cancel').onclick=()=>{showSessionSheet=false;render();};
+  document.getElementById('s-switch-mode').onclick=()=>{
+    // Same state transition the mode pills used to run — the only change is
+    // what triggers it. Manual reset of manualStillActive when going back to
+    // Timer so the green "Start from here" button never accidentally persists.
+    if(logMode==='timer'){logMode='manual';}
+    else{logMode='timer';manualStillActive=false;}
+    refreshSheet();
+  };
+  document.getElementById('s-cancel').onclick=()=>{showSessionSheet=false;window._sheetShowAll=false;render();};
   document.getElementById('m-start-date')?.addEventListener('input',e=>{manualStartDate=e.target.value;updateManualPreview();});
   document.getElementById('m-start')?.addEventListener('input',e=>{manualStart=e.target.value;updateManualPreview();});
   document.getElementById('m-end-date')?.addEventListener('input',e=>{manualEndDate=e.target.value;updateManualPreview();});
@@ -4180,39 +5872,167 @@ function mountSheet(){
   document.getElementById('m-still-active')?.addEventListener('change',e=>{
     manualStillActive=e.target.checked;
     refreshSheet();
+    if(manualStillActive){
+      setTimeout(()=>{document.getElementById('m-start')?.focus();},50);
+    }
   });
-  document.getElementById('s-start')?.addEventListener('click',()=>{beginSession();});
+  document.getElementById('s-start')?.addEventListener('click',()=>{
+    if(!sheetCat){showToast('Please select a category above');return;}
+    if(!sheetMethod){showToast('Please select a method');return;}
+    beginSession();
+  });
   document.getElementById('s-start-from')?.addEventListener('click',()=>{
-    if(!sheetMethod||!sheetCat||!manualStart)return;
+    if(!sheetCat){showToast('Please select a category above');return;}
+    if(!sheetMethod){showToast('Please select a method');return;}
+    if(!manualStart){showToast('Please enter a start time above');return;}
     beginSessionFrom(manualStartDate||today(),manualStart);
   });
   document.getElementById('s-log')?.addEventListener('click',()=>{
+    if(!sheetCat){showToast('Please select a category above');return;}
+    if(!sheetMethod){showToast('Please select a method');return;}
+    if(!manualStart||!manualEnd){showToast('Please enter start and end times');return;}
     const mins=calcManualMins();
-    if(mins<=0)return;
-    // Pass actual timestamps so multi-day sessions get split properly
+    if(mins<=0){showToast('End time must be after start time');return;}
     const sd=manualStartDate||today(),ed=manualEndDate||today();
     const startMs=new Date(`${sd}T${manualStart}:00`).getTime();
     const endMs=new Date(`${ed}T${manualEnd}:00`).getTime();
     logManual(sheetMethod,sheetCat,mins,'',sd,startMs,endMs);
   });
-  document.getElementById('add-cust-btn')?.addEventListener('click',()=>{
-    const inp=document.getElementById('cust-inp');const save=document.getElementById('save-cust-chk')?.checked!==false;
-    if(inp&&inp.value.trim())addCustomMethod(inp.value.trim(),save);
-  });
-  document.getElementById('cust-inp')?.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){const save=document.getElementById('save-cust-chk')?.checked!==false;if(e.target.value.trim())addCustomMethod(e.target.value.trim(),save);}
-  });
 }
 function refreshSheet(){const el=document.getElementById('sov');if(el)el.remove();mountSheet();}
 
-function addCustomMethod(name,save){
-  if(!name.trim())return;sheetMethod=name.trim();
-  if(save&&!(char.customMethods||[]).includes(name.trim())){char.customMethods=[...(char.customMethods||[]),name.trim()];saveChar();}
-  refreshSheet();
+function mountAdjustTimeSheet(){
+  const ex=document.getElementById('adjust-time-ov');if(ex)ex.remove();
+  if(!activeTimer)return;
+  const curH=Math.floor(timerSecs/3600);
+  const curM=Math.floor((timerSecs%3600)/60);
+  const el=document.createElement('div');el.className='overlay';el.id='adjust-time-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:24px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:4px">Adjust Session Time</div>
+    <div style="font-size:10px;color:var(--text4);margin-bottom:16px;line-height:1.6">Session is currently at <strong style="color:var(--text2)">${fmtLive(timerSecs)}</strong>. Enter the correct elapsed time below — it applies instantly.</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+      <input type="number" id="adj-h" class="gold-inp" min="0" max="168" value="${curH}" style="flex:1;margin:0;text-align:center;font-size:20px;font-weight:700;padding:14px 8px">
+      <span style="color:var(--text4);font-size:14px;flex-shrink:0">h</span>
+      <input type="number" id="adj-m" class="gold-inp" min="0" max="59" value="${curM}" style="flex:1;margin:0;text-align:center;font-size:20px;font-weight:700;padding:14px 8px">
+      <span style="color:var(--text4);font-size:14px;flex-shrink:0">min</span>
+    </div>
+    <div id="adj-preview" style="text-align:center;font-size:12px;color:var(--text4);margin-bottom:16px">New elapsed: <strong style="color:var(--accent);font-size:15px">${fmtLive(timerSecs)}</strong></div>
+    <div style="display:flex;gap:8px">
+      <button id="adj-cancel" class="btn-ghost" style="flex:0 0 96px">Cancel</button>
+      <button id="adj-save" class="btn-gold" style="flex:1">✓ Apply</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+  const inp_h=document.getElementById('adj-h');
+  const inp_m=document.getElementById('adj-m');
+  const preview=document.getElementById('adj-preview');
+  const updatePreview=()=>{
+    const h=Math.max(0,Math.min(168,parseInt(inp_h.value)||0));
+    const m=Math.max(0,Math.min(59,parseInt(inp_m.value)||0));
+    preview.innerHTML=`New elapsed: <strong style="color:var(--accent);font-size:15px">${fmtLive(h*3600+m*60)}</strong>`;
+  };
+  inp_h.addEventListener('input',updatePreview);
+  inp_m.addEventListener('input',updatePreview);
+  document.getElementById('adj-cancel').onclick=()=>el.remove();
+  document.getElementById('adj-save').onclick=()=>{
+    const h=Math.max(0,Math.min(168,parseInt(inp_h.value)||0));
+    const m=Math.max(0,Math.min(59,parseInt(inp_m.value)||0));
+    const newSecs=h*3600+m*60;
+    if(newSecs<60){showToast('Duration must be at least 1 minute');return;}
+    if(activeTimer.startedAt){
+      // Running — reset both startedAt and wallStart to reflect the corrected
+      // total. Pause history is wiped because the user is declaring a new
+      // active-time truth; keeping old pauses would double-count.
+      activeTimer={...activeTimer,startedAt:Date.now()-(newSecs*1000),wallStart:Date.now()-(newSecs*1000),elapsedOnPause:0,pauseIntervals:[],pausedAt:null};
+      timerSecs=newSecs;
+      startInterval();
+    } else {
+      // Paused — rewrite the frozen elapsed. Same reasoning: clear pause
+      // history so the declared total is what gets committed.
+      activeTimer={...activeTimer,elapsedOnPause:newSecs,pauseIntervals:[],pausedAt:null};
+      timerSecs=newSecs;
+    }
+    saveTimer(activeTimer);
+    el.remove();
+    showToast(`✓ Time adjusted to ${fmtLive(newSecs)}`);
+    render();
+  };
+  inp_h.focus();inp_h.select();
 }
-function deleteCustomMethod(name){
-  char.customMethods=(char.customMethods||[]).filter(m=>m!==name);
-  if(sheetMethod===name)sheetMethod='';saveChar();refreshSheet();
+
+function mountMethodEditor(){
+  const ex=document.getElementById('method-editor-ov');if(ex)ex.remove();
+  const localSet=new Set(char.preferredMethods||[]);
+  const knownCats=CATS.filter(c=>c.id!=='custom');
+  const allKnown=knownCats.flatMap(c=>c.methods);
+  const el=document.createElement('div');el.className='overlay';el.id='method-editor-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:24px">
+    <div class="sheet-handle"></div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:4px">Your Methods</div>
+    <div style="font-size:10px;color:var(--text4);margin-bottom:14px;line-height:1.6">Only these methods will appear when starting a session.</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <input id="me-inp" class="gold-inp" placeholder="Type a method or device…" maxlength="40" list="me-datalist" style="flex:1;margin:0;font-size:13px;padding:10px 11px">
+      <button type="button" id="me-add" class="btn-outline" style="padding:0 14px;white-space:nowrap;font-size:12px">+ Add</button>
+    </div>
+    <datalist id="me-datalist">${allKnown.map(m=>`<option value="${htmlEsc(m)}">`).join('')}</datalist>
+    <div id="me-list" style="display:flex;flex-wrap:wrap;gap:5px;min-height:44px;padding:10px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;margin-bottom:14px"></div>
+    <div style="display:flex;gap:8px">
+      <button id="me-cancel" class="btn-ghost" style="flex:0 0 96px">Cancel</button>
+      <button id="me-save" class="btn-gold" style="flex:1">✓ Save Methods</button>
+    </div>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+
+  const inp=document.getElementById('me-inp');
+  const listEl=document.getElementById('me-list');
+
+  const renderLocal=()=>{
+    if(!localSet.size){
+      listEl.innerHTML='<span style="font-size:11px;color:var(--text5);font-style:italic">No methods added yet — type above and tap Add.</span>';
+      return;
+    }
+    listEl.innerHTML=Array.from(localSet).map(m=>{
+      const cat=knownCats.find(c=>c.methods.includes(m));
+      const color=cat?cat.color:'#E879F9';
+      const icon=cat?cat.icon:'🛠️';
+      const esc=htmlEsc(m);const escAttr=esc.replace(/'/g,'&#39;');
+      return`<span style="display:inline-flex;align-items:center;gap:5px;background:${color}22;border:1px solid ${color}55;border-radius:20px;padding:5px 9px;font-size:11px;color:${color};font-family:var(--font-body)">
+        <span>${icon}</span><span>${esc}</span>
+        <button type="button" data-rm="${escAttr}" style="background:none;border:none;color:${color};cursor:pointer;font-size:12px;padding:0 0 0 2px;line-height:1;opacity:.7">✕</button>
+      </span>`;
+    }).join('');
+    listEl.querySelectorAll('[data-rm]').forEach(b=>{
+      b.onclick=()=>{localSet.delete(b.dataset.rm);renderLocal();};
+    });
+  };
+  renderLocal();
+
+  const handleAdd=()=>{
+    const raw=(inp.value||'').trim();if(!raw)return;
+    const match=allKnown.find(m=>m.toLowerCase()===raw.toLowerCase());
+    const name=match||raw;
+    if(!localSet.has(name))localSet.add(name);
+    inp.value='';inp.focus();renderLocal();
+  };
+  document.getElementById('me-add').onclick=handleAdd;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();handleAdd();}});
+
+  document.getElementById('me-cancel').onclick=()=>el.remove();
+  document.getElementById('me-save').onclick=()=>{
+    char.preferredMethods=Array.from(localSet);
+    const priorCustom=char.customMethods||[];
+    const newCustom=char.preferredMethods.filter(m=>!allKnown.some(k=>k.toLowerCase()===m.toLowerCase()));
+    const stillCustom=priorCustom.filter(m=>char.preferredMethods.includes(m));
+    char.customMethods=Array.from(new Set([...newCustom,...stillCustom]));
+    saveChar();
+    el.remove();
+    if(showSessionSheet)refreshSheet();
+    showToast('✓ Methods saved');
+  };
+  inp.focus();
 }
 
 // ── STOP SHEET ─────────────────────────────────────────────────────────────────
@@ -4225,7 +6045,7 @@ function mountStopSheet(){
   el.innerHTML=`<div class="sheet">
     <div class="sheet-handle"></div>
     <div style="text-align:center;margin-bottom:14px">
-      <div style="font-family:Cinzel,serif;font-size:12px;color:var(--text4);margin-bottom:6px">Session Complete</div>
+      <div style="font-family:var(--font-display);font-size:12px;color:var(--text4);margin-bottom:6px">Session Complete</div>
       <div class="big-timer">${fmtLive(timerSecs)}</div>
       <div style="font-size:12px;color:var(--text3);margin-top:4px">${method}</div>
       <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
@@ -4247,7 +6067,22 @@ function mountStopSheet(){
 }
 
 // ── EVENTS ─────────────────────────────────────────────────────────────────────
+function attachPhotoLongPress(){
+  if(tab!=='photos')return;
+  document.querySelectorAll('[data-photo-id]').forEach(el=>{
+    let timer=null;
+    const start=()=>{timer=setTimeout(()=>{if(navigator.vibrate)navigator.vibrate(30);enterPhotoSelect(+el.dataset.photoId);},450);};
+    const cancel=()=>{if(timer){clearTimeout(timer);timer=null;}};
+    el.addEventListener('touchstart',start,{passive:true});
+    el.addEventListener('touchend',cancel,{passive:true});
+    el.addEventListener('touchmove',cancel,{passive:true});
+    el.addEventListener('mousedown',start);
+    el.addEventListener('mouseup',cancel);
+    el.addEventListener('mouseleave',cancel);
+  });
+}
 function attachEvents(){
+  attachPhotoLongPress();
   document.querySelectorAll('.quick-start-btn').forEach(btn=>btn.addEventListener('click',function(){
     const method=this.dataset.method;
     const cat=this.dataset.cat;
@@ -4255,20 +6090,15 @@ function attachEvents(){
     sheetMethod=method;sheetCat=cat;sheetNotes='';
     beginSession();
   }));
-  document.getElementById('start-session-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
+  document.getElementById('start-session-btn')?.addEventListener('click',()=>{window._sheetShowAll=false;showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
   document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;render();});
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
   document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
+  document.getElementById('adjust-time-btn')?.addEventListener('click',()=>mountAdjustTimeSheet());
   document.getElementById('goal-inp')?.addEventListener('change',e=>{char.dailyGoalMin=Math.max(5,Math.min(1440,+e.target.value||120));saveChar();render();});
   document.getElementById('export-btn')?.addEventListener('click',exportCSV);
   document.getElementById('update-ci-btn')?.addEventListener('click',()=>{showCISheet=true;render();});
   document.getElementById('update-ci-btn2')?.addEventListener('click',()=>{showCISheet=true;render();});
-  document.getElementById('coach-talk-btn')?.addEventListener('click',()=>showCoachSheet());
-  document.getElementById('coach-cta')?.addEventListener('click',()=>{
-    if(currentCoachCTA==='log'){showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();}
-    else if(currentCoachCTA==='photos'){tab='photos';render();}
-    else if(currentCoachCTA==='journey'){tab='journey';render();}
-  });
   document.getElementById('open-compare-btn')?.addEventListener('click',()=>openComparePicker());
   document.getElementById('open-photo-guide-btn')?.addEventListener('click',()=>{
     photoGuideStep=1;pendingPhotoData=null;pendingPhotoCI=null;mountPhotoGuideSheet();
@@ -4330,10 +6160,9 @@ function attachEvents(){
       `"${label}" will be permanently removed. Your session count and total time will be adjusted.`,
       'Delete',
       ()=>{
-        char.sessions=Math.max(0,char.sessions-1);
-        char.minutes=Math.max(0,char.minutes-entry.dur);
         logs=logs.filter(l=>l.id!==id);
-        saveChar();saveLogs();render();
+        rebuildCharFromLogs();
+        render();
       }
     );
   }));
@@ -4356,7 +6185,7 @@ const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"resto
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false,fbUserEmail=null;
 let _onboardingRestorePending=false; // true while a fresh-install "Restore from Cloud" sign-in is in flight
 let commTab=localStorage.getItem('rst-comm-tab')||'live'; // persists last inner tab
-let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
+let commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,unsubBroadcast:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
 
 function isCommunityBlocked(uid){return!!uid&&(char.communityBlockedUsers||[]).includes(uid);}
 function conversationIdFor(uidA,uidB){return[uidA,uidB].sort().join('_');}
@@ -4398,7 +6227,17 @@ function initFirebase(){
     if(_authListenerAttached)return; // already listening — reuse it, don't re-register
     _authListenerAttached=true;
     fbAuth.getRedirectResult().then(result=>{
-      if(result&&result.user&&localStorage.getItem('rst-comm-pending')){
+      if(!result||!result.user)return;
+      const onboardingPending=localStorage.getItem('rst-onboarding-restore-pending');
+      const commPending=localStorage.getItem('rst-comm-pending');
+      if(onboardingPending){
+        localStorage.removeItem('rst-onboarding-restore-pending');
+        fbUID=result.user.uid;fbIsGoogle=true;fbUserEmail=result.user.email||null;
+        commState.ready=true;commState.authError=null;
+        restoreFromCloudOnboarding();
+        return;
+      }
+      if(commPending){
         localStorage.removeItem('rst-comm-pending');
         fbUID=result.user.uid;fbIsGoogle=true;fbUserEmail=result.user.email||null;
         commState.ready=true;commState.authError=null;
@@ -4414,15 +6253,22 @@ function initFirebase(){
         fbIsGoogle=isGoogle;
         fbUserEmail=isGoogle?(user.email||null):null;
         commState.ready=true;commState.authError=null;
-        if(fbIsGoogle&&localStorage.getItem('rst-comm-pending')){
+        const onboardingPending=localStorage.getItem('rst-onboarding-restore-pending');
+        const commPending=localStorage.getItem('rst-comm-pending');
+        if(fbIsGoogle&&onboardingPending){
+          localStorage.removeItem('rst-onboarding-restore-pending');
+          restoreFromCloudOnboarding();
+        } else if(fbIsGoogle&&commPending){
           localStorage.removeItem('rst-comm-pending');
           finaliseJoin();
-        } else {
+        } else if(fbIsGoogle&&(char.communityEnabled||tab==='community')){
           startCommunityListeners();
         }
+        flushCoachQueue();
+        flushCoachFeedbackQueue();
       } else {
         fbUserEmail=null;
-        if(localStorage.getItem('rst-comm-pending'))return;
+        if(localStorage.getItem('rst-comm-pending')||localStorage.getItem('rst-onboarding-restore-pending'))return;
         fbAuth.signInAnonymously().catch(e=>{
           commState.authError='Could not connect. Check your internet connection.';
           commState.loading=false;refreshCommUI();
@@ -4543,6 +6389,7 @@ function startCommunityListeners(){
   if(commState.unsubPosts){commState.unsubPosts();commState.unsubPosts=null;}
   if(commState.unsubEncourage)commState.unsubEncourage();
   if(commState.unsubConversations)commState.unsubConversations();
+  if(commState.unsubBroadcast){commState.unsubBroadcast();commState.unsubBroadcast=null;}
 
   // ── Real-time: active users only (last 7 days — keeps read count low)
   const userCutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-7*86400000));
@@ -4612,7 +6459,7 @@ function startCommunityListeners(){
   loadCommunityPrivacy();
 
   // Broadcast listener — single doc, near-zero read cost
-  db.collection('broadcast').doc('active').onSnapshot(snap=>{
+  commState.unsubBroadcast=db.collection('broadcast').doc('active').onSnapshot(snap=>{
     commState.broadcast=snap.exists?snap.data():null;
     if(tab==='community')refreshCommUI();
   },()=>{});
@@ -4621,17 +6468,16 @@ function startCommunityListeners(){
 
 }
 
-let lastPostFetch=0; // timestamp of last fetch — rate limiting
 function fetchPosts(force=false){
   if(!db)return;
   const now=Date.now();
   const cooldown=30000; // 30 seconds between fetches
-  if(!force&&now-lastPostFetch<cooldown){
-    const remaining=Math.ceil((cooldown-(now-lastPostFetch))/1000);
-    showToast(`Please wait ${remaining}s before refreshing again`);
+  if(!force&&now<commState.postsFetchCooldownUntil){
+    // Silent no-op — the Refresh button renders the countdown inline.
     return;
   }
-  lastPostFetch=now;
+  commState.postsFetchCooldownUntil=now+cooldown;
+  startPostsCooldownTimer();
   commState.postsLoading=true;
   refreshCommUI();
   const cutoff=firebase.firestore.Timestamp.fromDate(new Date(now-14*86400000));
@@ -4642,6 +6488,31 @@ function fetchPosts(force=false){
       commState.postsLoading=false;
       refreshCommUI();
     }).catch(()=>{commState.postsLoading=false;refreshCommUI();});
+}
+
+// Ticks the Refresh button label down while the cooldown is active.
+// We update the button's label in place rather than re-rendering the
+// whole tab every second — the render path already produces the correct
+// disabled state, so the tick only needs to keep the countdown in sync.
+function startPostsCooldownTimer(){
+  if(commState.postsFetchTimer)return;
+  const tick=()=>{
+    const remaining=Math.ceil((commState.postsFetchCooldownUntil-Date.now())/1000);
+    if(remaining<=0){
+      clearInterval(commState.postsFetchTimer);
+      commState.postsFetchTimer=null;
+      if(tab==='community'&&commTab==='posts')refreshCommUI();
+      return;
+    }
+    const btn=document.getElementById('comm-refresh-btn');
+    if(btn){
+      btn.disabled=true;
+      btn.style.opacity='.5';
+      btn.style.cursor='default';
+      btn.innerHTML=`${IC.refresh(13)} ${remaining}s`;
+    }
+  };
+  commState.postsFetchTimer=setInterval(tick,1000);
 }
 
 function refreshCommUI(){
@@ -4765,7 +6636,9 @@ function leaveComm(){
   if(commState.unsubPosts)commState.unsubPosts();
   if(commState.unsubEncourage)commState.unsubEncourage();
   if(commState.unsubConversations)commState.unsubConversations();
-  commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
+  if(commState.unsubBroadcast)commState.unsubBroadcast();
+  if(commState.postsFetchTimer)clearInterval(commState.postsFetchTimer);
+  commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,unsubBroadcast:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
   // NOTE: This no longer signs you out of Google — that's now a separate,
   // explicit action (signOutDevice below). Leaving the community just hides
   // your presence/posts; staying signed in means Cloud Backup keeps working
@@ -4786,7 +6659,9 @@ function signOutDevice(){
       if(commState.unsubPosts)commState.unsubPosts();
       if(commState.unsubEncourage)commState.unsubEncourage();
       if(commState.unsubConversations)commState.unsubConversations();
-      commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null};
+      if(commState.unsubBroadcast)commState.unsubBroadcast();
+      if(commState.postsFetchTimer)clearInterval(commState.postsFetchTimer);
+      commState={ready:false,loading:true,users:[],posts:[],activity:[],activityLoaded:false,activityLoading:false,conversations:[],unsubUsers:null,unsubPosts:null,unsubEncourage:null,unsubConversations:null,unsubBroadcast:null,authError:null,encouragements:[],encouragementListenerReady:false,openReplies:new Set(),replies:{},broadcast:null,postsFetchCooldownUntil:0,postsFetchTimer:null};
       db=null;fbAuth=null;fbUID=null;fbIsGoogle=false;fbUserEmail=null;
       const ex=document.getElementById('comm-settings-ov');if(ex)ex.remove();
       showToast('✓ Signed out of this device');
@@ -4975,9 +6850,9 @@ function showConversationSheet(otherUID,otherUser={}){
     <div class="sheet-handle"></div>
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
       ${avatarCircle(otherUser.avatar||'🌱',34,'var(--acc30)','var(--acc12)')}
-      <div style="flex:1;min-width:0"><div style="font-family:Cinzel,serif;font-size:14px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlEsc(displayName)}</div><div style="font-size:9px;color:var(--text5);margin-top:2px">Private conversation</div></div>
-      <button id="message-delete-convo" title="Delete conversation" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:20px;padding:5px 10px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">🗑</button>
-      <button id="message-close" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Close</button>
+      <div style="flex:1;min-width:0"><div style="font-family:var(--font-display);font-size:14px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlEsc(displayName)}</div><div style="font-size:9px;color:var(--text5);margin-top:2px">Private conversation</div></div>
+      <button id="message-delete-convo" title="Delete conversation" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:20px;padding:5px 10px;font-size:12px;color:#a03232;cursor:pointer;font-family:var(--font-body);flex-shrink:0">🗑</button>
+      <button id="message-close" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">Close</button>
     </div>
     <div id="message-thread" style="flex:1;overflow-y:auto;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px;margin-bottom:9px"></div>
     <div style="display:flex;gap:7px"><input id="message-inp" class="gold-inp" maxlength="500" placeholder="Write a message…" style="flex:1;font-size:12px"><button id="message-send" class="btn-gold" style="width:auto;padding:0 14px">Send</button></div>
@@ -5089,7 +6964,7 @@ function showMessagesInbox(){
     const unread=(conversation.unreadBy||[]).includes(fbUID);
     const timestamp=conversation.updatedAt?.toDate?conversation.updatedAt.toDate().toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
     return`<div style="display:flex;align-items:center;gap:4px;padding:10px 0;border-bottom:1px solid var(--stat-border)">
-      <button class="inbox-row" data-uid="${htmlEsc(otherUID)}" style="flex:1;min-width:0;text-align:left;display:flex;gap:9px;align-items:center;background:none;border:0;cursor:pointer;font-family:DM Sans,sans-serif;padding:0">
+      <button class="inbox-row" data-uid="${htmlEsc(otherUID)}" style="flex:1;min-width:0;text-align:left;display:flex;gap:9px;align-items:center;background:none;border:0;cursor:pointer;font-family:var(--font-body);padding:0">
         ${avatarCircle(info.avatar||'🌱',34,'var(--acc18)','var(--acc6)')}
         <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:${unread?700:600};color:var(--text1)">${htmlEsc(info.name||'Restorer')}</div><div style="font-size:10px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${htmlEsc(conversation.lastMessage||'')}</div></div>
         <div style="font-size:9px;color:${unread?'var(--accent)':'var(--text5)'};font-weight:${unread?700:400};flex-shrink:0">${unread?'New':timestamp}</div>
@@ -5098,7 +6973,7 @@ function showMessagesInbox(){
     </div>`;
   }).join('');
   const el=document.createElement('div');el.className='overlay';el.id='inbox-ov';
-  el.innerHTML=`<div class="sheet" style="max-height:78vh"><div class="sheet-handle"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px"><div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Messages</div><button id="inbox-close" class="btn-outline" style="padding:5px 11px;font-size:10px">Close</button></div><div style="font-size:10px;color:var(--text5);line-height:1.5;margin-bottom:8px">Private messages are opt-in. You control this in Community Settings.</div><div>${rows||'<div style="padding:24px 0;text-align:center;font-size:11px;color:var(--text5)">No conversations yet.</div>'}</div></div>`;
+  el.innerHTML=`<div class="sheet" style="max-height:78vh"><div class="sheet-handle"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px"><div style="font-family:var(--font-display);font-size:14px;color:var(--accent)">Messages</div><button id="inbox-close" class="btn-outline" style="padding:5px 11px;font-size:10px">Close</button></div><div style="font-size:10px;color:var(--text5);line-height:1.5;margin-bottom:8px">Private messages are opt-in. You control this in Community Settings.</div><div>${rows||'<div style="padding:24px 0;text-align:center;font-size:11px;color:var(--text5)">No conversations yet.</div>'}</div></div>`;
   document.getElementById('root').appendChild(el);
   document.getElementById('inbox-close').onclick=()=>el.remove();
   el.addEventListener('click',event=>{if(event.target===el)el.remove();});
@@ -5141,7 +7016,7 @@ function renderCommunity(){
     if(!u.active)return false;
     if(!u.lastSeen)return false;
     const seenMs=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
-    return(now-seenMs)<7*24*60*60*1000;
+    return(now-seenMs)<2*60*60*1000;
   });
   const recentlyActive=commState.users.filter(u=>{
     if(u.active||!u.lastSeen)return false;
@@ -5170,14 +7045,14 @@ function renderCommunity(){
           <div style="font-weight:700;font-size:13px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.communityDisplayName}</div>
           <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[char.ciLevel||0].ci} · ${running?'<span style="color:var(--green)">● Restoring now</span>':(char.communityVisible!==false?'● Visible':'○ Hidden')}</div>
         </div>
-        <button onclick="showMessagesInbox()" style="position:relative;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0" title="Messages">💬${unreadMessages?`<span style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:#fff;border-radius:9px;min-width:15px;height:15px;font-size:8px;line-height:15px;font-weight:700">${unreadMessages}</span>`:''}</button>
-        <button onclick="showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">${IC.settings(14)}</button>
+        <button onclick="showMessagesInbox()" style="position:relative;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0" title="Messages">💬${unreadMessages?`<span style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:#fff;border-radius:9px;min-width:15px;height:15px;font-size:8px;line-height:15px;font-weight:700">${unreadMessages}</span>`:''}</button>
+        <button onclick="showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0">${IC.settings(14)}</button>
       </div>`;
 
   // ── Encouragement notification card ──
   const encCard=unreadEncouragements.length?`
     <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:12px;padding:11px 14px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:7px"><span>👊 Encouragements</span><button onclick="markEncouragementsRead()" style="background:none;border:0;color:var(--green);font-size:9px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">Mark seen</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--green);margin-bottom:7px"><span>👊 Encouragements</span><button onclick="markEncouragementsRead()" style="background:none;border:0;color:var(--green);font-size:9px;font-weight:700;cursor:pointer;font-family:var(--font-body)">Mark seen</button></div>
       ${unreadEncouragements.slice(0,5).map(e=>`
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <span style="font-size:18px">${e.avatar}</span>
@@ -5206,7 +7081,7 @@ function renderCommunity(){
   ];
   const tabBar=`<div style="display:flex;gap:5px;margin-bottom:12px;background:var(--bg-stat);border-radius:10px;padding:4px">
     ${tabs.map(t=>`
-      <button onclick="commTab='${t.id}';localStorage.setItem('rst-comm-tab','${t.id}');setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':t.id==='activity'?'fetchCommunityActivity();':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;position:relative;
+      <button onclick="commTab='${t.id}';localStorage.setItem('rst-comm-tab','${t.id}');setLastSeen('${t.id}');${t.id==='posts'?'fetchPosts(true);':t.id==='activity'?'fetchCommunityActivity();':''}refreshCommUI()" style="flex:1;padding:7px 4px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-body);transition:all .15s;position:relative;
         background:${commTab===t.id?'var(--bg-card)':'transparent'};
         color:${commTab===t.id?'var(--accent)':'var(--text4)'};
         box-shadow:${commTab===t.id?'0 1px 4px rgba(0,0,0,.2)':'none'}">
@@ -5248,16 +7123,18 @@ function renderCommunity(){
             <div style="font-size:28px;margin-bottom:8px">💬</div>
             ${isJoined?'No posts yet — be the first to share an update.':'No posts yet.'}
           </div>`;
+    const _postCooldownRemaining=Math.max(0,Math.ceil((commState.postsFetchCooldownUntil-Date.now())/1000));
     content=`
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700;color:var(--text1)">Community Posts</div>
-        <button onclick="fetchPosts();refreshCommUI()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;gap:5px">
-          ${IC.refresh(13)} Refresh
-        </button>
+        ${_postCooldownRemaining>0
+          ? `<button id="comm-refresh-btn" disabled style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text4);cursor:default;font-family:var(--font-body);display:flex;align-items:center;gap:5px;opacity:.5">${IC.refresh(13)} ${_postCooldownRemaining}s</button>`
+          : `<button id="comm-refresh-btn" onclick="fetchPosts();refreshCommUI()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:5px">${IC.refresh(13)} Refresh</button>`
+        }
       </div>
       ${feedCards}
       <div style="height:68px"></div>
-      ${isJoined?`<button id="comm-post-btn" style="position:fixed;bottom:80px;right:max(12px,calc(50vw - 228px));background:var(--accent);border:none;border-radius:28px;padding:0 20px 0 16px;height:48px;box-shadow:0 4px 20px rgba(0,0,0,.45);cursor:pointer;display:flex;align-items:center;gap:8px;z-index:19;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;color:var(--bg);letter-spacing:.3px">
+      ${isJoined?`<button id="comm-post-btn" style="position:fixed;bottom:80px;right:max(12px,calc(50vw - 228px));background:var(--accent);border:none;border-radius:28px;padding:0 20px 0 16px;height:48px;box-shadow:0 4px 20px rgba(0,0,0,.45);cursor:pointer;display:flex;align-items:center;gap:8px;z-index:19;font-family:var(--font-body);font-weight:700;font-size:13px;color:var(--bg);letter-spacing:.3px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         Post Update
       </button>`:''}`;
@@ -5281,7 +7158,7 @@ function renderCommunity(){
           </div>`;
         }).join('')
         :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:1.8;background:var(--bg-stat);border-radius:12px">No activity has been shared yet.<br>Finish a session to help start the feed.</div>`;
-    content=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">The latest 10 community milestones</div></div><button onclick="fetchCommunityActivity()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">${IC.refresh(13)} Refresh</button></div><div class="card" style="padding:2px 12px">${activityRows}</div>`;
+    content=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">The latest 10 community milestones</div></div><button onclick="fetchCommunityActivity()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">${IC.refresh(13)} Refresh</button></div><div class="card" style="padding:2px 12px">${activityRows}</div>`;
   }
 
   else if(commTab==='members'){
@@ -5329,7 +7206,7 @@ if(u.active){
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span style="font-weight:700;font-size:13px;color:var(--text1)">${u.name||'Restorer'}</span>
-        <span style="font-family:Cinzel,serif;font-size:10px;color:var(--accent)">${LEVELS[Math.min(u.ci||0,10)].ci}</span>
+        <span style="font-family:var(--font-display);font-size:10px;color:var(--accent)">${LEVELS[Math.min(u.ci||0,10)].ci}</span>
         ${(u.streak||0)>2?`<span style="font-size:10px;color:#F59E0B">${u.streak}🔥</span>`:''}
         ${isMe?`<span style="font-size:9px;color:var(--text5)">· you</span>`:''}
       </div>
@@ -5365,7 +7242,7 @@ function buildPostCard(p,now,reacted,isJoined){
               <div style="flex:1;min-width:0">
                 <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:3px">
                   <span style="font-weight:600;font-size:11px;color:var(--text1)">${r.name||'Restorer'}</span>
-                  <span style="font-family:Cinzel,serif;font-size:9px;color:var(--accent)">${LEVELS[Math.min(r.ci||0,10)].ci}</span>
+                  <span style="font-family:var(--font-display);font-size:9px;color:var(--accent)">${LEVELS[Math.min(r.ci||0,10)].ci}</span>
                   <span style="font-size:9px;color:var(--text5);margin-left:auto">${rago}</span>
                 </div>
                 <div style="font-size:12px;color:var(--text2);line-height:1.55">${htmlEsc(r.text||'')}</div>
@@ -5377,9 +7254,9 @@ function buildPostCard(p,now,reacted,isJoined){
       ?`<div style="display:flex;gap:7px;align-items:center;padding-top:8px;border-top:1px solid var(--stat-border);margin-top:4px">
           ${avatarCircle(char.communityAvatar||'🌱',28,'var(--acc18)','var(--acc6)')}
           <input id="reply-inp-${p.id}" placeholder="Write a reply..." maxlength="200"
-            style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 12px;color:var(--text1);font-size:12px;outline:none;font-family:DM Sans,sans-serif"
+            style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 12px;color:var(--text1);font-size:12px;outline:none;font-family:var(--font-body)"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();commReply('${p.id}');}">
-          <button onclick="commReply('${p.id}')" style="background:var(--accent);border:none;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif;flex-shrink:0">Send</button>
+          <button onclick="commReply('${p.id}')" style="background:var(--accent);border:none;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--bg);cursor:pointer;font-family:var(--font-body);flex-shrink:0">Send</button>
         </div>`
       :`<div style="font-size:10px;color:var(--text5);padding-top:8px;border-top:1px solid var(--stat-border);text-align:center">Join the community to reply</div>`;
 
@@ -5392,7 +7269,7 @@ function buildPostCard(p,now,reacted,isJoined){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:4px">
           <span style="font-weight:600;font-size:12px;color:var(--text1)">${p.name||'Restorer'}</span>
-          <span style="font-family:Cinzel,serif;font-size:9px;color:var(--accent)">${LEVELS[Math.min(p.ci||0,10)].ci}</span>
+          <span style="font-family:var(--font-display);font-size:9px;color:var(--accent)">${LEVELS[Math.min(p.ci||0,10)].ci}</span>
           <span style="font-size:9px;color:var(--text5);margin-left:auto">${ago}</span>
         </div>
         ${p.title?`<div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:4px;line-height:1.4">${htmlEsc(p.title)}</div>`:''}
@@ -5408,17 +7285,17 @@ function buildPostCard(p,now,reacted,isJoined){
         const myR=myPick===r;
         const dimmed=isJoined&&!!myPick&&!myR;
         return`<button onclick="${isJoined?`commReact('${p.id}','${r}')`:`showToast('Join the community to react')`}"
-          style="background:${myR?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${myR?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;color:${myR?'var(--accent)':isJoined?'var(--text4)':'var(--text5)'};display:inline-flex;align-items:center;gap:3px;font-family:DM Sans,sans-serif;opacity:${!isJoined?'.55':dimmed?'.4':'1'};transition:opacity .15s">
+          style="background:${myR?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${myR?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;color:${myR?'var(--accent)':isJoined?'var(--text4)':'var(--text5)'};display:inline-flex;align-items:center;gap:3px;font-family:var(--font-body);opacity:${!isJoined?'.55':dimmed?'.4':'1'};transition:opacity .15s">
           ${emoji}<span style="font-size:11px;font-weight:${myR?700:400}">${count||''}</span>
         </button>`;
       }).join('')}
       <button onclick="toggleReplies('${p.id}')"
-        style="background:${isOpen?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isOpen?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;color:${isOpen?'var(--accent)':'var(--text4)'};display:inline-flex;align-items:center;gap:4px;font-family:DM Sans,sans-serif">
+        style="background:${isOpen?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isOpen?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;color:${isOpen?'var(--accent)':'var(--text4)'};display:inline-flex;align-items:center;gap:4px;font-family:var(--font-body)">
         💬 <span>${replyCount>0?replyCount:''} ${isOpen?'Hide':'Reply'}</span>
       </button>
       ${isMe
-        ?`<button onclick="confirmDialog('Delete post?','This will remove your post and all its replies.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif">✕</button>`
-        :`<button onclick="reportPost('${p.id}')" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:DM Sans,sans-serif" title="Report this post">${IC.flag(12)} Report</button>`
+        ?`<button onclick="confirmDialog('Delete post?','This will remove your post and all its replies.','Delete',()=>deleteCommPost('${p.id}'))" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body)">✕</button>`
+        :`<button onclick="reportPost('${p.id}')" style="margin-left:auto;background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body)" title="Report this post">${IC.flag(12)} Report</button>`
       }
     </div>
     ${replySection}
@@ -5442,7 +7319,7 @@ function showPostSheet(){
   const el=document.createElement('div');el.className='overlay';el.id='post-ov';
   el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:12px">New Post</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:12px">New Post</div>
     <input id="post-title" class="gold-inp" placeholder="Topic title (optional)..." maxlength="60" style="font-size:13px;margin-bottom:8px">
     <textarea id="post-text" placeholder="Share a win, a question, an observation..." style="min-height:90px;font-size:13px;margin-bottom:4px"></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -5532,7 +7409,7 @@ function showUserProfile(uid){
         ${u.active?`<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid var(--bg-sheet)"></div>`:''}
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-family:Cinzel,serif;font-size:17px;font-weight:700;color:var(--text1)">${u.name||'Restorer'}</div>
+        <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text1)">${u.name||'Restorer'}</div>
         <div style="font-size:11px;color:var(--text4);margin-top:3px">${u.active?`<span style="color:var(--green)">● Restoring now</span>`:u.lastSeen?'Recently active':''}</div>
       </div>
       ${isMe?'':`<div style="display:flex;gap:5px;align-items:center"><button onclick="event.stopPropagation();commEncourage('${u.uid}');document.getElementById('user-profile-ov').remove();" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:9px 12px;font-size:16px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>${canMessage?`<button onclick="event.stopPropagation();openConversation('${u.uid}');" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:9px 12px;font-size:14px;color:var(--accent);cursor:pointer;flex-shrink:0" title="Message">💬</button>`:''}</div>`}
@@ -5542,7 +7419,7 @@ function showUserProfile(uid){
     ${statsHtml}
     ${methodsHtml}
     ${achBadges}
-    ${!isMe?`<button onclick="blockCommunityUser('${u.uid}')" style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.22);border-radius:9px;padding:9px;font-size:11px;color:#b85454;cursor:pointer;font-family:DM Sans,sans-serif;margin-bottom:7px">Block member</button>`:''}
+    ${!isMe?`<button onclick="blockCommunityUser('${u.uid}')" style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.22);border-radius:9px;padding:9px;font-size:11px;color:#b85454;cursor:pointer;font-family:var(--font-body);margin-bottom:7px">Block member</button>`:''}
     <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
@@ -5556,10 +7433,10 @@ function showCommSettings(){
   const shareStats=char.communityShareStats!==false;
   const messagesEnabled=char.communityMessagesEnabled!==false;
   const blockedRows=Object.entries(char.communityBlockedProfiles||{}).filter(([uid])=>(char.communityBlockedUsers||[]).includes(uid)).map(([uid,name])=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--stat-border)"><div style="flex:1;min-width:0;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlEsc(name)}</div><button onclick="unblockCommunityUser('${uid}');showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:5px 8px;font-size:10px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Unblock</button></div>`).join('');
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--stat-border)"><div style="flex:1;min-width:0;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlEsc(name)}</div><button onclick="unblockCommunityUser('${uid}');showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:7px;padding:5px 8px;font-size:10px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">Unblock</button></div>`).join('');
   el.innerHTML=`<div class="sheet" style="max-height:88vh;padding-bottom:28px">
     <div class="sheet-handle"></div>
-    <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent);margin-bottom:16px">Community Settings</div>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:16px">Community Settings</div>
 
     <div style="margin-bottom:14px">
       <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Avatar</div>
@@ -5613,13 +7490,13 @@ function showCommSettings(){
       <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Account</div>
 
       <button onclick="signOutDevice()"
-        style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px;font-size:13px;color:var(--text2);cursor:pointer;font-family:DM Sans,sans-serif;margin-bottom:5px">
+        style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px;font-size:13px;color:var(--text2);cursor:pointer;font-family:var(--font-body);margin-bottom:5px">
         🔓 Sign Out of This Device
       </button>
       <div style="font-size:9px;color:var(--text5);line-height:1.5;margin-bottom:14px">Disconnects your Google account on this device only. Nothing is deleted — not your data, your posts, or your cloud backup.</div>
 
       <button onclick="confirmDialog('Leave Community?','Your presence will be removed from the active list and you\\'ll stop appearing in posts and member lists. Your posts expire naturally after 14 days. You stay signed in, so rejoining later is one tap.','Leave',leaveComm)"
-        style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">
+        style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:10px;padding:11px;font-size:13px;color:#a03232;cursor:pointer;font-family:var(--font-body)">
         Leave Community
       </button>
       <div style="font-size:9px;color:var(--text5);line-height:1.5;margin-top:6px">Turns off your community presence and posts. Doesn't sign you out or touch your cloud backup.</div>
@@ -5653,7 +7530,7 @@ function showAvatarPicker(){
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
       ${avatarCircle(current,44,'var(--acc30)','var(--acc12)')}
       <div>
-        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Choose Avatar</div>
+        <div style="font-family:var(--font-display);font-size:14px;color:var(--accent)">Choose Avatar</div>
         <div style="font-size:10px;color:var(--text5);margin-top:3px">Visible to the community</div>
       </div>
     </div>
@@ -5695,7 +7572,7 @@ function showCoachSheet(){
   const ex=document.getElementById('coach-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='coach-ov';
 
-  const historyHtml=coachHistory.map(h=>`
+  const historyHtml=coachHistory.map((h,i)=>`
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
         <div style="background:var(--acc12);border:1px solid var(--acc30);border-radius:14px 14px 4px 14px;padding:8px 12px;font-size:12px;color:var(--accent);max-width:80%;line-height:1.5">${htmlEsc(h.q)}</div>
@@ -5704,11 +7581,16 @@ function showCoachSheet(){
         <div style="font-size:18px;flex-shrink:0">🧠</div>
         <div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:4px 14px 14px 14px;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-line;flex:1">${htmlEsc(h.a)}</div>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:4px">
+        ${h.flagged
+          ?`<span style="font-size:10px;color:var(--text5);font-style:italic;padding:2px 6px">Thanks — feedback noted</span>`
+          :`<button onclick="coachFlagAnswer(${i})" style="background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body);padding:2px 6px;opacity:.6;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'">👎 Not helpful</button>`}
+      </div>
     </div>`).join('');
 
   const suggestionsHtml=COACH_SUGGESTIONS.map(s=>
     `<button onclick="coachAsk('${s.q.replace(/'/g,"\\'")}')"
-      style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .15s"
+      style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:6px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);white-space:nowrap;transition:all .15s"
       onmouseover="this.style.borderColor='var(--acc30)';this.style.color='var(--accent)'"
       onmouseout="this.style.borderColor='var(--stat-border)';this.style.color='var(--text3)'"
     >${s.label}</button>`
@@ -5719,10 +7601,10 @@ function showCoachSheet(){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-shrink:0">
       <div style="font-size:24px">🧠</div>
       <div style="flex:1">
-        <div style="font-family:Cinzel,serif;font-size:14px;color:var(--accent)">Coach</div>
+        <div style="font-family:var(--font-display);font-size:14px;color:var(--accent)">Coach</div>
         <div style="font-size:10px;color:var(--text5)">Ask me anything about your restoration</div>
       </div>
-      <button onclick="document.getElementById('coach-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0">✕ Close</button>
+      <button onclick="document.getElementById('coach-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0">✕ Close</button>
     </div>
 
     <div id="coach-chat" style="flex:1;overflow-y:auto;min-height:80px;margin-bottom:12px">
@@ -5736,7 +7618,7 @@ function showCoachSheet(){
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${suggestionsHtml}</div>
       <div style="display:flex;gap:7px;padding-bottom:20px">
         <input id="coach-inp" placeholder="Type your question..." maxlength="200"
-          style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:22px;padding:10px 16px;color:var(--text1);font-size:13px;outline:none;font-family:'DM Sans',sans-serif"
+          style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:22px;padding:10px 16px;color:var(--text1);font-size:13px;outline:none;font-family:var(--font-body)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();coachSend();}">
         <button onclick="coachSend()"
           style="background:var(--accent);border:none;border-radius:22px;width:42px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--bg)">
@@ -5761,26 +7643,100 @@ function coachSend(){
 }
 
 function coachAsk(question){
-  // Generate answer from brain
   const answer=coachBrainMatch(question);
-  // Add to session history
-  coachHistory.push({q:question,a:answer});
-  if(coachHistory.length>10)coachHistory.shift(); // keep last 10 exchanges
-  // Capture question for owner review (Firestore, minimal cost — owner reads weekly)
-  captureCoachQuestion(question);
-  // Reopen sheet with new history
+  const matched=!answer.startsWith("I'm not sure I have a perfect answer");
+  coachHistory.push({q:question,a:answer,flagged:false});
+  if(coachHistory.length>10)coachHistory.shift();
+  captureCoachQuestion(question,matched);
   showCoachSheet();
 }
 
-function captureCoachQuestion(question){
-  // Write to Firestore for owner review — no PII, just the question + basic context
-  if(!db||!question.trim())return;
-  db.collection('coach_questions').add({
-    q:question.trim().slice(0,200),
-    ci:char.ciLevel||0,
-    sessions:char.sessions||0,
-    ts:firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(()=>{}); // silent fail — non-critical
+// Records a thumbs-down on a specific Coach answer. The answer itself stays
+// visible — the user may still find value in the rest of it, and removing it
+// would feel punishing. Only the button state changes, and the Q+A pair is
+// queued to Firestore so the admin Coach tab can surface it for review.
+function coachFlagAnswer(idx){
+  const entry=coachHistory[idx];
+  if(!entry||entry.flagged)return;
+  entry.flagged=true;
+  enqueueCoachFeedback(entry.q,entry.a);
+  flushCoachFeedbackQueue();
+  if(navigator.vibrate)navigator.vibrate(15);
+  showCoachSheet();
+}
+
+function enqueueCoachFeedback(question,answer){
+  try{
+    const q=JSON.parse(localStorage.getItem('rst-coach-feedback-queue')||'[]');
+    q.push({
+      q:question.trim().slice(0,200),
+      a:answer.slice(0,2000),
+      ci:char.ciLevel||0
+    });
+    if(q.length>50)q.splice(0,q.length-50);
+    localStorage.setItem('rst-coach-feedback-queue',JSON.stringify(q));
+  }catch{}
+}
+
+// Mirrors flushCoachQueue — sends queued thumbs-down feedback once Firebase
+// auth has settled. Same pattern: clear the local queue first, so a page
+// close mid-flush can't cause duplicate writes.
+function flushCoachFeedbackQueue(){
+  if(!db||!fbUID)return;
+  let q;
+  try{q=JSON.parse(localStorage.getItem('rst-coach-feedback-queue')||'[]');}catch{return;}
+  if(!q.length)return;
+  localStorage.removeItem('rst-coach-feedback-queue');
+  q.forEach(item=>{
+    db.collection('coach_feedback').add({
+      q:item.q,
+      a:item.a,
+      ci:item.ci||0,
+      ts:firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(()=>{});
+  });
+}
+
+function captureCoachQuestion(question,matched){
+  if(!question.trim())return;
+  // Always queue first — this means a question is never lost, even if
+  // Firebase isn't initialised yet (non-community user) or the write
+  // fails mid-flight. flushCoachQueue() sends everything pending.
+  enqueueCoachQuestion(question,matched);
+  flushCoachQueue();
+}
+
+function enqueueCoachQuestion(question,matched){
+  try{
+    const q=JSON.parse(localStorage.getItem('rst-coach-queue')||'[]');
+    q.push({
+      q:question.trim().slice(0,200),
+      ci:char.ciLevel||0,
+      sessions:char.sessions||0,
+      matched:matched!==false
+    });
+    // Keep the local queue bounded — old questions past 50 are dropped
+    if(q.length>50)q.splice(0,q.length-50);
+    localStorage.setItem('rst-coach-queue',JSON.stringify(q));
+  }catch{}
+}
+
+function flushCoachQueue(){
+  if(!db||!fbUID)return; // auth not settled yet — items stay queued
+  let q;
+  try{q=JSON.parse(localStorage.getItem('rst-coach-queue')||'[]');}catch{return;}
+  if(!q.length)return;
+  // Clear immediately so a page close mid-flush can't cause duplicate sends
+  localStorage.removeItem('rst-coach-queue');
+  q.forEach(item=>{
+    db.collection('coach_questions').add({
+      q:item.q,
+      ci:item.ci||0,
+      sessions:item.sessions||0,
+      matched:item.matched!==false,
+      ts:firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(()=>{}); // silent fail — non-critical, already dropped from queue
+  });
 }
 
 const ADMIN_UID='ucBxGcyLCTMxyYDKgqOnDmlq2j52';
@@ -5812,13 +7768,13 @@ function showAdminPanel(){
     <div style="padding:0 16px;flex-shrink:0">
       <div style="width:36px;height:4px;background:var(--stat-border);border-radius:2px;margin:0 auto 14px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-family:Cinzel,serif;font-size:15px;color:#e74c3c;letter-spacing:1px">⚙ Admin</div>
-        <button onclick="document.getElementById('admin-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">Close</button>
+        <div style="font-family:var(--font-display);font-size:15px;color:#e74c3c;letter-spacing:1px">⚙ Admin</div>
+        <button onclick="document.getElementById('admin-ov').remove()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">Close</button>
       </div>
       <div style="display:flex;gap:4px;margin-bottom:14px;background:var(--bg-stat);border-radius:10px;padding:3px;overflow-x:auto;scrollbar-width:none">
         ${[['dashboard','📊','Stats'],['reports','🚩','Reports'],['users','👥','Users'],['broadcast','📣','Broadcast'],['coach','🧠','Coach']].map(([id,icon,label])=>`
         <button id="admin-tab-${id}" onclick="adminSwitchTab('${id}')"
-          style="flex:1;min-width:52px;padding:6px 4px;border:none;border-radius:7px;cursor:pointer;font-size:10px;font-weight:600;font-family:DM Sans,sans-serif;white-space:nowrap;transition:all .15s;
+          style="flex:1;min-width:52px;padding:6px 4px;border:none;border-radius:7px;cursor:pointer;font-size:10px;font-weight:600;font-family:var(--font-body);white-space:nowrap;transition:all .15s;
           background:${_adminTab===id?'var(--bg-card)':'transparent'};
           color:${_adminTab===id?'var(--accent)':'var(--text4)'}">
           ${icon} ${label}
@@ -5905,7 +7861,7 @@ function adminLoadTab(){
         <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px;margin-bottom:14px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
             <div style="font-size:11px;font-weight:600;color:var(--text2)">7-Day Retention</div>
-            <div style="font-family:Cinzel,serif;font-size:16px;font-weight:700;color:${retentionPct>=50?'var(--green)':retentionPct>=25?'var(--accent)':'#e74c3c'}">${retentionPct}%</div>
+            <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:${retentionPct>=50?'var(--green)':retentionPct>=25?'var(--accent)':'#e74c3c'}">${retentionPct}%</div>
           </div>
           <div style="height:6px;background:var(--bg-card);border-radius:3px;overflow:hidden">
             <div style="height:100%;border-radius:3px;background:${retentionPct>=50?'var(--green)':retentionPct>=25?'var(--accent)':'#e74c3c'};width:${retentionPct}%;transition:width .6s"></div>
@@ -5920,7 +7876,7 @@ function adminLoadTab(){
             const max=Math.max(...dist,1);
             return dist.map((n,i)=>`
               <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
-                <div style="font-family:Cinzel,serif;font-size:9px;color:var(--accent);width:28px;flex-shrink:0">CI-${i}</div>
+                <div style="font-family:var(--font-display);font-size:9px;color:var(--accent);width:28px;flex-shrink:0">CI-${i}</div>
                 <div style="flex:1;height:8px;background:var(--bg-card);border-radius:4px;overflow:hidden">
                   <div style="height:100%;border-radius:4px;background:var(--acc45);width:${Math.round(n/max*100)}%;transition:width .6s"></div>
                 </div>
@@ -5963,9 +7919,9 @@ function adminLoadTab(){
               ${preview}
               <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
                 ${post?`
-                <button onclick="adminDeletePost('${r.postId}','${d.id}')" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:6px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">🗑 Delete Post</button>
-                <button onclick="adminBanUID('${post.uid||''}','${d.id}')" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:6px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban User</button>`:''}
-                <button onclick="adminResolve('${d.id}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:DM Sans,sans-serif">✓ Dismiss</button>
+                <button onclick="adminDeletePost('${r.postId}','${d.id}')" style="background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:6px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:var(--font-body)">🗑 Delete Post</button>
+                <button onclick="adminBanUID('${post.uid||''}','${d.id}')" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:6px 12px;font-size:11px;color:#a03232;cursor:pointer;font-family:var(--font-body)">⛔ Ban User</button>`:''}
+                <button onclick="adminResolve('${d.id}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">✓ Dismiss</button>
               </div>
             </div>`;
           }).join('');
@@ -5990,10 +7946,10 @@ function adminLoadTab(){
           Appears at the top of the Community tab for all users. Useful for updates, welcome messages, or announcements. Leave blank to hide.
         </div>
         <textarea id="admin-broadcast-inp" placeholder="Write your announcement here… (leave blank to clear)"
-          style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:12px;width:100%;outline:none;resize:vertical;min-height:90px;font-family:DM Sans,sans-serif;margin-bottom:10px">${htmlEsc(current)}</textarea>
+          style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:12px;width:100%;outline:none;resize:vertical;min-height:90px;font-family:var(--font-body);margin-bottom:10px">${htmlEsc(current)}</textarea>
         <div style="display:flex;gap:8px">
-          <button onclick="adminClearBroadcast()" style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px 16px;font-size:12px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Clear</button>
-          <button onclick="adminSaveBroadcast()" style="flex:1;background:linear-gradient(135deg,var(--acc18),var(--accent));border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--bg);cursor:pointer;font-family:DM Sans,sans-serif">📣 Publish</button>
+          <button onclick="adminClearBroadcast()" style="flex:0 0 auto;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:8px;padding:10px 16px;font-size:12px;color:#a03232;cursor:pointer;font-family:var(--font-body)">Clear</button>
+          <button onclick="adminSaveBroadcast()" style="flex:1;background:linear-gradient(135deg,var(--acc18),var(--accent));border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;color:var(--bg);cursor:pointer;font-family:var(--font-body)">📣 Publish</button>
         </div>
         ${current?`<div style="margin-top:12px;background:var(--acc6);border:1px solid var(--acc18);border-radius:8px;padding:10px 12px">
           <div style="font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Currently Live</div>
@@ -6004,42 +7960,84 @@ function adminLoadTab(){
   // ── COACH ──────────────────────────────────────────────────────────────
   } else if(_adminTab==='coach'){
     content.innerHTML='<div style="font-size:11px;color:var(--text4)">Loading coach questions…</div>';
-    db.collection('coach_questions').orderBy('ts','desc').limit(100).get().then(snap=>{
+    // Fetch questions and flagged feedback in parallel. Feedback is a newer
+    // collection — if the read fails (rules not yet published, or collection
+    // empty) we still want the questions view to render normally.
+    Promise.all([
+      db.collection('coach_questions').orderBy('ts','desc').limit(200).get(),
+      db.collection('coach_feedback').orderBy('ts','desc').limit(100).get().catch(()=>null)
+    ]).then(([snap,fbSnap])=>{
       if(!document.getElementById('admin-content'))return;
-      if(snap.empty){content.innerHTML='<div style="font-size:11px;color:var(--green);text-align:center;padding:20px">✓ No questions yet.</div>';return;}
+
+      // Build the flagged-feedback section. Renders above the question list.
+      let feedbackHtml='';
+      if(fbSnap&&!fbSnap.empty){
+        const fbRows=fbSnap.docs.map(d=>{
+          const x=d.data();
+          const ts=x.ts?.toDate?x.ts.toDate().toLocaleDateString():'?';
+          return`<div style="background:var(--bg-stat);border:1px solid rgba(200,50,50,.18);border-radius:8px;padding:10px 12px;margin-bottom:6px">
+            <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:5px"><strong style="color:var(--text1)">Q:</strong> ${htmlEsc(x.q||'')}</div>
+            <div style="font-size:10px;color:var(--text3);line-height:1.55;padding-left:8px;border-left:2px solid var(--stat-border);white-space:pre-line;max-height:120px;overflow-y:auto">${htmlEsc((x.a||'').slice(0,500))}${(x.a||'').length>500?'…':''}</div>
+            <div style="font-size:9px;color:var(--text5);text-align:right;margin-top:5px">${ts} · CI-${x.ci||0}</div>
+          </div>`;
+        }).join('');
+        feedbackHtml=`<div style="font-size:10px;font-weight:700;color:#a03232;margin-bottom:7px;text-transform:uppercase;letter-spacing:.8px">👎 Flagged answers (${fbSnap.size})</div>${fbRows}<div style="height:14px"></div>`;
+      }
+
+      if(snap.empty){
+        content.innerHTML=feedbackHtml+'<div style="font-size:11px;color:var(--green);text-align:center;padding:20px">✓ No questions yet.</div>';
+        return;
+      }
+      // Aggregate by question text, tracking matched vs unmatched counts
       const qMap={};
       snap.docs.forEach(d=>{
-        const q=d.data().q||'';
-        if(!qMap[q])qMap[q]={count:0,ci:[],ts:d.data().ts};
+        const data=d.data();
+        const q=data.q||'';
+        if(!qMap[q])qMap[q]={count:0,matchedCount:0,unmatchedCount:0,ci:[]};
         qMap[q].count++;
-        qMap[q].ci.push(d.data().ci||0);
+        // Old entries without the flag default to matched (assumed answered)
+        if(data.matched===false)qMap[q].unmatchedCount++;
+        else qMap[q].matchedCount++;
+        qMap[q].ci.push(data.ci||0);
       });
-      const sorted=Object.entries(qMap).sort((a,b)=>b[1].count-a[1].count);
-      // Group: unanswered (count>1) vs single
-      const trending=sorted.filter(([,v])=>v.count>1);
-      const single=sorted.filter(([,v])=>v.count===1);
-      const renderQ=([q,v])=>`
-        <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px">
+      const allEntries=Object.entries(qMap);
+      // Split: unmatched first (sorted by unmatched count), then matched
+      const unmatchedEntries=allEntries.filter(([,v])=>v.unmatchedCount>0).sort((a,b)=>b[1].unmatchedCount-a[1].unmatchedCount);
+      const matchedEntries=allEntries.filter(([,v])=>v.unmatchedCount===0).sort((a,b)=>b[1].count-a[1].count);
+      window._coachSorted=unmatchedEntries; // email uses this — only the gaps
+      const totalUnmatched=unmatchedEntries.reduce((a,[,v])=>a+v.unmatchedCount,0);
+      const renderQ=([q,v],isUnmatched)=>{
+        const avgCi=v.ci.length?Math.round(v.ci.reduce((a,b)=>a+b,0)/v.ci.length*10)/10:0;
+        const displayCount=isUnmatched?v.unmatchedCount:v.count;
+        return`<div style="background:var(--bg-stat);border:1px solid ${isUnmatched?'rgba(200,50,50,.2)':'var(--stat-border)'};border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px">
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;color:var(--text2);line-height:1.5">${htmlEsc(q)}</div>
-            <div style="font-size:9px;color:var(--text5);margin-top:3px">avg CI: ${Math.round(v.ci.reduce((a,b)=>a+b,0)/v.ci.length*10)/10}</div>
+            <div style="font-size:9px;color:var(--text5);margin-top:3px">avg CI: ${avgCi}${isUnmatched&&v.matchedCount>0?` · also matched ${v.matchedCount}×`:''}</div>
           </div>
-          ${v.count>1?`<span style="background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0">×${v.count}</span>`:''}
+          ${displayCount>1?`<span style="background:${isUnmatched?'rgba(200,50,50,.1)':'var(--acc12)'};border:1px solid ${isUnmatched?'rgba(200,50,50,.3)':'var(--acc30)'};border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;color:${isUnmatched?'#a03232':'var(--accent)'};flex-shrink:0">×${displayCount}</span>`:''}
         </div>`;
-      window._coachSorted=sorted;
-      content.innerHTML=`
+      };
+      content.innerHTML=feedbackHtml+`
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px">${snap.size} questions · ${sorted.length} unique</div>
-          <div style="display:flex;gap:6px">
-            <button onclick="adminEmailCoachQuestions(${JSON.stringify(sorted).replace(/"/g,'&quot;')})" style="background:var(--acc6);border:1px solid var(--acc30);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--accent);cursor:pointer;font-family:DM Sans,sans-serif">📧 Email all</button>
-            <button onclick="adminClearCoachQuestions()" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:4px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">Clear all</button>
+          <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px">${snap.size} captured · ${allEntries.length} unique</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <button onclick="adminDownloadCoachQuestions()" style="background:var(--acc6);border:1px solid var(--acc30);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--accent);cursor:pointer;font-family:var(--font-body)">⬇ Download JSON</button>
+            <button onclick="adminEmailCoachQuestions()" style="background:var(--acc6);border:1px solid var(--acc30);border-radius:6px;padding:4px 10px;font-size:10px;color:var(--accent);cursor:pointer;font-family:var(--font-body)">📧 Email unmatched</button>
+            <button onclick="adminClearCoachQuestions()" style="background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.2);border-radius:6px;padding:4px 10px;font-size:10px;color:#a03232;cursor:pointer;font-family:var(--font-body)">Clear all</button>
           </div>
         </div>
         <div style="font-size:10px;color:var(--text5);margin-bottom:10px;line-height:1.5;background:var(--acc6);border:1px solid var(--acc18);border-radius:8px;padding:8px 10px">
-          💡 Tap <strong style="color:var(--accent)">Email all</strong> to send questions to yourself, then bring them to Claude to expand the Coach brain.
+          💡 <strong style="color:var(--accent)">Email unmatched</strong> sends only the questions the Coach couldn't answer. Bring those to Claude with your coach_data.json to fill the gaps.
         </div>
-        ${trending.length?`<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:7px;text-transform:uppercase;letter-spacing:.8px">🔥 Trending (asked multiple times)</div>${trending.map(renderQ).join('')}`:''}
-        ${single.length?`<div style="font-size:10px;font-weight:700;color:var(--text4);margin:10px 0 7px;text-transform:uppercase;letter-spacing:.8px">Single asks</div>${single.map(renderQ).join('')}`:''}`;
+        ${unmatchedEntries.length?`
+          <div style="font-size:10px;font-weight:700;color:#a03232;margin-bottom:7px;text-transform:uppercase;letter-spacing:.8px">🚩 Unmatched (${unmatchedEntries.length} unique · ${totalUnmatched} total asks)</div>
+          ${unmatchedEntries.map(e=>renderQ(e,true)).join('')}
+        `:`<div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:12px;text-align:center;margin-bottom:14px"><div style="font-size:11px;color:var(--green);font-weight:600">✓ Every captured question was answered</div><div style="font-size:9px;color:var(--text4);margin-top:4px">No gaps to fill right now.</div></div>`}
+        ${matchedEntries.length?`
+          <div style="font-size:10px;font-weight:700;color:var(--text4);margin:14px 0 7px;text-transform:uppercase;letter-spacing:.8px">✓ Matched (${matchedEntries.length} unique)</div>
+          ${matchedEntries.slice(0,20).map(e=>renderQ(e,false)).join('')}
+          ${matchedEntries.length>20?`<div style="font-size:10px;color:var(--text5);text-align:center;padding:8px">+${matchedEntries.length-20} more matched questions not shown</div>`:''}
+        `:''}`;
     }).catch(e=>{if(content)content.innerHTML=`<div style="font-size:11px;color:var(--text4)">Could not load — check Firestore rules.<br><span style="font-size:10px;color:var(--text5)">${e.code||e.message}</span></div>`;});
   }
 }
@@ -6074,8 +8072,8 @@ function adminUserCard(uid,u){
     </div>
     <div style="display:flex;gap:6px">
       ${!banned
-        ?`<button onclick="adminBanUID('${uid}',null)" style="flex:1;background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:7px;font-size:11px;color:#a03232;cursor:pointer;font-family:DM Sans,sans-serif">⛔ Ban</button>`
-        :`<button onclick="adminUnbanUID('${uid}')" style="flex:1;background:rgba(34,168,90,.06);border:1px solid rgba(34,168,90,.25);border-radius:6px;padding:7px;font-size:11px;color:var(--green);cursor:pointer;font-family:DM Sans,sans-serif">✓ Unban</button>`
+        ?`<button onclick="adminBanUID('${uid}',null)" style="flex:1;background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.25);border-radius:6px;padding:7px;font-size:11px;color:#a03232;cursor:pointer;font-family:var(--font-body)">⛔ Ban</button>`
+        :`<button onclick="adminUnbanUID('${uid}')" style="flex:1;background:rgba(34,168,90,.06);border:1px solid rgba(34,168,90,.25);border-radius:6px;padding:7px;font-size:11px;color:var(--green);cursor:pointer;font-family:var(--font-body)">✓ Unban</button>`
       }
     </div>
   </div>`;
@@ -6137,17 +8135,18 @@ function adminUnbanUID(uid){
 
 function adminEmailCoachQuestions(){
   const sorted=window._coachSorted||[];
-  if(!sorted.length){showToast('No questions to email');return;}
+  if(!sorted.length){showToast('No unmatched questions to email');return;}
   const lines=sorted.map(([q,v])=>{
-    const avgCi=Math.round(v.ci.reduce((a,b)=>a+b,0)/v.ci.length*10)/10;
-    return '• '+q+(v.count>1?' (x'+v.count+', avg CI-'+avgCi+')':' (avg CI-'+avgCi+')');
+    const avgCi=v.ci.length?Math.round(v.ci.reduce((a,b)=>a+b,0)/v.ci.length*10)/10:0;
+    return '• '+q+(v.unmatchedCount>1?' (x'+v.unmatchedCount+', avg CI-'+avgCi+')':' (avg CI-'+avgCi+')');
   }).join('\n');
-  const total=sorted.reduce((a,[,v])=>a+v.count,0);
-  const subject=encodeURIComponent("User's Questions");
+  const total=sorted.reduce((a,[,v])=>a+v.unmatchedCount,0);
+  const subject=encodeURIComponent("Unmatched Coach Questions");
   const body=encodeURIComponent(
-    'Coach Questions from RestoreTrack Users\n'+
+    'UNMATCHED Coach Questions from RestoreTrack Users\n'+
+    '(Questions the Coach could not answer)\n\n'+
     'Exported: '+new Date().toLocaleDateString()+'\n'+
-    'Total: '+total+' questions ('+sorted.length+' unique)\n\n'+
+    'Total: '+total+' asks across '+sorted.length+' unique questions\n\n'+
     lines+'\n\n---\n'+
     'Bring these to Claude with your coach_data.json to expand the Coach brain.'
   );
@@ -6163,14 +8162,128 @@ function adminClearCoachQuestions(){
   });
 }
 
+// Exports all captured questions (matched and unmatched) plus any flagged
+// answers as a single JSON file. Two top-level keys so the payload can grow
+// in the future without breaking anything that reads it.
+async function adminDownloadCoachQuestions(){
+  if(!db){showToast('Not connected');return;}
+  showToast('⏳ Building export…');
+  try{
+    const [qsSnap,fbSnap]=await Promise.all([
+      db.collection('coach_questions').orderBy('ts','desc').limit(500).get(),
+      db.collection('coach_feedback').orderBy('ts','desc').limit(500).get().catch(()=>null)
+    ]);
+    const questions=qsSnap.docs.map(d=>{
+      const x=d.data();
+      return{
+        q:x.q||'',
+        matched:x.matched!==false,
+        ci:x.ci||0,
+        sessions:x.sessions||0,
+        ts:x.ts?.toDate?x.ts.toDate().toISOString():null
+      };
+    });
+    const feedback=fbSnap?fbSnap.docs.map(d=>{
+      const x=d.data();
+      return{
+        q:x.q||'',
+        a:x.a||'',
+        ci:x.ci||0,
+        ts:x.ts?.toDate?x.ts.toDate().toISOString():null
+      };
+    }):[];
+    const payload={
+      exportedAt:new Date().toISOString(),
+      questionCount:questions.length,
+      feedbackCount:feedback.length,
+      questions,
+      feedback
+    };
+    const json=JSON.stringify(payload,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`restoretrack-coach-export-${today().replace(/-/g,'')}.json`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    showToast(`✅ Exported ${questions.length} questions · ${feedback.length} flagged`);
+  }catch(e){
+    console.warn('[RT] admin download coach questions error',e);
+    showToast('⚠ Could not build export');
+  }
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────────────
+function ensureAnimations(){
+  if(document.getElementById('rt-animations'))return;
+  const style=document.createElement('style');
+  style.id='rt-animations';
+  style.textContent=`
+    /* Active state: a soft green glow pulses outward from the session
+       card's edge, like a slow heartbeat. Not an alert — a pulse of
+       "alive". The pulse stays subtle; the eye reads it as breathing,
+       not blinking. */
+    .sess-active-card {
+      animation: rtHeartbeat 2.4s ease-in-out infinite;
+    }
+    @keyframes rtHeartbeat {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,168,90,0); }
+      50%      { box-shadow: 0 0 0 10px rgba(34,168,90,.14); }
+    }
+
+    /* The live dot gets its own subtle glow so it feels like a running
+       indicator rather than a static circle. */
+    .sess-live-dot {
+      box-shadow: 0 0 6px rgba(34,168,90,.55);
+      animation: rtDotPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes rtDotPulse {
+      0%, 100% { box-shadow: 0 0 4px rgba(34,168,90,.45); }
+      50%      { box-shadow: 0 0 10px rgba(34,168,90,.85); }
+    }
+
+    /* Respect the user's motion preference. Anyone who has reduced
+       motion enabled gets the polished static state instead. */
+    /* Paused state: slower, cooler gold pulse. Reads as "at rest but
+       still present" rather than the green heartbeat of a running session. */
+    .sess-paused-card {
+      animation: rtPausedPulse 4s ease-in-out infinite;
+    }
+    @keyframes rtPausedPulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--acc12); }
+      50%      { box-shadow: 0 0 0 8px rgba(201,168,76,0); }
+    }
+
+    /* Accessibility: if the user has reduced motion enabled at the OS
+       level, we hold the button static — no comet, no breathe. The button
+       remains fully usable; it just doesn't animate. */
+    @media (prefers-reduced-motion: reduce) {
+      .sess-active-card { animation: none; }
+      .sess-live-dot { animation: none; }
+      .sess-paused-card { animation: none; }
+    }
+    @keyframes goalShimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(150%); }
+    }
+    @keyframes goalCelebrate {
+      0%, 100% { box-shadow: 0 0 0 0 transparent; }
+      50%      { box-shadow: 0 0 14px 2px var(--acc30); }
+    }
+    .nav { overflow: visible !important; }
+  `;
+  document.head.appendChild(style);
+}
 (async ()=>{
+  ensureAnimations();
   await loadAll();
   render();
-  // Init Firebase if already a community member, or if returning from Google redirect
-  if(char.communityEnabled||localStorage.getItem('rst-comm-pending')){
-    initFirebase();
-    // If a session is already running, sync presence once Firebase auth settles
-    if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
-  }
+  // Always init Firebase — the coach question queue needs auth to flush,
+  // and anonymous auth provides the baseline the Community tab expects.
+  // Community listeners themselves only start for members or while the
+  // Community tab is open (gated inside initFirebase's auth handler).
+  initFirebase();
+  // If a session is already running, sync presence once Firebase auth settles
+  if(activeTimer&&activeTimer.startedAt){setTimeout(syncPresence,2500);}
 })();

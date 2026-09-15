@@ -1,9 +1,22 @@
 <!DOCTYPE html>
-<html data-theme="ivory">
+<html data-theme="shadow">
 <head>
 <meta charset="UTF-8">
+<script>
+  // Apply the user's stored theme synchronously — before CSS/JS loads.
+  // Shadow is the :root default, so a brand-new user needs no override.
+  (function(){
+    try{
+      var pid=localStorage.getItem('rst-active-pid');
+      if(!pid)return;
+      var c=JSON.parse(localStorage.getItem('rst-'+pid+'-char')||'null');
+      if(c&&c.theme)document.documentElement.setAttribute('data-theme',c.theme);
+    }catch(e){}
+  })();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RestoreTrack">
 <meta name="theme-color" content="#0D0B14">
@@ -13,8 +26,10 @@
 <!-- Styling -->
 <link rel="stylesheet" href="style.css">
 
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Fonts: Inter (variable weight, single file) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 
 <!-- Firebase (must load before app.js) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
