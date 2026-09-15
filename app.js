@@ -1700,13 +1700,25 @@ function exportCSV(){
 // ── UI HELPERS ─────────────────────────────────────────────────────────────────
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3500);}
 function showSessFlash(msg){const el=document.createElement('div');el.className='sess-flash';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),950);}
-function showEncourageBurst(avatar){
+// Fires a small upward-outward burst of encouraging emojis.
+// If originEl is provided, the burst originates near that element —
+// so tapping 👊 on a specific card feels local and satisfying rather
+// than generic-screen-confetti.
+function showEncourageBurst(avatar,originEl){
   const pool=[avatar||'👊','💪','✨','🌱','⚡','🔥'];
+  let baseX=50,baseY=50;
+  if(originEl){
+    const rect=originEl.getBoundingClientRect();
+    baseX=((rect.left+rect.width/2)/window.innerWidth)*100;
+    baseY=((rect.top+rect.height/2)/window.innerHeight)*100;
+  }
   for(let i=0;i<7;i++)setTimeout(()=>{
     const el=document.createElement('div');
     el.textContent=pool[i%pool.length];
-    const l=8+Math.random()*84,fs=16+Math.random()*20,dur=.8+Math.random()*.5;
-    el.style.cssText=`position:fixed;font-size:${fs}px;left:${l}%;top:${35+Math.random()*25}%;pointer-events:none;z-index:500;animation:enc-burst ${dur}s ease forwards`;
+    const fs=16+Math.random()*20,dur=.8+Math.random()*.5;
+    const x=baseX+(Math.random()-0.5)*30;
+    const y=baseY+(Math.random()-0.5)*20;
+    el.style.cssText=`position:fixed;font-size:${fs}px;left:${x}%;top:${y}%;pointer-events:none;z-index:500;animation:enc-burst ${dur}s ease forwards`;
     document.body.appendChild(el);
     setTimeout(()=>el.remove(),(dur*1000)+200);
   },i*95);
@@ -6391,10 +6403,11 @@ function startCommunityListeners(){
   if(commState.unsubConversations)commState.unsubConversations();
   if(commState.unsubBroadcast){commState.unsubBroadcast();commState.unsubBroadcast=null;}
 
-  // ── Real-time: active users only (last 7 days — keeps read count low)
-  const userCutoff=firebase.firestore.Timestamp.fromDate(new Date(Date.now()-7*86400000));
+  // ── Real-time: all members, ordered by most recent activity.
+  // We used to filter to "active in last 7 days" — but that hid dormant
+  // members entirely, making the community feel smaller than it is. Now
+  // everyone is fetched, and the Members tab segments by recency instead.
   commState.unsubUsers=db.collection('community_users')
-    .where('lastSeen','>',userCutoff)
     .orderBy('lastSeen','desc').limit(60)
     .onSnapshot(snap=>{
       commState.users=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(u=>u.visible!==false&&!u.banned&&!isCommunityBlocked(u.uid));
@@ -6807,17 +6820,45 @@ function commReply(postId){
   }).catch(()=>{inp.disabled=false;showToast('⚠ Could not send reply');});
 }
 
-function commEncourage(uid){
+function commEncourage(uid,btn){
   if(!db||!fbUID||!fbIsGoogle){showToast('Sign in to send encouragement');return;}
   if(uid===fbUID){showToast('That\'s you 😄');return;}
+  // Optimistic feedback: burst fires on tap, button locks and turns gold,
+  // then flips to ✓ once Firestore confirms. On failure, everything reverts.
+  if(btn){
+    btn.style.background='var(--acc12)';
+    btn.style.borderColor='var(--acc30)';
+    btn.disabled=true;
+  }
+  showEncourageBurst('👊',btn);
   db.collection('community_users').doc(uid)
     .collection('encouragements').add({
       fromUID:fbUID,
       fromName:char.communityDisplayName||'Someone',
       fromAvatar:char.communityAvatar||'👊',
       ts:firebase.firestore.FieldValue.serverTimestamp()
-    }).then(()=>showToast('👊 Encouragement sent!'))
-    .catch(()=>showToast('⚠ Could not send — try again'));
+    }).then(()=>{
+      showToast('👊 Encouragement sent!');
+      if(btn){
+        btn.textContent='✓';
+        setTimeout(()=>{
+          if(btn){
+            btn.style.background='';
+            btn.style.borderColor='';
+            btn.textContent='👊';
+            btn.disabled=false;
+          }
+        },1600);
+      }
+    })
+    .catch(()=>{
+      showToast('⚠ Could not send — try again');
+      if(btn){
+        btn.style.background='';
+        btn.style.borderColor='';
+        btn.disabled=false;
+      }
+    });
 }
 
 function markEncouragementsRead(){
@@ -7110,13 +7151,13 @@ function renderCommunity(){
 
   if(commTab==='live'){
     const activeCards=active.length
-      ?active.map(u=>buildUserCard(u,now,isJoined)).join('')
+      ?active.map(u=>buildUserCard(u,now,isJoined,'live')).join('')
       :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;line-height:2;background:var(--bg-stat);border-radius:12px">
           <div style="font-size:28px;margin-bottom:8px">◉</div>
           No one restoring right now.<br>${isJoined?'Start a session to be first.':'Join and start a session to appear here.'}
         </div>`;
     const recentCards=recentlyActive.length
-      ?`<div class="sec-title" style="margin-top:10px">Recently Active</div>${recentlyActive.map(u=>buildUserCard(u,now,isJoined)).join('')}`
+      ?`<div class="sec-title" style="margin-top:10px">Recently Active</div>${recentlyActive.map(u=>buildUserCard(u,now,isJoined,'member')).join('')}`
       :'';
     content=`
       <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px">${active.length>0?'Restoring Right Now':'Active Now'}</div>
@@ -7174,44 +7215,81 @@ function renderCommunity(){
 
   else if(commTab==='members'){
     const allMembers=commState.users;
-    const memberCards=allMembers.length
-      ?allMembers.map(u=>buildUserCard(u,now,isJoined)).join('')
-      :`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;background:var(--bg-stat);border-radius:12px">No members yet.</div>`;
-    content=`
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:700;color:var(--text1)">All Members</div>
-        <div style="font-size:10px;color:var(--text5)">${allMembers.length} total</div>
-      </div>
-      ${memberCards}`;
+    if(!allMembers.length){
+      content=`<div style="text-align:center;padding:28px 16px;color:var(--text5);font-size:12px;background:var(--bg-stat);border-radius:12px">No members yet.</div>`;
+    } else {
+      // Bucket each member by last-seen recency. Users who have never been
+      // seen (or 30+ days ago) land in the final "Community" segment with
+      // no timestamp — the point is presence, not the number of days away.
+      const bucketOf=(u)=>{
+        if(u.active)return 'active';
+        if(!u.lastSeen)return 'older';
+        const ms=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
+        const days=(now-ms)/86400000;
+        if(days<7)return 'week';
+        if(days<30)return 'month';
+        return 'older';
+      };
+      const segActive=[],segWeek=[],segMonth=[],segOlder=[];
+      allMembers.forEach(u=>{
+        const b=bucketOf(u);
+        if(b==='active')segActive.push(u);
+        else if(b==='week')segWeek.push(u);
+        else if(b==='month')segMonth.push(u);
+        else segOlder.push(u);
+      });
+      const sectionHeader=(label,count)=>`
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 8px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4)">${label}</div>
+          <div style="font-size:10px;color:var(--text5)">${count}</div>
+        </div>`;
+      content=`
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:13px;font-weight:700;color:var(--text1)">Members</div>
+          <div style="font-size:10px;color:var(--text5)">${allMembers.length} total</div>
+        </div>
+        ${segActive.length?sectionHeader('🟢 Restoring now',segActive.length)+segActive.map(u=>buildUserCard(u,now,isJoined,'live')).join(''):''}
+        ${segWeek.length?sectionHeader('Active this week',segWeek.length)+segWeek.map(u=>buildUserCard(u,now,isJoined,'member')).join(''):''}
+        ${segMonth.length?sectionHeader('Active this month',segMonth.length)+segMonth.map(u=>buildUserCard(u,now,isJoined,'member')).join(''):''}
+        ${segOlder.length?sectionHeader('Community',segOlder.length)+segOlder.map(u=>buildUserCard(u,now,isJoined,'dormant')).join(''):''}
+      `;
+    }
   }
 
   return`${topBar}${broadcastBanner}${encCard}${tabBar}${content}`;
 }
 
-function buildUserCard(u,now,isJoined){
+// mode: 'live' | 'member' | 'dormant'. Defaults based on activity.
+//   live    — currently restoring: shows method + elapsed, green accent
+//   member  — recently active: shows timeAgo, neutral accent
+//   dormant — 30+ days inactive: no timestamp (avoids reading as "dead")
+function buildUserCard(u,now,isJoined,mode){
+  mode=mode||(u.active?'live':'member');
   const isMe=u.uid===fbUID;
   const ms=u.lastSeen?.toMillis?u.lastSeen.toMillis():0;
-  let timeStr;
-if(u.active){
-  if(u.sessionStartedAt){
-    const sessStartMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
-    const elapsedMins=Math.floor((now-sessStartMs)/60000);
-    timeStr=fmtDur(elapsedMins);
-  } else if(u.todayMins>0){
-    timeStr=fmtDur(u.todayMins)+' today';
+  let secondLine='';
+  if(u.active){
+    let elapsedStr='Active now';
+    if(u.sessionStartedAt){
+      const sessStartMs=u.sessionStartedAt.toMillis?u.sessionStartedAt.toMillis():new Date(u.sessionStartedAt).getTime();
+      elapsedStr=fmtDur(Math.floor((now-sessStartMs)/60000));
+    } else if(u.todayMins>0){
+      elapsedStr=fmtDur(u.todayMins)+' today';
+    }
+    secondLine=`${u.method?`<span style="color:var(--text2)">${u.method}</span> · `:''}<span style="color:var(--green);font-weight:600">${elapsedStr}</span>`;
+  } else if(mode==='dormant'){
+    secondLine=`<span style="color:var(--text5);font-style:italic">Community member</span>`;
   } else {
-    timeStr='Active now';
+    const timeStr=ms>0?timeAgo(ms):'—';
+    secondLine=`<span style="color:var(--text4)">Active ${timeStr}</span>`;
   }
-} else {
-  timeStr=ms>0?timeAgo(ms):'Inactive';
-}
   const encourageBtn=isMe?''
     :isJoined
-      ?`<button onclick="event.stopPropagation();commEncourage('${u.uid}')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>`
+      ?`<button onclick="event.stopPropagation();commEncourage('${u.uid}',this)" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0;transition:all .2s" title="Encourage">👊</button>`
       :`<button onclick="event.stopPropagation();showToast('Join the community to encourage others')" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:7px 12px;font-size:15px;cursor:pointer;flex-shrink:0;opacity:.4" title="Join to encourage">👊</button>`;
-  return`<div onclick="showUserProfile('${u.uid}')" style="background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:center;cursor:pointer">
+  return`<div onclick="showUserProfile('${u.uid}')" style="background:var(--bg-card);border:1px solid ${u.active?'var(--green-border)':'var(--card-border)'};border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:center;cursor:pointer;transition:border-color .2s">
     <div style="position:relative;flex-shrink:0">
-      ${avatarCircle(u.avatar||'🌱',38,'var(--acc30)','var(--acc12)')}
+      ${avatarCircle(u.avatar||'🌱',38,u.active?'var(--green)':'var(--acc30)',u.active?'var(--green-bg)':'var(--acc12)')}
       ${u.active?`<div style="position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
     </div>
     <div style="flex:1;min-width:0">
@@ -7221,7 +7299,7 @@ if(u.active){
         ${(u.streak||0)>2?`<span style="font-size:10px;color:#F59E0B">${u.streak}🔥</span>`:''}
         ${isMe?`<span style="font-size:9px;color:var(--text5)">· you</span>`:''}
       </div>
-      <div style="font-size:10px;color:var(--text4);margin-top:3px">${u.active&&u.method?`${u.method} · `:''}${u.active?`<span style="color:var(--green)">${timeStr}</span>`:`<span>${timeStr}</span>`}</div>
+      <div style="font-size:10px;color:var(--text4);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${secondLine}</div>
     </div>
     ${encourageBtn}
   </div>`;
@@ -7365,76 +7443,103 @@ function showUserProfile(uid){
   const ex=document.getElementById('user-profile-ov');if(ex)ex.remove();
   const el=document.createElement('div');el.className='overlay';el.id='user-profile-ov';
 
-  // Format joined date
   const joinedStr=u.joinedAt?.toDate?
     u.joinedAt.toDate().toLocaleDateString('en',{month:'long',year:'numeric'}):null;
 
-  // Top methods pills
   const methods=u.topMethods||[];
   const methodsHtml=methods.length?`
-    <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--text4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Preferred Methods</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:1.2px">Preferred Methods</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${methods.map((m,i)=>`<span style="background:${i===0?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${i===0?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:4px 11px;font-size:11px;color:${i===0?'var(--accent)':'var(--text3)'}">${m}</span>`).join('')}
+        ${methods.map((m,i)=>`<span style="background:${i===0?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${i===0?'var(--acc30)':'var(--stat-border)'};border-radius:20px;padding:5px 12px;font-size:11px;color:${i===0?'var(--accent)':'var(--text3)'};font-weight:${i===0?'600':'400'}">${m}</span>`).join('')}
       </div>
     </div>`:'';
 
-  // Milestone badges — from achievements synced on community_users doc
+  // Milestones are collapsed by default — the count is the hook, the list
+  // is opt-in. A wall of 44 badges reads as a spreadsheet, not achievements.
   const userAchs=u.achievements||[];
-  const achBadges=userAchs.length?`
-    <div style="margin-bottom:12px">
-      <div style="font-size:10px;color:var(--text4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px">Milestones Unlocked</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${ACHS.filter(a=>userAchs.includes(a.id)).map(a=>`
-          <span title="${a.title}" style="background:var(--acc6);border:1px solid var(--acc18);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);display:inline-flex;align-items:center;gap:4px">
-            ${a.icon} ${a.title}
-          </span>`).join('')}
+  const earnedBadges=ACHS.filter(a=>userAchs.includes(a.id));
+  const milestonesHtml=earnedBadges.length?`
+    <div style="margin-bottom:14px">
+      <button onclick="toggleProfileBadges()" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--font-body);text-align:left">
+        <span style="font-size:16px;flex-shrink:0">🏅</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--text1)">${earnedBadges.length} milestone${earnedBadges.length!==1?'s':''} unlocked</div>
+          <div style="font-size:10px;color:var(--text4);margin-top:2px">Tap to see them all</div>
+        </div>
+        <span id="profile-badges-chevron" style="font-size:11px;color:var(--text5);flex-shrink:0;transform:rotate(0deg);transition:transform .2s">▾</span>
+      </button>
+      <div id="profile-badges-list" style="display:none;margin-top:8px;padding:10px 12px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px">
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${earnedBadges.map(a=>`<span title="${a.title}" style="background:var(--acc6);border:1px solid var(--acc18);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);display:inline-flex;align-items:center;gap:4px">${a.icon} ${a.title}</span>`).join('')}
+        </div>
       </div>
     </div>`:'';
 
   const statsHtml=u.shareStats!==false&&(u.sessions||u.totalHours)?`
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
-      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+      <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 6px;text-align:center">
         <div style="font-size:15px;font-weight:700;color:var(--text1)">${LEVELS[Math.min(u.ci||0,10)].ci}</div>
         <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">CI Level</div>
       </div>
-      ${u.sessions!=null?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+      ${u.sessions!=null?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 6px;text-align:center">
         <div style="font-size:15px;font-weight:700;color:var(--text1)">${u.sessions}</div>
         <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Sessions</div>
       </div>`:''}
-      ${u.totalHours!=null?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+      ${u.totalHours!=null?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 6px;text-align:center">
         <div style="font-size:15px;font-weight:700;color:var(--text1)">${u.totalHours}h</div>
         <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Hours</div>
       </div>`:''}
-      ${(u.streak||0)>0?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:8px;text-align:center">
+      ${(u.streak||0)>0?`<div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:9px 6px;text-align:center">
         <div style="font-size:15px;font-weight:700;color:#F59E0B">${u.streak}🔥</div>
         <div style="font-size:8px;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Streak</div>
       </div>`:''}
     </div>`:'';
 
-  el.innerHTML=`<div class="sheet" style="max-height:88vh">
+  const statusLine=u.active
+    ?`<span style="color:var(--green);font-weight:600">● Restoring now${u.method?` · ${u.method}`:''}</span>`
+    :(joinedStr?`Member since ${joinedStr}`:'');
+
+  el.innerHTML=`<div class="sheet" style="max-height:88vh;padding-bottom:24px">
     <div class="sheet-handle"></div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:${joinedStr?'6':'14'}px">
-      <div style="position:relative">
-        ${avatarCircle(u.avatar||'🌱',52,'var(--acc30)','var(--acc12)')}
-        ${u.active?`<div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid var(--bg-sheet)"></div>`:''}
+
+    <!-- Hero: centered avatar + name + status -->
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="display:inline-block;position:relative;margin-bottom:10px">
+        ${avatarCircle(u.avatar||'🌱',64,u.active?'var(--green)':'var(--acc30)',u.active?'var(--green-bg)':'var(--acc12)')}
+        ${u.active?`<div style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:var(--green);border:2.5px solid var(--bg-sheet)"></div>`:''}
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text1)">${u.name||'Restorer'}</div>
-        <div style="font-size:11px;color:var(--text4);margin-top:3px">${u.active?`<span style="color:var(--green)">● Restoring now</span>`:u.lastSeen?'Recently active':''}</div>
-      </div>
-      ${isMe?'':`<div style="display:flex;gap:5px;align-items:center"><button onclick="event.stopPropagation();commEncourage('${u.uid}');document.getElementById('user-profile-ov').remove();" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:9px 12px;font-size:16px;cursor:pointer;flex-shrink:0" title="Encourage">👊</button>${canMessage?`<button onclick="event.stopPropagation();openConversation('${u.uid}');" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:9px 12px;font-size:14px;color:var(--accent);cursor:pointer;flex-shrink:0" title="Message">💬</button>`:''}</div>`}
+      <div style="font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--text1);margin-bottom:4px">${u.name||'Restorer'}</div>
+      <div style="font-size:11px;color:var(--text4)">${statusLine}</div>
     </div>
-    ${joinedStr?`<div style="font-size:10px;color:var(--text5);margin-bottom:12px">Member since ${joinedStr}</div>`:''}
-    ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-style:italic">"${htmlEsc(u.bio)}"</div>`:''}
+
+    <!-- Action buttons: encourage + message -->
+    ${!isMe?`<div style="display:flex;gap:8px;margin-bottom:16px">
+      <button onclick="event.stopPropagation();commEncourage('${u.uid}',this)" style="flex:1;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px;font-size:13px;color:var(--text2);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s"><span style="font-size:16px">👊</span> Encourage</button>
+      ${canMessage?`<button onclick="event.stopPropagation();document.getElementById('user-profile-ov').remove();openConversation('${u.uid}')" style="flex:1;background:var(--acc12);border:1px solid var(--acc30);border-radius:10px;padding:11px;font-size:13px;color:var(--accent);cursor:pointer;font-family:var(--font-body);font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px"><span style="font-size:15px">💬</span> Message</button>`:''}
+    </div>`:''}
+
+    ${u.bio?`<div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--bg-stat);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-style:italic">"${htmlEsc(u.bio)}"</div>`:''}
+
     ${statsHtml}
     ${methodsHtml}
-    ${achBadges}
-    ${!isMe?`<button onclick="blockCommunityUser('${u.uid}')" style="width:100%;background:rgba(200,50,50,.06);border:1px solid rgba(200,50,50,.22);border-radius:9px;padding:9px;font-size:11px;color:#b85454;cursor:pointer;font-family:var(--font-body);margin-bottom:7px">Block member</button>`:''}
-    <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%">Close</button>
+    ${milestonesHtml}
+
+    ${!isMe?`<button onclick="blockCommunityUser('${u.uid}')" style="width:100%;background:transparent;border:1px solid rgba(200,50,50,.15);border-radius:9px;padding:9px;font-size:11px;color:#b85454;cursor:pointer;font-family:var(--font-body);margin-top:4px;opacity:.7">Block member</button>`:''}
+    <button class="btn-ghost" onclick="document.getElementById('user-profile-ov').remove()" style="width:100%;margin-top:8px">Close</button>
   </div>`;
   document.getElementById('root').appendChild(el);
   el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
+
+// Expand/collapse the milestone list in the user profile sheet.
+function toggleProfileBadges(){
+  const list=document.getElementById('profile-badges-list');
+  const chev=document.getElementById('profile-badges-chevron');
+  if(!list)return;
+  const isOpen=list.style.display==='block';
+  list.style.display=isOpen?'none':'block';
+  if(chev)chev.style.transform=isOpen?'rotate(0deg)':'rotate(180deg)';
 }
 
 function showCommSettings(){
