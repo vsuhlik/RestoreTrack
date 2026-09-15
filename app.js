@@ -7025,6 +7025,8 @@ function renderCommunity(){
   const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
   const unreadEncouragements=communityUnreadEncouragements();
   const unreadMessages=commState.conversations.filter(c=>(c.unreadBy||[]).includes(fbUID)).length;
+  const memberCount=commState.users.length;
+  const topStreak=commState.users.reduce((max,u)=>Math.max(max,u.streak||0),0);
 
   // ── Status bar (joined) or join banner ──
   const topBar=!isJoined
@@ -7036,17 +7038,30 @@ function renderCommunity(){
           Join as ${htmlEsc(char.name)}
         </button>
       </div>`
-    :`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
-        <div style="position:relative;flex-shrink:0;cursor:pointer" onclick="showUserProfile('${fbUID||''}')">
-          ${avatarCircle(char.communityAvatar||'🌱',36,'var(--acc30)','var(--acc12)')}
-          ${running?`<div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
+    :`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;margin-bottom:10px;overflow:hidden">
+        <div style="padding:10px 14px;display:flex;align-items:center;gap:10px">
+          <div style="position:relative;flex-shrink:0;cursor:pointer" onclick="showUserProfile('${fbUID||''}')">
+            ${avatarCircle(char.communityAvatar||'🌱',36,'var(--acc30)','var(--acc12)')}
+            ${running?`<div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:13px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.communityDisplayName}</div>
+            <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[char.ciLevel||0].ci} · ${running?'<span style="color:var(--green)">● Restoring now</span>':(char.communityVisible!==false?'● Visible':'○ Hidden')}</div>
+          </div>
+          <button onclick="showMessagesInbox()" style="position:relative;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0" title="Messages">💬${unreadMessages?`<span style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:#fff;border-radius:9px;min-width:15px;height:15px;font-size:8px;line-height:15px;font-weight:700">${unreadMessages}</span>`:''}</button>
+          <button onclick="showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0">${IC.settings(14)}</button>
         </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:13px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.communityDisplayName}</div>
-          <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[char.ciLevel||0].ci} · ${running?'<span style="color:var(--green)">● Restoring now</span>':(char.communityVisible!==false?'● Visible':'○ Hidden')}</div>
+        <div style="border-top:1px solid var(--stat-border);padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text4);flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="live-dot" style="flex-shrink:0"></span>
+            <span style="color:var(--green);font-weight:700">${active.length}</span>
+            <span>restoring now</span>
+          </div>
+          <span style="color:var(--text6);opacity:.5">·</span>
+          <div><span style="color:var(--text2);font-weight:700">${memberCount}</span> member${memberCount!==1?'s':''}</div>
+          ${topStreak>2?`<span style="color:var(--text6);opacity:.5">·</span>
+          <div><span style="color:#F59E0B;font-weight:700">${topStreak}🔥</span> top streak</div>`:''}
         </div>
-        <button onclick="showMessagesInbox()" style="position:relative;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0" title="Messages">💬${unreadMessages?`<span style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:#fff;border-radius:9px;min-width:15px;height:15px;font-size:8px;line-height:15px;font-weight:700">${unreadMessages}</span>`:''}</button>
-        <button onclick="showCommSettings()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0">${IC.settings(14)}</button>
       </div>`;
 
   // ── Encouragement notification card ──
@@ -7103,12 +7118,8 @@ function renderCommunity(){
     const recentCards=recentlyActive.length
       ?`<div class="sec-title" style="margin-top:10px">Recently Active</div>${recentlyActive.map(u=>buildUserCard(u,now,isJoined)).join('')}`
       :'';
-    const totalOnline=active.length+recentlyActive.length;
     content=`
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:700;color:var(--text1)">${active.length>0?`${active.length} Restoring Right Now 🟢`:'Active Now'}</div>
-        ${totalOnline>0?`<div style="font-size:10px;color:var(--text5)">${totalOnline} online</div>`:''}
-      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--text1);margin-bottom:8px">${active.length>0?'Restoring Right Now':'Active Now'}</div>
       ${activeCards}${recentCards}`;
   }
 
