@@ -95,6 +95,17 @@ const ACHS=[
   {id:'ci9',     icon:'👑',title:'CI-9',              desc:'Natural overhang at rest — final stretch',       check:c=>(c.ciLevel||0)>=9,g:'ci'},
   {id:'ci10',    icon:'🏆',title:'Fully Restored',    desc:'CI-10 — the journey is complete',                check:c=>(c.ciLevel||0)>=10,g:'ci'},
 ];
+// Which badges get a "hero" treatment in the community activity feed.
+// Second tier of each category and above — first-photo, first-rest-day, and
+// ten-session badges are early nudges, not moments worth a gold card.
+const HERO_BADGE_IDS=new Set([
+  's50','s100','s200','s365','s500',
+  'h50','h100','h250','h500','h1000',
+  'str7','str14','str30','str60','str90','str180','str365',
+  'goal30','goal100','goal365',
+  'meth5','photo10',
+  'ci1','ci2','ci3','ci4','ci5','ci6','ci7','ci8','ci9','ci10'
+]);
 const THEMES=[
   {id:'ivory',  name:'Ivory',  bg:'#F0EDE6',accent:'#7A5C10',text:'#1a1710',mid:'#C8A848'},
   {id:'shadow', name:'Shadow', bg:'#0D0B14',accent:'#C9A84C',text:'#E2DDD0',mid:'#3d2a00'},
@@ -898,6 +909,7 @@ function awardMultiDay(method,catId,startMs,endMs,notes,activeSecs,timer){
   // per day, so a session that was paused across a Tuesday doesn't credit
   // Tuesday with hours that never actually happened.
   if(endMs<=startMs)return;
+  const prevStreak=char.streak;
   const perDaySecs={};
   let cursor=startMs;
   while(cursor<endMs){
@@ -977,6 +989,7 @@ function awardMultiDay(method,catId,startMs,endMs,notes,activeSecs,timer){
 
 function awardSession(method,catId,totalMins,notes,dateOverride){
   const td=dateOverride||today();
+  const prevStreak=char.streak;
   let ns=char.streak;
   if(char.lastDate){
     const diff=Math.round((new Date(td)-new Date(char.lastDate))/86400000);
@@ -1000,9 +1013,10 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
   if(sessionCountsForGoal&&prevDateMin<char.dailyGoalMin&&(prevDateMin+totalMins)>=char.dailyGoalMin)ngd++;
   char={...char,sessions:char.sessions+1,minutes:char.minutes+totalMins,streak:ns,lastDate:td,methods:nm,goalDays:ngd,lastMethod:method,lastCat:catId};
   const newly=[];
-  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
+  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({id:a.id,title:a.title,icon:a.icon});}
   logs=[{id:Date.now(),date:td,method,cat:catId,dur:totalMins,notes},...logs];
   saveChar();saveLogs();
+  emitAwardActivity({prevStreak,newStreak:ns,newly});
   showSessFlash(`✓ ${fmtMin(totalMins)}`);
   if(newly.length){
     showToast(`🏅 ${newly[0].title} unlocked!`);
@@ -1012,6 +1026,25 @@ function awardSession(method,catId,totalMins,notes,dateOverride){
   else if(ns>=30)showToast(`🔥 ${ns} days straight. ${fmtMin(totalMins)}. Remarkable.`);
   else if(ns>1)showToast(`${fmtMin(totalMins)} · ${ns}-day streak 🔥`);
   else showToast(getSessionQuip(totalMins));
+}
+
+// ── AWARD-PATH COMMUNITY EVENTS ───────────────────────────────────────────────
+// Fires streak_milestone and badge_unlocked community events after any live
+// award path completes. Only called from awardSession(), awardMultiDay(), and
+// saveCILevels() — never from recalcAchievements(), so a returning user
+// catching up on backfilled badges never spawns a burst of hero cards on
+// first launch after an update.
+const STREAK_MILESTONES=[7,30,100,365];
+function emitAwardActivity({prevStreak,newStreak,newly}={}){
+  if(typeof prevStreak==='number'&&typeof newStreak==='number'&&newStreak>prevStreak){
+    const crossed=STREAK_MILESTONES.find(m=>prevStreak<m&&newStreak>=m);
+    if(crossed)recordCommunityActivity('streak_milestone',{days:crossed});
+  }
+  (newly||[]).forEach(b=>{
+    if(HERO_BADGE_IDS.has(b.id)){
+      recordCommunityActivity('badge_unlocked',{badgeId:b.id,title:b.title,icon:b.icon});
+    }
+  });
 }
 
 // ── ACHIEVEMENT RECALC ────────────────────────────────────────────────────────
@@ -7138,28 +7171,91 @@ function renderCommunity(){
   }
 
   else if(commTab==='activity'){
-    const activityRows=commState.activityLoading
+    const buildActivityItem=(item)=>{
+      const type=item.type;
+      const uid=item.uid||'';
+      const name=htmlEsc(item.name||'Restorer');
+      const avatar=item.avatar||'🌱';
+      const eventMs=item.ts?.toMillis?item.ts.toMillis():Date.now();
+      const detail=item.detail||{};
+      const nameHtml=`<strong onclick="event.stopPropagation();showUserProfile('${uid}')" style="color:var(--text1);cursor:pointer">${name}</strong>`;
+      const nameDim=`<strong onclick="event.stopPropagation();showUserProfile('${uid}')" style="color:var(--text2);cursor:pointer">${name}</strong>`;
+
+      // Hero cards — gold border, larger avatar, icon badge in the corner.
+      if(type==='ci_reached'){
+        const ci=Math.min(Number(detail.ci)||0,10);
+        return`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:11px;align-items:center">
+          <div onclick="event.stopPropagation();showUserProfile('${uid}')" style="position:relative;flex-shrink:0;cursor:pointer">
+            ${avatarCircle(avatar,42,'var(--acc30)','var(--acc12)')}
+            <div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--bg-card);border:1.5px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent)">◑</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:var(--text3);line-height:1.4;margin-bottom:2px">${nameHtml}</div>
+            <div style="font-size:14px;font-weight:700;color:var(--accent);line-height:1.35">Reached ${LEVELS[ci].ci}</div>
+            <div style="font-size:9px;color:var(--text5);margin-top:3px">${timeAgo(eventMs)}</div>
+          </div>
+        </div>`;
+      }
+      if(type==='badge_unlocked'){
+        const icon=detail.icon||'🏅';
+        const title=htmlEsc(detail.title||'a milestone');
+        return`<div style="background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:11px;align-items:center">
+          <div onclick="event.stopPropagation();showUserProfile('${uid}')" style="position:relative;flex-shrink:0;cursor:pointer">
+            ${avatarCircle(avatar,42,'var(--acc30)','var(--acc12)')}
+            <div style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:var(--bg-card);border:1.5px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-size:12px">${icon}</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:var(--text3);line-height:1.4;margin-bottom:2px">${nameHtml}</div>
+            <div style="font-size:13px;font-weight:700;color:var(--accent);line-height:1.35">${title} unlocked 🏅</div>
+            <div style="font-size:9px;color:var(--text5);margin-top:3px">${timeAgo(eventMs)}</div>
+          </div>
+        </div>`;
+      }
+
+      // Pulse rows — a session just started. Small, dim, green dot.
+      if(type==='session_started'){
+        const method=htmlEsc(detail.method||'a session');
+        return`<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--stat-border)">
+          <div onclick="event.stopPropagation();showUserProfile('${uid}')" style="position:relative;flex-shrink:0;cursor:pointer">
+            ${avatarCircle(avatar,28,'var(--green)','var(--green-bg)')}
+            <div style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>
+          </div>
+          <div style="flex:1;min-width:0;font-size:11px;color:var(--text3);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${nameDim} just started <strong style="color:var(--text1)">${method}</strong></div>
+          <div style="font-size:9px;color:var(--text5);flex-shrink:0">${timeAgo(eventMs)}</div>
+        </div>`;
+      }
+
+      // Standard rows — completed sessions, streak milestones.
+      let description='recorded a restoration activity.';
+      if(type==='session_completed'){
+        const dur=fmtDur(Number(detail.duration)||0);
+        const method=htmlEsc(detail.method||'a method');
+        description=detail.first
+          ?`logged their <strong style="color:var(--text1)">first session</strong> 🌱`
+          :`finished <strong style="color:var(--text1)">${dur}</strong> with ${method}`;
+      } else if(type==='streak_milestone'){
+        const days=Number(detail.days)||0;
+        description=`hit a <strong style="color:#F59E0B">${days}-day streak</strong> 🔥`;
+      }
+      return`<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--stat-border)">
+        <div onclick="event.stopPropagation();showUserProfile('${uid}')" style="flex-shrink:0;cursor:pointer">${avatarCircle(avatar,34,'var(--acc18)','var(--acc6)')}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;color:var(--text2);line-height:1.55">${nameHtml} ${description}</div>
+          <div style="font-size:9px;color:var(--text5);margin-top:3px">${timeAgo(eventMs)}</div>
+        </div>
+      </div>`;
+    };
+
+    const activityBody=commState.activityLoading
       ?`<div style="text-align:center;padding:28px;color:var(--text5);font-size:11px"><div class="live-dot" style="display:inline-block;margin-bottom:8px"></div><br>Loading activity…</div>`
       :commState.activity.length
-        ?commState.activity.map(item=>{
-          const isSession=item.type==='session_completed';
-          const isCI=item.type==='ci_reached';
-          const description=isSession
-            ?`Stopped using <strong style="color:var(--text1)">${htmlEsc(item.detail?.method||'a method')}</strong> after ${fmtDur(Number(item.detail?.duration)||0)}.`
-            :isCI?`Updated their progress to <strong style="color:var(--accent)">${LEVELS[Math.min(Number(item.detail?.ci)||0,10)].ci}</strong>.`
-            :'Recorded a restoration activity.';
-          const eventMs=item.ts?.toMillis?item.ts.toMillis():Date.now();
-          return`<div style="display:flex;gap:9px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--stat-border)">
-            ${avatarCircle(item.avatar||'🌱',34,'var(--acc18)','var(--acc6)')}
-            <div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text2);line-height:1.55"><strong style="color:var(--text1)">${htmlEsc(item.name||'Restorer')}</strong> ${description}</div><div style="font-size:9px;color:var(--text5);margin-top:3px">${timeAgo(eventMs)}</div></div>
-          </div>`;
-        }).join('')
+        ?commState.activity.map(buildActivityItem).join('')
         :`<div style="text-align:center;padding:24px 8px">
             <div style="font-size:30px;margin-bottom:10px;opacity:.6">⚡</div>
             <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px">No activity yet</div>
             <div style="font-size:11px;color:var(--text4);line-height:1.7">The feed starts with the first session.<br>Finish one and yours will be the latest entry here.</div>
           </div>`;
-    content=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">The latest 10 community milestones</div></div><button onclick="fetchCommunityActivity()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">${IC.refresh(13)} Refresh</button></div><div class="card" style="padding:2px 12px">${activityRows}</div>`;
+    content=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">What the community has been up to</div></div><button onclick="fetchCommunityActivity()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">${IC.refresh(13)} Refresh</button></div><div class="card" style="padding:4px 12px">${activityBody}</div>`;
   }
 
   else if(commTab==='members'){
