@@ -211,6 +211,16 @@ function timeAgoShort(ms){
   if(diff<604800000)return Math.floor(diff/86400000)+'d';
   return Math.floor(diff/604800000)+'w';
 }
+// Time-of-day greeting for the community top bar. Warmth without being
+// saccharine — "Still up" is for the late-night restorer opening the app
+// after 11pm, which is a genuinely common moment in this community.
+function timeOfDayGreeting(name){
+  const h=new Date().getHours();
+  if(h>=5&&h<12)return`Good morning, ${name}`;
+  if(h>=12&&h<17)return`Good afternoon, ${name}`;
+  if(h>=17&&h<23)return`Good evening, ${name}`;
+  return`Still up, ${name}`;
+}
 // Always returns YYYY-MM-DD in the user's LOCAL timezone — never UTC
 const localDateStr=(d)=>{const x=d||new Date();return`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;};
 const today=()=>localDateStr();
@@ -7038,7 +7048,10 @@ function renderCommunity(){
   const regularPosts=commState.posts.filter(p=>p.type!=='milestone');
   const unreadMessages=commState.conversations.filter(c=>(c.unreadBy||[]).includes(fbUID)).length;
   const memberCount=commState.users.length;
-  const topStreak=commState.users.reduce((max,u)=>Math.max(max,u.streak||0),0);
+  // Sum of every member's synced totalHours. Members who've opted out of
+  // sharing stats contribute 0 — their data isn't visible anywhere, so
+  // it shouldn't be summed here either.
+  const totalHoursRestored=commState.users.reduce((sum,u)=>sum+(u.totalHours||0),0);
 
   // ── First-time welcome banner ──
   // Shown once per user, dismissible, remembered in localStorage.
@@ -7072,7 +7085,7 @@ function renderCommunity(){
             ${running?`<div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
           </div>
           <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:13px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.communityDisplayName}</div>
+            <div style="font-weight:700;font-size:13px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${timeOfDayGreeting(char.communityDisplayName)}</div>
             <div style="font-size:10px;color:var(--text4);margin-top:1px">${LEVELS[char.ciLevel||0].ci} · ${running?'<span style="color:var(--green)">● Restoring now</span>':(char.communityVisible!==false?'● Visible':'○ Hidden')}</div>
           </div>
           <button onclick="showMessagesInbox()" style="position:relative;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0" title="Messages">💬${unreadMessages?`<span style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:#fff;border-radius:9px;min-width:15px;height:15px;font-size:8px;line-height:15px;font-weight:700">${unreadMessages}</span>`:''}</button>
@@ -7086,8 +7099,8 @@ function renderCommunity(){
           </div>
           <span style="color:var(--text6);opacity:.5">·</span>
           <div><span style="color:var(--text2);font-weight:700">${memberCount}</span> member${memberCount!==1?'s':''}</div>
-          ${topStreak>2?`<span style="color:var(--text6);opacity:.5">·</span>
-          <div><span style="color:#F59E0B;font-weight:700">${topStreak}🔥</span> top streak</div>`:''}
+          ${totalHoursRestored>0?`<span style="color:var(--text6);opacity:.5">·</span>
+          <div><span style="color:var(--accent);font-weight:700">${Number(totalHoursRestored).toLocaleString('en-US')}h</span> restored so far</div>`:''}
         </div>
       </div>`;
 
@@ -7255,9 +7268,26 @@ function renderCommunity(){
             <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px">No activity yet</div>
             <div style="font-size:11px;color:var(--text4);line-height:1.7">The feed starts with the first session.<br>Finish one and yours will be the latest entry here.</div>
           </div>`;
-    content=`<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">Sessions & milestones across the community</div></div><div class="card" style="padding:4px 12px">${activityBody}</div>`;
+    // Ambient subline derived from the feed's own data. Uses only entries
+    // already loaded — no new reads. Falls back gracefully when the feed is
+    // empty or the load is still in flight.
+    const activitySubline=(()=>{
+      if(commState.activityLoading)return'Loading…';
+      if(!commState.activity.length)return'No activity yet — be the first';
+      const nowMs=Date.now();
+      const recentCount=commState.activity.filter(item=>{
+        const ms=item.ts?.toMillis?item.ts.toMillis():0;
+        return ms>0&&(nowMs-ms)<3*60*60*1000;
+      }).length;
+      const hour=new Date().getHours();
+      if(recentCount>=4)return'An active day in the community';
+      if(hour<12&&recentCount===0)return'A quiet morning — be the first';
+      if(hour>=18&&recentCount>0)return'Winding down after a good day';
+      if(recentCount===0)return'Quiet today so far';
+      return'What the community has been up to';
+    })();
+    content=`<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">${activitySubline}</div></div><div class="card" style="padding:4px 12px">${activityBody}</div>`;
   }
-
   else if(commTab==='members'){
     const allMembers=commState.users;
     if(!allMembers.length){
@@ -7345,7 +7375,17 @@ function buildUserCard(u,now,isJoined,mode){
     }
     secondLine=`${u.method?`<span style="color:var(--text2)">${u.method}</span> · `:''}<span style="color:var(--green);font-weight:600">${elapsedStr}</span>`;
   } else if(mode==='dormant'){
-    secondLine=`<span style="color:var(--text5);font-style:italic">Community member</span>`;
+    if(u.lastSeen){
+      const ms=u.lastSeen.toMillis?u.lastSeen.toMillis():new Date(u.lastSeen).getTime();
+      const mo=new Date(ms).toLocaleDateString('en',{month:'long'});
+      secondLine=`<span style="color:var(--text5);font-style:italic">Last here in ${mo}</span>`;
+    } else if(u.joinedAt){
+      const ms=u.joinedAt.toMillis?u.joinedAt.toMillis():new Date(u.joinedAt).getTime();
+      const mo=new Date(ms).toLocaleDateString('en',{month:'long'});
+      secondLine=`<span style="color:var(--text5);font-style:italic">Joined ${mo}</span>`;
+    } else {
+      secondLine=`<span style="color:var(--text5);font-style:italic">Community member</span>`;
+    }
   } else {
     const timeStr=ms>0?timeAgo(ms):'—';
     secondLine=`<span style="color:var(--text4)">Active ${timeStr}</span>`;
