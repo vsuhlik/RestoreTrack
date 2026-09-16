@@ -7232,7 +7232,7 @@ function renderCommunity(){
         const method=htmlEsc(detail.method||'a method');
         description=detail.first
           ?`logged their <strong style="color:var(--text1)">first session</strong> 🌱`
-          :`finished <strong style="color:var(--text1)">${dur}</strong> with ${method}`;
+          :`finished <strong style="color:var(--text1)">${dur}</strong> with <strong style="color:var(--text1);font-weight:600">${method}</strong>`;
       } else if(type==='streak_milestone'){
         const days=Number(detail.days)||0;
         description=`hit a <strong style="color:#F59E0B">${days}-day streak</strong> 🔥`;
@@ -7255,7 +7255,7 @@ function renderCommunity(){
             <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px">No activity yet</div>
             <div style="font-size:11px;color:var(--text4);line-height:1.7">The feed starts with the first session.<br>Finish one and yours will be the latest entry here.</div>
           </div>`;
-    content=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">What the community has been up to</div></div><button onclick="fetchCommunityActivity()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">${IC.refresh(13)} Refresh</button></div><div class="card" style="padding:4px 12px">${activityBody}</div>`;
+    content=`<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:700;color:var(--text1)">Recent Activity</div><div style="font-size:10px;color:var(--text5);margin-top:2px">Sessions & milestones across the community</div></div><div class="card" style="padding:4px 12px">${activityBody}</div>`;
   }
 
   else if(commTab==='members'){
