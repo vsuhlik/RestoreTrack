@@ -6237,8 +6237,34 @@ const COMM_AVATARS=[
   '🌺','🌸','🌻','🎋','🏔️','⛰️','🧗','🥊','🧘','🌌',
   '🪐','🌠','🌋','🐆','🦂','⚜️','🧿','♟️','🪄','🗺️'
 ];
-function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)'){
-  return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2px solid ${border};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.52)}px;flex-shrink:0;line-height:1">${emoji||'🌱'}</div>`;
+function avatarCircle(emoji,size=38,border='var(--acc30)',bg='var(--acc12)',ring=null){
+  // ring: null | {color, label?}. When provided, draws a subtle outer glow
+  // in the ring color and (if label is set) a small corner badge. Colors
+  // come from theme variables so every theme renders natively — the caller
+  // passes 'var(--accent)', 'var(--green)', etc.
+  const ringShadow=ring?.color
+    ?`box-shadow:0 0 0 1.5px ${ring.color},0 0 8px ${ring.color};`
+    :'';
+  const badge=ring?.label
+    ?`<span style="position:absolute;top:-4px;right:-4px;font-size:${Math.max(9,Math.round(size*0.32))}px;line-height:1;background:var(--bg-card);border-radius:50%;width:${Math.round(size*0.42)}px;height:${Math.round(size*0.42)}px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.5);z-index:1;pointer-events:none">${ring.label}</span>`
+    :'';
+  return`<span style="position:relative;display:inline-flex;flex-shrink:0">${badge}<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2px solid ${border};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.52)}px;flex-shrink:0;line-height:1;${ringShadow}">${emoji||'🌱'}</div></span>`;
+}
+// Decides which ring (if any) an avatar should carry, based on the member's
+// current streak. Active-session state is already signaled by the green
+// border + corner dot at the call sites — no additional ring needed there.
+// Rarity tiers:
+//   - 14+ days AND holding the community's top streak → gold ring + crown
+//   - 30+ days → gold ring + fire
+//   - 7+ days → subtle gold halo, no badge
+function avatarRingFor(u){
+  if(!u)return null;
+  const streak=u.streak||0;
+  if(streak<7)return null;
+  const topStreak=commState.users.reduce((m,x)=>Math.max(m,x.streak||0),0);
+  if(streak>=14&&streak===topStreak)return{color:'var(--accent)',label:'👑'};
+  if(streak>=30)return{color:'var(--accent)',label:'🔥'};
+  return{color:'var(--acc45)',label:null};
 }
 const FB_CFG={apiKey:"AIzaSyBsJCNIQmiB_zYB1EqZZLk-_gITTX8m-q8",authDomain:"restoretrack-76aae.firebaseapp.com",projectId:"restoretrack-76aae",storageBucket:"restoretrack-76aae.firebasestorage.app",messagingSenderId:"592305053944",appId:"1:592305053944:web:9bc6c3894f034c2017db0d"};
 let db=null,fbAuth=null,fbUID=null,fbIsGoogle=false,fbUserEmail=null;
@@ -7392,7 +7418,7 @@ function buildUserCard(u,now,isJoined,mode){
   }
   return`<div onclick="showUserProfile('${u.uid}')" style="background:var(--bg-card);border:1px solid ${u.active?'var(--green-border)':'var(--card-border)'};border-radius:12px;padding:12px;margin-bottom:7px;display:flex;gap:10px;align-items:center;cursor:pointer;transition:border-color .2s">
     <div style="position:relative;flex-shrink:0">
-      ${avatarCircle(u.avatar||'🌱',38,u.active?'var(--green)':'var(--acc30)',u.active?'var(--green-bg)':'var(--acc12)')}
+      ${avatarCircle(u.avatar||'🌱',38,u.active?'var(--green)':'var(--acc30)',u.active?'var(--green-bg)':'var(--acc12)',avatarRingFor(u))}
       ${u.active?`<div style="position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg-card)"></div>`:''}
     </div>
     <div style="flex:1;min-width:0">
@@ -7608,11 +7634,18 @@ function showUserProfile(uid){
     <!-- Hero: centered avatar + name + status -->
     <div style="text-align:center;margin-bottom:16px">
       <div style="display:inline-block;position:relative;margin-bottom:10px">
-        ${avatarCircle(u.avatar||'🌱',64,u.active?'var(--green)':'var(--acc30)',u.active?'var(--green-bg)':'var(--acc12)')}
+        ${avatarCircle(u.avatar||'🌱',64,u.active?'var(--green)':'var(--acc30)',u.active?'var(--green-bg)':'var(--acc12)',avatarRingFor(u))}
         ${u.active?`<div style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:var(--green);border:2.5px solid var(--bg-sheet)"></div>`:''}
       </div>
       <div style="font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--text1);margin-bottom:4px">${u.name||'Restorer'}</div>
       <div style="font-size:11px;color:var(--text4)">${statusLine}</div>
+      ${(()=>{
+        const ring=avatarRingFor(u);
+        if(!ring||!ring.label)return '';
+        const caption=ring.label==='👑'?'Longest active streak in the community':ring.label==='🔥'?'30+ day streak':'';
+        if(!caption)return '';
+        return`<div style="margin-top:8px"><span style="display:inline-flex;align-items:center;gap:5px;background:var(--acc6);border:1px solid var(--acc30);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--accent);font-weight:600">${ring.label} ${caption}</span></div>`;
+      })()}
     </div>
 
     <!-- Action button: message only. Encourage was removed — see future Activity reactions. -->
