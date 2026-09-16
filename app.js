@@ -7587,6 +7587,15 @@ function showUserProfile(uid){
   // is opt-in. A wall of 44 badges reads as a spreadsheet, not achievements.
   const userAchs=u.achievements||[];
   const earnedBadges=ACHS.filter(a=>userAchs.includes(a.id));
+  // Hero-tier badges (mid-to-high achievements, defined by HERO_BADGE_IDS)
+  // float to the top of the list, so tapping in shows the person's strongest
+  // achievements first. Sort is stable in modern browsers, so the original
+  // ACHS order is preserved within each tier.
+  const sortedBadges=[...earnedBadges].sort((a,b)=>{
+    const ah=HERO_BADGE_IDS.has(a.id)?0:1;
+    const bh=HERO_BADGE_IDS.has(b.id)?0:1;
+    return ah-bh;
+  });
   const milestonesHtml=earnedBadges.length?`
     <div style="margin-bottom:14px">
       <button onclick="toggleProfileBadges()" style="width:100%;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--font-body);text-align:left">
@@ -7599,7 +7608,13 @@ function showUserProfile(uid){
       </button>
       <div id="profile-badges-list" style="display:none;margin-top:8px;padding:10px 12px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px">
         <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${earnedBadges.map(a=>`<span title="${a.title}" style="background:var(--acc6);border:1px solid var(--acc18);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);display:inline-flex;align-items:center;gap:4px">${a.icon} ${a.title}</span>`).join('')}
+          ${sortedBadges.map(a=>{
+            const isHero=HERO_BADGE_IDS.has(a.id);
+            const pillStyle=isHero
+              ?`background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:5px 12px;font-size:11.5px;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;gap:4px;box-shadow:0 0 8px var(--acc12)`
+              :`background:var(--acc6);border:1px solid var(--acc18);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);opacity:.8;display:inline-flex;align-items:center;gap:4px`;
+            return`<span title="${a.title}" style="${pillStyle}">${a.icon} ${a.title}</span>`;
+          }).join('')}
         </div>
       </div>
     </div>`:'';
