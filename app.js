@@ -774,7 +774,7 @@ function startInterval(){
   timerInterval=setInterval(()=>{
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
-    const el=document.getElementById('mc-run-time');if(el)el.textContent=fmtLive(timerSecs);
+    const elHdr=document.getElementById('hdr-session-time');if(elHdr)elHdr.textContent=fmtLive(timerSecs);
     const el3=document.getElementById('mc-run-time-3');if(el3)el3.textContent=fmtLive(timerSecs);
     // Every 60 seconds — refresh live stats elements without full re-render
     liveTickCount++;
@@ -2145,6 +2145,7 @@ function render(){
   if(showProfileScreen){renderProfileScreen();return;}
   const ci=char.ciLevel||0;
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
+  const isPaused=!!activeTimer&&!activeTimer.startedAt;
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
@@ -2154,7 +2155,12 @@ function render(){
           <span style="font-size:7.5px;color:var(--text6);font-family:var(--font-body);letter-spacing:.5px">v2.6.0</span>
         </div>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
-        <div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Progress">${LEVELS[ci].ci}</div>
+        ${isRunning
+          ? `<div class="ci-pill hdr-session-pill" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Go to session"><span class="hdr-session-dot"></span><span id="hdr-session-time">${fmtLive(timerSecs)}</span></div>`
+          : isPaused
+            ? `<div class="ci-pill hdr-session-pill hdr-session-pill--paused" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Session paused"><span style="font-size:10px;line-height:1">⏸</span><span id="hdr-session-time">${fmtLive(timerSecs)}</span></div>`
+            : `<div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Progress">${LEVELS[ci].ci}</div>`
+        }
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
         <button id="coach-btn" title="Ask Coach" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;transition:border-color .2s">🧠</button>
@@ -2166,15 +2172,6 @@ function render(){
         </button>
       </div>
     </div>
-    ${isRunning?`<div class="session-strip" onclick="tab='today';render()">
-      <div class="live-dot" style="flex-shrink:0"></div>
-      <span style="font-size:11px;font-weight:600;color:var(--green);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${activeTimer.method||'Session'}</span>
-      <span style="font-size:12px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;flex-shrink:0;letter-spacing:.3px" id="mc-run-time">${fmtLive(timerSecs)}</span>
-      <button id="stop-strip-btn" onclick="event.stopPropagation();stopSession()"
-        style="background:rgba(34,168,90,.15);border:1px solid var(--green-border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--green)">
-        ${IC.stop(13)}
-      </button>
-    </div>`:''}
     <div class="content" id="content"></div>
     <div class="nav">${renderNav()}</div>
   </div>`;
@@ -8545,6 +8542,41 @@ function ensureAnimations(){
       0%, 100% { box-shadow: 0 0 0 0 transparent; }
       50%      { box-shadow: 0 0 14px 2px var(--acc30); }
     }
+
+    /* Header session pill — replaces the CI pill while a session runs or is
+       paused. Uses .ci-pill as the size/shape base, overrides only colors
+       and the internal layout. One slot, three states. */
+    .hdr-session-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green-bg);
+      border-color: var(--green-border);
+      color: var(--green);
+      padding: 2px 9px;
+      font-variant-numeric: tabular-nums;
+    }
+    .hdr-session-pill--paused {
+      background: var(--acc12);
+      border-color: var(--acc30);
+      color: var(--accent);
+    }
+    .hdr-session-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      animation: hdrDotPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hdrDotPulse {
+      0%, 100% { box-shadow: 0 0 3px rgba(34,168,90,.4); }
+      50%      { box-shadow: 0 0 8px rgba(34,168,90,.85); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hdr-session-dot { animation: none; }
+    }
+
     .nav { overflow: visible !important; }
   `;
   document.head.appendChild(style);
