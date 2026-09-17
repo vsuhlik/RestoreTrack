@@ -1713,6 +1713,98 @@ function _isIOS(){
   return navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1;
 }
 
+// Detects whether the app is running installed (standalone) vs in a browser
+// tab. iOS exposes a non-standard `navigator.standalone`; every other platform
+// uses the display-mode media query. We check all three display modes because
+// Android Chrome and desktop PWAs can report `minimal-ui` or `fullscreen`
+// depending on how the manifest is configured.
+function isStandalone(){
+  if(navigator.standalone===true)return true;
+  if(window.matchMedia){
+    if(window.matchMedia('(display-mode: standalone)').matches)return true;
+    if(window.matchMedia('(display-mode: fullscreen)').matches)return true;
+    if(window.matchMedia('(display-mode: minimal-ui)').matches)return true;
+  }
+  return false;
+}
+
+// Platform-aware install instructions. The steps differ meaningfully across
+// iOS / Android / desktop, and the iOS in-app-browser trap is the single most
+// common failure path for users arriving from Reddit or Instagram — so it
+// gets its own callout rather than being buried in a numbered step.
+function mountInstallSheet(){
+  const ex=document.getElementById('install-ov');if(ex)ex.remove();
+  const ios=_isIOS();
+  const android=/Android/.test(navigator.userAgent);
+
+  // Platform-aware steps. Three quirks that trip people up, all addressed here:
+  //  - iOS Safari can hide the Share button behind the ••• menu (Compact layout)
+  //  - "Add to Home Screen" can be missing from the share sheet (needs Edit Actions)
+  //  - Android Chrome labels the menu item differently across versions
+  const steps=ios?[
+    {
+      t:'Tap the Share button',
+      d:'In Safari, it\u2019s the square with an up-arrow. If you don\u2019t see it, tap the ••• menu first — your Safari layout may hide it behind there.'
+    },
+    {
+      t:'Scroll and tap \u201cAdd to Home Screen\u201d',
+      d:'It\u2019s in the list of options. If you don\u2019t see it, scroll to the very bottom, tap \u201cEdit Actions\u201d, then tap \u201cAdd to Home Screen\u201d.'
+    },
+    {
+      t:'Tap \u201cAdd\u201d',
+      d:'Make sure \u201cOpen as Web App\u201d is turned on (it should be by default). RestoreTrack appears on your Home Screen.'
+    }
+  ]:android?[
+    {
+      t:'Tap the ⋮ menu',
+      d:'Top-right corner of Chrome.'
+    },
+    {
+      t:'Tap \u201cInstall app\u201d',
+      d:'The exact wording varies: \u201cInstall app\u201d, \u201cAdd to Home screen\u201d, or \u201cInstall and create shortcut\u201d. All do the same thing.'
+    },
+    {
+      t:'Confirm',
+      d:'RestoreTrack appears on your Home Screen.'
+    }
+  ]:[
+    {
+      t:'Look for the install icon',
+      d:'A small ⊕ or monitor icon in your browser\u2019s address bar.'
+    },
+    {
+      t:'Click it and confirm',
+      d:'Or open the browser menu and choose \u201cInstall RestoreTrack\u201d.'
+    }
+  ];
+
+  const el=document.createElement('div');el.className='overlay';el.id='install-ov';
+  el.innerHTML=`<div class="sheet" style="padding-bottom:28px">
+    <div class="sheet-handle"></div>
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="font-size:40px;margin-bottom:10px;opacity:.85">📱</div>
+      <div style="font-family:var(--font-display);font-size:16px;color:var(--accent);margin-bottom:6px">Install RestoreTrack</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.65;max-width:300px;margin:0 auto">Opens from your Home Screen like a native app — no address bar, works offline.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      ${steps.map((s,i)=>`
+        <div style="display:flex;gap:12px;align-items:flex-start;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--acc12);border:1px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:3px">${s.t}</div>
+            <div style="font-size:11px;color:var(--text4);line-height:1.55">${s.d}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    ${(ios||android)?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--text3);line-height:1.65">
+      💡 <strong style="color:var(--text2)">Coming from Reddit, Instagram, or another app?</strong> You may be in an in-app browser. Tap the menu in the corner and choose <strong style="color:var(--text2)">\u201cOpen in browser\u201d</strong> or <strong style="color:var(--text2)">\u201cOpen in Safari\u201d</strong> first — the install option won\u2019t appear otherwise.
+    </div>`:''}
+    <button class="btn-ghost" onclick="document.getElementById('install-ov').remove()" style="width:100%">Got it</button>
+  </div>`;
+  document.getElementById('root').appendChild(el);
+  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
+}
+
 function exportPhotoSingle(id){
   const p=photos.find(x=>x.id===id);
   if(!p)return;
@@ -2412,6 +2504,12 @@ function renderToday(){
   ${timerBlock}
   ${quickLogBtn}
   ${!activeTimer?`<button id="start-session-btn" class="btn-gold" style="margin-bottom:7px">${IC.plus(14)} Start Session</button>`:''}
+  ${(char.sessions>=1&&!isStandalone()&&!localStorage.getItem('rst-install-hint-seen'))?`<div style="background:var(--acc6);border:1px solid var(--acc30);border-radius:10px;padding:11px 12px;margin-bottom:7px;display:flex;gap:10px;align-items:center">
+    <span style="font-size:17px;flex-shrink:0">📱</span>
+    <div style="flex:1;min-width:0;font-size:11px;color:var(--text3);line-height:1.5">Install RestoreTrack to your Home Screen for the full app experience.</div>
+    <button onclick="localStorage.setItem('rst-install-hint-seen','1');mountInstallSheet()" style="background:var(--acc12);border:1px solid var(--acc30);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--accent);font-weight:600;cursor:pointer;font-family:var(--font-body);flex-shrink:0;white-space:nowrap">Show me</button>
+    <button onclick="localStorage.setItem('rst-install-hint-seen','1');render()" title="Dismiss" style="background:none;border:none;color:var(--text5);font-size:14px;cursor:pointer;font-family:var(--font-body);padding:0 2px;line-height:1;flex-shrink:0">✕</button>
+  </div>`:''}
   ${lastSessHtml}
   ${tSess.length?`
   <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
@@ -5146,7 +5244,7 @@ function renderProfileScreen(){
     <!-- Hero card -->
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border-gold);border-radius:14px;padding:18px;margin-bottom:4px">
       <div style="display:flex;align-items:center;gap:14px">
-        <div class="pavatar" style="width:52px;height:52px;font-size:20px;flex-shrink:0">${char.name.charAt(0).toUpperCase()}</div>
+        ${identityAvatar(char.name,52)}
         <div style="flex:1;min-width:0">
           <div style="font-weight:700;font-size:16px;color:var(--text1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${char.name}</div>
           <div style="font-size:11px;color:var(--text4);margin-top:3px">${LEVELS[char.ciLevel||0].ci} · ${char.sessions} session${char.sessions!==1?'s':''}</div>
@@ -5270,6 +5368,18 @@ function renderProfileScreen(){
       Your data lives on this device. Nothing is uploaded unless you set up Cloud Backup.
     </div>
 
+    ${!isStandalone()?`${_secLabel('Get the App')}
+    <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px">
+      <button id="install-app-btn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:none;border:none;cursor:pointer;text-align:left;font-family:var(--font-body)">
+        <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">📱</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text1)">Install as App</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px">Home Screen icon · full-screen · works offline</div>
+        </div>
+        <span style="font-size:14px;color:var(--text5);flex-shrink:0">›</span>
+      </button>
+    </div>`:''}
+
     ${_secLabel('Support')}
     <div style="width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:14px">
       <button id="feedback-btn" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--stat-border);cursor:pointer;text-align:left;font-family:var(--font-body)">
@@ -5295,6 +5405,7 @@ function renderProfileScreen(){
     </div>
   </div>`;
 
+  document.getElementById('install-app-btn')?.addEventListener('click',mountInstallSheet);
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
     const version='v2.6.0';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
