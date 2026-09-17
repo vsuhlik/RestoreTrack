@@ -152,6 +152,16 @@ let todayOptionsExpanded=false;
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 const fmtHMS=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`};
 const fmtLive=s=>{if(s<86400)return fmtHMS(s);const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60);return`${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;};
+// Header-only time format — compressed for the tight session pill.
+// Seconds only matter right after a session starts; above an hour, hours and
+// minutes read cleaner than a ticking clock. Days appear when they matter.
+const fmtLiveCompact=s=>{
+  if(s<60)return s+'s';
+  if(s<3600){const m=Math.floor(s/60),sc=s%60;return`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;}
+  const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60);
+  if(d>0)return`${d}d ${h}h ${m}m`;
+  return`${h}h ${m}m`;
+};
 const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;return r?`${h}h ${r}m`:`${h}h`};
 const fmtDur=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;if(h<24)return r?`${h}h ${r}m`:`${h}h`;const d=Math.floor(h/24),rh=h%24;if(rh===0)return r?`${d}d ${r}m`:`${d}d`;return r?`${d}d ${rh}h ${r}m`:`${d}d ${rh}h`;};
 const fmtDate=s=>{if(!s)return'';const p=s.split('-');return`${p[1]}/${p[2]}/${p[0].slice(2)}`;};
@@ -170,6 +180,15 @@ function fmtWallStart(ms){
     :`Started ${tStr} · ${new Date(dStr+'T12:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}`;
 }
 const htmlEsc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// Header identity mark — always-present, always-personal. Community members
+// who've picked an avatar get their emoji; everyone else gets their initial.
+// One code path, two inputs, never a generic person icon.
+function identityAvatar(name,size=26){
+  const emoji=char.communityEnabled?(char.communityAvatar||'🌱'):null;
+  const inner=emoji||(name||'R').charAt(0).toUpperCase();
+  const isEmoji=!!emoji;
+  return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--acc12);border:1px solid var(--acc30);display:flex;align-items:center;justify-content:center;font-size:${isEmoji?Math.round(size*0.55):Math.round(size*0.5)}px;flex-shrink:0;line-height:1;font-weight:${isEmoji?400:700};color:var(--accent);font-family:var(--font-display)">${inner}</div>`;
+}
 
 // ── LUCIDE ICONS (inline SVG — consistent, theme-colored, crisp at any size) ──
 const IC={
@@ -774,7 +793,7 @@ function startInterval(){
   timerInterval=setInterval(()=>{
     if(!activeTimer)return;
     timerSecs=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
-    const elHdr=document.getElementById('hdr-session-time');if(elHdr)elHdr.textContent=fmtLive(timerSecs);
+    const elHdr=document.getElementById('hdr-session-time');if(elHdr)elHdr.textContent=fmtLiveCompact(timerSecs);
     const el3=document.getElementById('mc-run-time-3');if(el3)el3.textContent=fmtLive(timerSecs);
     // Every 60 seconds — refresh live stats elements without full re-render
     liveTickCount++;
@@ -2163,26 +2182,22 @@ function render(){
   const isPaused=!!activeTimer&&!activeTimer.startedAt;
   document.getElementById('root').innerHTML=`<div class="app">
     <div class="hdr">
-      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
-        <div style="display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;line-height:1;gap:1px">
-          <span id="v-tap" onclick="adminTap()"
-            style="font-family:var(--font-display);font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1">RESTORETRACK</span>
-          <span style="font-size:7.5px;color:var(--text6);font-family:var(--font-body);letter-spacing:.5px">v2.6.0</span>
-        </div>
+      <div style="display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0">
+        <span id="v-tap" onclick="adminTap()"
+          style="font-family:var(--font-display);font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:2px;cursor:default;user-select:none;line-height:1;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">RESTORETRACK</span>
         <div style="width:1px;height:20px;background:var(--stat-border);flex-shrink:0"></div>
         ${isRunning
-          ? `<div class="ci-pill hdr-session-pill" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Go to session"><span class="hdr-session-dot"></span><span id="hdr-session-time">${fmtLive(timerSecs)}</span></div>`
+          ? `<div class="ci-pill hdr-session-pill" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Go to session"><span class="hdr-session-dot"></span><span id="hdr-session-time">${fmtLiveCompact(timerSecs)}</span></div>`
           : isPaused
-            ? `<div class="ci-pill hdr-session-pill hdr-session-pill--paused" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Session paused"><span style="font-size:10px;line-height:1">⏸</span><span id="hdr-session-time">${fmtLive(timerSecs)}</span></div>`
+            ? `<div class="ci-pill hdr-session-pill hdr-session-pill--paused" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Session paused"><span style="font-size:10px;line-height:1">⏸</span><span id="hdr-session-time">${fmtLiveCompact(timerSecs)}</span></div>`
             : `<div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Progress">${LEVELS[ci].ci}</div>`
         }
       </div>
-      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-        <button id="coach-btn" title="Ask Coach" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;transition:border-color .2s">🧠</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:1;min-width:0;justify-content:flex-end">
         <button class="profile-btn" id="pbtn"
-          style="flex-shrink:0;display:flex;align-items:center;gap:5px;max-width:150px;overflow:hidden">
-          ${IC.user(13)}
-          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${char.name}</span>
+          style="flex-shrink:1;min-width:80px;display:flex;align-items:center;gap:6px;padding:2px 10px 2px 3px;overflow:hidden">
+          ${identityAvatar(char.name,26)}
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;text-align:left">${char.name}</span>
           <span style="flex-shrink:0">▾</span>
         </button>
       </div>
@@ -2191,7 +2206,6 @@ function render(){
     <div class="nav">${renderNav()}</div>
   </div>`;
     document.getElementById('pbtn').onclick=()=>{showProfileScreen=true;render();};
-  document.getElementById('coach-btn').onclick=()=>showCoachSheet();
   document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
   const c=document.getElementById('content');
   if(tab==='today')c.innerHTML=renderToday();
@@ -2308,7 +2322,7 @@ function renderToday(){
     <button id="adjust-time-btn" class="btn-ghost" style="width:100%;margin-top:7px;padding:9px;font-size:12px">⏱ Adjust Time</button>
   </div>`:isPaused?`<div class="card sess-paused-card" style="border-color:var(--acc30);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span style="font-size:16px">⏸</span>
+      <span style="color:var(--accent);display:inline-flex;align-items:center">${IC.pause(14)}</span>
       <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--accent)">Session Paused</div>
       <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method} · ${fmtLive(timerSecs)}</div></div>
     </div>
@@ -5052,10 +5066,10 @@ function obStepReady(){
       </div>
 
       <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px">
-        <span style="font-size:18px;flex-shrink:0;line-height:1">🧠</span>
+        <span style="font-size:18px;flex-shrink:0;line-height:1">💬</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:3px">A Coach is built in</div>
-          <div style="font-size:11px;color:var(--text4);line-height:1.6">Tap the 🧠 icon anywhere to ask about methods, timelines, plateaus, or motivation — any time.</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6">Tap <strong style="color:var(--text2)">Ask Coach</strong> on the Home tab to ask about methods, timelines, plateaus, or motivation — any time.</div>
         </div>
       </div>
 
@@ -8559,6 +8573,42 @@ function ensureAnimations(){
       0%, 100% { box-shadow: 0 0 0 0 transparent; }
       50%      { box-shadow: 0 0 14px 2px var(--acc30); }
     }
+
+    /* Header session pill — replaces the CI pill while a session runs or is
+       paused. Uses .ci-pill as the size/shape base, overrides only colors
+       and the internal layout. One slot, three states. */
+    .hdr-session-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--green-bg);
+      border-color: var(--green-border);
+      color: var(--green);
+      padding: 2px 9px;
+      font-variant-numeric: tabular-nums;
+    }
+    .hdr-session-pill--paused {
+      background: var(--acc12);
+      border-color: var(--acc30);
+      color: var(--accent);
+    }
+    .hdr-session-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      display: inline-block;
+      animation: hdrDotPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes hdrDotPulse {
+      0%, 100% { box-shadow: 0 0 3px rgba(34,168,90,.4); }
+      50%      { box-shadow: 0 0 8px rgba(34,168,90,.85); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hdr-session-dot { animation: none; }
+    }
+
     .nav { overflow: visible !important; }
   `;
   document.head.appendChild(style);
