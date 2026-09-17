@@ -853,6 +853,21 @@ function stopSession(){
   }
   showStopSheet=true;render();
 }
+function pauseSession(){
+  if(!activeTimer||!activeTimer.startedAt)return;
+  stopInterval();
+  const elapsed=Math.floor((Date.now()-activeTimer.startedAt)/1000)+(activeTimer.elapsedOnPause||0);
+  timerSecs=elapsed;
+  // Mark the pause start. resumeSession() closes the interval when the user
+  // resumes, so paused time is subtracted from the total exactly once.
+  activeTimer={...activeTimer,startedAt:null,elapsedOnPause:elapsed,pausedAt:Date.now()};
+  saveTimer(activeTimer);
+  // Single short pulse — deliberately different from Stop's double-pulse, so
+  // the haptic alone tells you which one you hit without looking at the phone.
+  if(navigator.vibrate)navigator.vibrate(30);
+  showToast('⏸ Session paused');
+  render();
+}
 function resumeSession(){
   if(!activeTimer)return;
   const now=Date.now();
@@ -2287,9 +2302,10 @@ function renderToday(){
       <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--green)" id="mc-run-time-3">${fmtLive(timerSecs)}</div>
     </div>
     <div style="display:flex;gap:7px">
-      <button id="adjust-time-btn" class="btn-ghost" style="flex:0 0 auto;padding:10px 14px;font-size:12px;white-space:nowrap">⏱ Adjust</button>
-      <button id="stop-btn" class="btn-red" style="flex:1;margin:0;padding:10px;font-size:13px">${IC.stop(14)} Stop Session</button>
+      <button id="pause-btn" class="btn-outline" style="margin:0;padding:10px;font-size:13px;flex:1;display:flex;align-items:center;justify-content:center;gap:5px">${IC.pause(14)} Pause</button>
+      <button id="stop-btn" style="margin:0;padding:10px;font-size:13px;flex:1;background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.3);border-radius:10px;color:#c0504d;font-weight:600;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:5px">${IC.stop(14)} Stop</button>
     </div>
+    <button id="adjust-time-btn" class="btn-ghost" style="width:100%;margin-top:7px;padding:9px;font-size:12px">⏱ Adjust Time</button>
   </div>`:isPaused?`<div class="card sess-paused-card" style="border-color:var(--acc30);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span style="font-size:16px">⏸</span>
@@ -2297,8 +2313,8 @@ function renderToday(){
       <div style="font-size:10px;color:var(--text4);margin-top:1px">${activeTimer.method} · ${fmtLive(timerSecs)}</div></div>
     </div>
     <div style="display:flex;gap:7px">
-      <button id="resume-btn" class="btn-green" style="margin:0;padding:10px;font-size:13px;flex:1">${IC.play(14)} Resume</button>
-      <button id="stop-btn" class="btn-red" style="margin:0;padding:10px;font-size:13px;flex:1">${IC.stop(14)} Stop</button>
+      <button id="resume-btn" class="btn-green" style="margin:0;padding:10px;font-size:13px;flex:1;display:flex;align-items:center;justify-content:center;gap:5px">${IC.play(14)} Resume</button>
+      <button id="stop-btn" style="margin:0;padding:10px;font-size:13px;flex:1;background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.3);border-radius:10px;color:#c0504d;font-weight:600;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:5px">${IC.stop(14)} Stop</button>
     </div>
     <button id="adjust-time-btn" class="btn-ghost" style="width:100%;margin-top:7px;padding:9px;font-size:12px">⏱ Adjust Time</button>
   </div>`:'';
@@ -6157,6 +6173,7 @@ function attachEvents(){
   }));
   document.getElementById('start-session-btn')?.addEventListener('click',()=>{window._sheetShowAll=false;showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
   document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;render();});
+  document.getElementById('pause-btn')?.addEventListener('click',pauseSession);
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
   document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
   document.getElementById('adjust-time-btn')?.addEventListener('click',()=>mountAdjustTimeSheet());
@@ -8542,41 +8559,6 @@ function ensureAnimations(){
       0%, 100% { box-shadow: 0 0 0 0 transparent; }
       50%      { box-shadow: 0 0 14px 2px var(--acc30); }
     }
-
-    /* Header session pill — replaces the CI pill while a session runs or is
-       paused. Uses .ci-pill as the size/shape base, overrides only colors
-       and the internal layout. One slot, three states. */
-    .hdr-session-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--green-bg);
-      border-color: var(--green-border);
-      color: var(--green);
-      padding: 2px 9px;
-      font-variant-numeric: tabular-nums;
-    }
-    .hdr-session-pill--paused {
-      background: var(--acc12);
-      border-color: var(--acc30);
-      color: var(--accent);
-    }
-    .hdr-session-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--green);
-      flex-shrink: 0;
-      animation: hdrDotPulse 2.4s ease-in-out infinite;
-    }
-    @keyframes hdrDotPulse {
-      0%, 100% { box-shadow: 0 0 3px rgba(34,168,90,.4); }
-      50%      { box-shadow: 0 0 8px rgba(34,168,90,.85); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .hdr-session-dot { animation: none; }
-    }
-
     .nav { overflow: visible !important; }
   `;
   document.head.appendChild(style);
