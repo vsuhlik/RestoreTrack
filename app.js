@@ -1352,6 +1352,7 @@ function mountStorageSheet(){
   const totalKB=photosTotalKB(photos);
   const fmtKB=kb=>kb>=1024?`${(kb/1024).toFixed(1)} MB`:`${kb} KB`;
   const currentQ=char.photoQuality||'balanced';
+  const privacy=photoPrivacyMessage();
   const qOption=(id,label,desc)=>`<div onclick="setPhotoQuality('${id}')" style="display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;border-bottom:1px solid var(--stat-border);${currentQ===id?'background:var(--acc6);':''}">
     <div style="width:18px;height:18px;border-radius:50%;border:2px solid ${currentQ===id?'var(--accent)':'var(--stat-border)'};flex-shrink:0;display:flex;align-items:center;justify-content:center">${currentQ===id?'<span style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></span>':''}</div>
     <div style="flex:1;min-width:0">
@@ -1366,6 +1367,10 @@ function mountStorageSheet(){
     <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center">
       <div style="font-size:24px;font-weight:700;color:var(--accent);line-height:1">${fmtKB(totalKB)}</div>
       <div style="font-size:11px;color:var(--text4);margin-top:4px">${photos.length} photo${photos.length!==1?'s':''} · stored in IndexedDB</div>
+    </div>
+
+    <div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:var(--text3);line-height:1.65">
+      ${privacy.icon} <strong style="color:var(--text2)">${privacy.strong}</strong> ${privacy.rest}
     </div>
 
     <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Compression Quality</div>
@@ -2856,11 +2861,10 @@ function renderPhotos(){
 
   const pinned=sorted.filter(p=>p.pinned);
 
-  // ── Top bar (storage + manage) ──
-  const topBar=photos.length?`<div style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:12px;padding:11px 14px;margin-bottom:9px;display:flex;align-items:center;gap:10px">
-    <span style="font-size:18px;flex-shrink:0">📦</span>
-    <div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text1)">${photos.length} photo${photos.length!==1?'s':''} · ${fmtKB(totalKB)}</div>
-    <button onclick="mountStorageSheet()" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body);flex-shrink:0">Manage</button>
+  // ── Toolbar row (count · size · Manage as a quiet text link) ──
+  const topBar=photos.length?`<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;padding:0 2px">
+    <div style="font-size:11px;color:var(--text4)">${photos.length} photo${photos.length!==1?'s':''} · ${fmtKB(totalKB)}</div>
+    <button onclick="mountStorageSheet()" style="background:none;border:none;padding:0;font-size:11px;color:var(--accent);cursor:pointer;font-family:var(--font-body);text-decoration:underline;text-underline-offset:3px;flex-shrink:0">Manage</button>
   </div>`:'';
 
   // ── Privacy disclaimer (dynamic) ──
@@ -2946,10 +2950,9 @@ function renderPhotos(){
     </div>`;
   }
 
+  // Nudge (if it triggers) lives as a quiet subline in the Timeline header
+  // instead of a dedicated card. Same signal, no card-height cost.
   const nudgeDays=photos.length?Math.round((Date.now()-new Date(sorted[0].date+'T12:00:00'))/86400000):-1;
-  const nudge=nudgeDays>=30?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--text2);line-height:1.6">
-    📅 It's been <strong>${nudgeDays} days</strong> since your last photo. A new one would track real change.
-  </div>`:'';
 
   const compareBtn=photos.length>=2
     ?`<button class="btn-ghost" id="open-compare-btn" style="width:100%;margin-bottom:8px;font-size:12px">⟷ Compare Two Photos</button>`
@@ -2966,6 +2969,14 @@ function renderPhotos(){
       box-shadow:${_photoViewMode==='ci'?'0 1px 4px rgba(0,0,0,.2)':'none'}">By CI Level</button>
   </div>`;
 
+  // The Timeline subline is one thing at a time. Priority: the nudge (if it
+  // triggers — it's time-sensitive), then select-mode instruction, then the
+  // long-press hint as the calm default.
+  const timelineSubline=nudgeDays>=30
+    ? `<span style="font-size:9px;color:var(--accent);font-weight:600;text-transform:none;letter-spacing:0">Last photo ${nudgeDays}d ago</span>`
+    : _photoSelectMode
+      ? `<span style="font-size:9px;color:var(--accent);font-weight:600;text-transform:none;letter-spacing:0">Tap photos to select</span>`
+      : `<span style="font-size:9px;color:var(--text5);font-weight:400;text-transform:none;letter-spacing:0">Long-press a photo to select multiple</span>`;
   const timelineSection=_photoViewMode==='ci'
     ?`<div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
         <span>Filmstrip</span>
@@ -2973,13 +2984,11 @@ function renderPhotos(){
       </div>${renderCIFilmstrip()}`
     :`<div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
         <span>Timeline</span>
-        ${_photoSelectMode?`<span style="font-size:9px;color:var(--accent);font-weight:600;text-transform:none;letter-spacing:0">Tap photos to select</span>`:`<span style="font-size:9px;color:var(--text5);font-weight:400;text-transform:none;letter-spacing:0">Long-press a photo to select multiple</span>`}
+        ${timelineSubline}
       </div>${monthSections}`;
 
   return`
-  ${disclaimer}
   ${topBar}
-  ${nudge}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
     <button class="btn-gold" id="open-photo-guide-btn">📷 Take Photo</button>
     <button class="btn-ghost" id="open-photo-library-btn" style="font-size:13px">🖼 Choose Existing</button>
