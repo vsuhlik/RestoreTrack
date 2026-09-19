@@ -838,8 +838,9 @@ function beginSession(){
   // Guard: if a session is already running or paused, don't silently overwrite it
   if(activeTimer&&(activeTimer.startedAt||activeTimer.elapsedOnPause>0)){
     showToast('⚠ A session is already in progress');
-    showSessionSheet=false;render();return;
+    showSessionSheet=false;window._sheetBackdate=null;render();return;
   }
+  window._sheetBackdate=null;
   activeTimer={startedAt:Date.now(),wallStart:Date.now(),method:sheetMethod,cat:sheetCat,notes:sheetNotes,elapsedOnPause:0,pauseIntervals:[],pausedAt:null};
   timerSecs=0;saveTimer(activeTimer);startInterval();showSessionSheet=false;
   if(navigator.vibrate)navigator.vibrate(60);
@@ -904,13 +905,19 @@ function commitSession(notes){
   const method=activeTimer?activeTimer.method:sheetMethod;
   const catId=activeTimer?activeTimer.cat:sheetCat;
   const n=notes||sheetNotes||'';
+  // The end time defaults to "now", but stopSession() sets activeTimer.pausedAt
+  // to the stop moment, and the Stop sheet's end-time picker can move it
+  // earlier. Using pausedAt as the authoritative end lets a bedtime-forgot-to-
+  // stop session save with the correct (shorter) duration without any special
+  // casing elsewhere.
+  const endMs=(activeTimer&&activeTimer.pausedAt)?activeTimer.pausedAt:Date.now();
   const completedMins=activeTimer&&activeTimer.wallStart
-    ?Math.max(1,Math.round((Date.now()-activeTimer.wallStart)/60000))
+    ?Math.max(1,Math.round((endMs-activeTimer.wallStart)/60000))
     :Math.max(1,Math.round(timerSecs/60));
   // If we have a real start timestamp, split across days accurately
   // wallStart survives stopSession() which nulls startedAt
   if(activeTimer&&activeTimer.wallStart&&!activeTimer._forceSave){
-    awardMultiDay(method,catId,activeTimer.wallStart,Date.now(),n,timerSecs,activeTimer);
+    awardMultiDay(method,catId,activeTimer.wallStart,endMs,n,timerSecs,activeTimer);
   } else {
     const finalMins=Math.max(1,Math.round(timerSecs/60));
     awardSession(method,catId,finalMins,n);
@@ -5393,7 +5400,7 @@ function renderProfileScreen(){
       <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
         <span style="font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1">ℹ</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:600;color:var(--text2)">RestoreTrack v2.6.0</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2)">RestoreTrack v2.6.1</div>
           <div style="font-size:10px;color:var(--text5);margin-top:2px">Personal tracker · Not medical advice</div>
         </div>
       </div>
@@ -5407,7 +5414,7 @@ function renderProfileScreen(){
 
   document.getElementById('install-app-btn')?.addEventListener('click',mountInstallSheet);
   document.getElementById('feedback-btn')?.addEventListener('click',()=>{
-    const version='v2.6.0';
+    const version='v2.6.1';
     const subject=encodeURIComponent(`RestoreTrack ${version} Feedback`);
     const body=encodeURIComponent(`Hi,\n\nI'm using RestoreTrack ${version} and wanted to share:\n\n[Write your feedback, bug report, or suggestion here]\n\n---\nApp info: ${version} · CI-${char.ciLevel||0} · ${char.sessions} sessions`);
     window.location.href=`mailto:restoretrack@gmail.com?subject=${subject}&body=${body}`;
@@ -5480,7 +5487,7 @@ async function cloudBackupSave() {
       logs: logsData,
       pid: currentPid,
       backedUpAt: firebase.firestore.FieldValue.serverTimestamp(),
-      appVersion: 'v2.6.0'
+      appVersion: 'v2.6.1'
     });
 
     // 2. Save photos to subcollection (one doc per photo)
@@ -6046,10 +6053,25 @@ function mountSheet(){
       </label>
       <div id="manual-duration-preview" style="text-align:center;font-size:13px;color:var(--text3);min-height:20px;margin-top:10px">${calcManualPreview()}</div>
     </div>`:''}
+    ${isTimer?`<div style="text-align:center;margin-top:8px">
+      <button id="s-backdate-toggle" style="background:none;border:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:var(--font-body);padding:6px 8px;text-decoration:underline;text-underline-offset:3px;transition:color .15s">
+        ${window._sheetBackdate?'Hide start time':'Already been going? Start from earlier →'}
+      </button>
+    </div>
+    <div id="s-backdate-row" style="display:${window._sheetBackdate?'block':'none'};margin-top:8px;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px">
+      <div style="font-size:10px;color:var(--text4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Session start</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input type="date" id="s-backdate-date" value="${window._sheetBackdate?.date||today()}" max="${today()}"
+          style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:8px;padding:8px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:var(--font-body)">
+        <input type="time" id="s-backdate-time" value="${window._sheetBackdate?.time||''}"
+          style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:8px;padding:8px;color:var(--accent);font-size:14px;font-weight:700;width:100%;outline:none;font-family:var(--font-display);text-align:center">
+      </div>
+      <div style="font-size:10px;color:var(--text5);margin-top:8px;line-height:1.5">Session will start already counting from this time and keep running.</div>
+    </div>`:''}
     <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn-ghost" id="s-cancel" style="flex:0 0 76px">Cancel</button>
       <div style="flex:1">${isTimer
-        ?`<button class="btn-green" id="s-start" style="margin:0">${IC.play(14)} Start Timer</button>`
+        ?`<button class="btn-green" id="s-start" style="margin:0">${IC.play(14)} ${window._sheetBackdate?'Start from earlier':'Start Timer'}</button>`
         :manualStillActive
           ?`<button class="btn-green" id="s-start-from" style="margin:0">${IC.play(14)} Start from here</button>`
           :`<button class="btn-gold" id="s-log">✓ Log Session</button>`
@@ -6070,7 +6092,7 @@ function mountSheet(){
     else{logMode='timer';manualStillActive=false;}
     refreshSheet();
   };
-  document.getElementById('s-cancel').onclick=()=>{showSessionSheet=false;window._sheetShowAll=false;render();};
+  document.getElementById('s-cancel').onclick=()=>{showSessionSheet=false;window._sheetShowAll=false;window._sheetBackdate=null;render();};
   document.getElementById('m-start-date')?.addEventListener('input',e=>{manualStartDate=e.target.value;updateManualPreview();});
   document.getElementById('m-start')?.addEventListener('input',e=>{manualStart=e.target.value;updateManualPreview();});
   document.getElementById('m-end-date')?.addEventListener('input',e=>{manualEndDate=e.target.value;updateManualPreview();});
@@ -6085,7 +6107,37 @@ function mountSheet(){
   document.getElementById('s-start')?.addEventListener('click',()=>{
     if(!sheetCat){showToast('Please select a category above');return;}
     if(!sheetMethod){showToast('Please select a method');return;}
+    if(window._sheetBackdate){
+      const d=window._sheetBackdate.date||today();
+      const t=window._sheetBackdate.time;
+      if(!t){showToast('Pick a start time');return;}
+      const ms=new Date(`${d}T${t}:00`).getTime();
+      if(isNaN(ms)){showToast('Invalid start time');return;}
+      if(ms>Date.now()){showToast('Start time must be in the past');return;}
+      window._sheetBackdate=null;
+      beginSessionFrom(d,t);
+      return;
+    }
     beginSession();
+  });
+  document.getElementById('s-backdate-toggle')?.addEventListener('click',()=>{
+    if(window._sheetBackdate){
+      window._sheetBackdate=null;
+    } else {
+      // Default: 30 minutes ago, rounded to the nearest half-hour boundary.
+      const d=new Date(Date.now()-30*60*1000);
+      const m=d.getMinutes()<30?0:30;
+      const hh=String(d.getHours()).padStart(2,'0');
+      const mm=String(m).padStart(2,'0');
+      window._sheetBackdate={date:localDateStr(d),time:`${hh}:${mm}`};
+    }
+    refreshSheet();
+  });
+  document.getElementById('s-backdate-date')?.addEventListener('input',e=>{
+    if(window._sheetBackdate)window._sheetBackdate.date=e.target.value;
+  });
+  document.getElementById('s-backdate-time')?.addEventListener('input',e=>{
+    if(window._sheetBackdate)window._sheetBackdate.time=e.target.value;
   });
   document.getElementById('s-start-from')?.addEventListener('click',()=>{
     if(!sheetCat){showToast('Please select a category above');return;}
@@ -6110,62 +6162,195 @@ function refreshSheet(){const el=document.getElementById('sov');if(el)el.remove(
 function mountAdjustTimeSheet(){
   const ex=document.getElementById('adjust-time-ov');if(ex)ex.remove();
   if(!activeTimer)return;
-  const curH=Math.floor(timerSecs/3600);
-  const curM=Math.floor((timerSecs%3600)/60);
-  const el=document.createElement('div');el.className='overlay';el.id='adjust-time-ov';
-  el.innerHTML=`<div class="sheet" style="padding-bottom:24px">
+
+  // Adjust edits the START time only. Duration is derived as end − start,
+  // where end is "now" for a running session or activeTimer.pausedAt for a
+  // paused one. Editing here keeps the session running — ending a session
+  // early is the Stop sheet's job (it has its own end-time picker).
+  //
+  // We deliberately preserve pauseIntervals rather than wiping them. That
+  // keeps the multi-day splitter accurate: if a session had a mid-window
+  // pause and the user shifts the start earlier, the pause still anchors to
+  // its real timestamp and gets subtracted correctly.
+  const _wallStart = activeTimer.wallStart || (Date.now() - timerSecs*1000);
+  const _isRunning = !!activeTimer.startedAt;
+  const _pauses = (activeTimer.pauseIntervals||[]).slice();
+  let _adjStartMs = _wallStart;
+
+  const _endRef = () => _isRunning ? Date.now() : (activeTimer.pausedAt || Date.now());
+
+  const computeElapsed = () => {
+    const probe = { wallStart: _adjStartMs, pauseIntervals: _pauses, pausedAt: null };
+    // sessionActiveSecsBetween() already returns SECONDS — do not divide again.
+    return sessionActiveSecsBetween(probe, _adjStartMs, _endRef());
+  };
+  const fmtPickDate = (ms) => localDateStr(new Date(ms));
+  const fmtPickTime = (ms) => {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  };
+
+  const initialElapsed = computeElapsed();
+
+  const el = document.createElement('div');el.className='overlay';el.id='adjust-time-ov';
+  el.innerHTML = `<div class="sheet" style="padding-bottom:24px">
     <div class="sheet-handle"></div>
-    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:4px">Adjust Session Time</div>
-    <div style="font-size:10px;color:var(--text4);margin-bottom:16px;line-height:1.6">Session is currently at <strong style="color:var(--text2)">${fmtLive(timerSecs)}</strong>. Enter the correct elapsed time below — it applies instantly.</div>
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-      <input type="number" id="adj-h" class="gold-inp" min="0" max="168" value="${curH}" style="flex:1;margin:0;text-align:center;font-size:20px;font-weight:700;padding:14px 8px">
-      <span style="color:var(--text4);font-size:14px;flex-shrink:0">h</span>
-      <input type="number" id="adj-m" class="gold-inp" min="0" max="59" value="${curM}" style="flex:1;margin:0;text-align:center;font-size:20px;font-weight:700;padding:14px 8px">
-      <span style="color:var(--text4);font-size:14px;flex-shrink:0">min</span>
+    <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:4px">Adjust Session</div>
+    <div style="font-size:11px;color:var(--text4);margin-bottom:16px;line-height:1.6">Change when this session started. Duration updates automatically.</div>
+
+    <div class="sec-title" style="margin-top:0">Started at</div>
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:10px;padding:4px 8px;margin-bottom:16px">
+      <input type="date" id="adj-date" value="${fmtPickDate(_adjStartMs)}" max="${today()}"
+        style="flex:1;min-width:0;background:transparent;border:none;padding:9px 4px;color:var(--accent);font-size:14px;font-weight:700;outline:none;font-family:var(--font-body);text-align:center">
+      <span style="color:var(--text5);font-size:11px;flex-shrink:0;font-weight:500">at</span>
+      <input type="time" id="adj-time" value="${fmtPickTime(_adjStartMs)}"
+        style="flex:1;min-width:0;background:transparent;border:none;padding:9px 4px;color:var(--accent);font-size:14px;font-weight:700;outline:none;font-family:var(--font-display);text-align:center">
     </div>
-    <div id="adj-preview" style="text-align:center;font-size:12px;color:var(--text4);margin-bottom:16px">New elapsed: <strong style="color:var(--accent);font-size:15px">${fmtLive(timerSecs)}</strong></div>
+
+    <div class="sec-title" style="margin-top:0">Adjust duration</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px">
+      ${[['−1h',-60],['−15m',-15],['−5m',-5],['+5m',5],['+15m',15],['+1h',60]].map(([label,delta])=>`
+        <button class="adj-nudge" data-delta="${delta}"
+          style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px 4px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:var(--font-body);transition:all .15s">${label}</button>
+      `).join('')}
+    </div>
+
+    <div style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <span style="font-size:11px;color:var(--text4)">Now</span>
+        <span style="font-size:13px;color:var(--text3);font-variant-numeric:tabular-nums" id="adj-current">${fmtLive(timerSecs)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:11px;color:var(--text4)">After</span>
+        <span style="font-size:15px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums" id="adj-preview">${fmtLive(initialElapsed)}</span>
+      </div>
+    </div>
+
     <div style="display:flex;gap:8px">
       <button id="adj-cancel" class="btn-ghost" style="flex:0 0 96px">Cancel</button>
       <button id="adj-save" class="btn-gold" style="flex:1">✓ Apply</button>
     </div>
   </div>`;
   document.getElementById('root').appendChild(el);
-  el.addEventListener('click',e=>{if(e.target===el)el.remove();});
-  const inp_h=document.getElementById('adj-h');
-  const inp_m=document.getElementById('adj-m');
-  const preview=document.getElementById('adj-preview');
-  const updatePreview=()=>{
-    const h=Math.max(0,Math.min(168,parseInt(inp_h.value)||0));
-    const m=Math.max(0,Math.min(59,parseInt(inp_m.value)||0));
-    preview.innerHTML=`New elapsed: <strong style="color:var(--accent);font-size:15px">${fmtLive(h*3600+m*60)}</strong>`;
+
+  const _dateInp = document.getElementById('adj-date');
+  const _timeInp = document.getElementById('adj-time');
+  const _previewEl = document.getElementById('adj-preview');
+  const _currentEl = document.getElementById('adj-current');
+
+  const paintPicker = () => {
+    _dateInp.value = fmtPickDate(_adjStartMs);
+    _timeInp.value = fmtPickTime(_adjStartMs);
   };
-  inp_h.addEventListener('input',updatePreview);
-  inp_m.addEventListener('input',updatePreview);
-  document.getElementById('adj-cancel').onclick=()=>el.remove();
-  document.getElementById('adj-save').onclick=()=>{
-    const h=Math.max(0,Math.min(168,parseInt(inp_h.value)||0));
-    const m=Math.max(0,Math.min(59,parseInt(inp_m.value)||0));
-    const newSecs=h*3600+m*60;
-    if(newSecs<60){showToast('Duration must be at least 1 minute');return;}
-    if(activeTimer.startedAt){
-      // Running — reset both startedAt and wallStart to reflect the corrected
-      // total. Pause history is wiped because the user is declaring a new
-      // active-time truth; keeping old pauses would double-count.
-      activeTimer={...activeTimer,startedAt:Date.now()-(newSecs*1000),wallStart:Date.now()-(newSecs*1000),elapsedOnPause:0,pauseIntervals:[],pausedAt:null};
-      timerSecs=newSecs;
+  // Greys out −N buttons when their tap couldn't leave at least 60 seconds of
+  // elapsed time (the Apply minimum). +N buttons are always enabled — they
+  // only ever lengthen the session, which is always valid.
+  const paintNudgeStates = (secs) => {
+    if(secs === undefined) secs = computeElapsed();
+    document.querySelectorAll('#adjust-time-ov .adj-nudge').forEach(btn=>{
+      const delta = parseInt(btn.dataset.delta) || 0;
+      if(delta >= 0) return;
+      const disabled = secs < Math.abs(delta) * 60 + 60;
+      btn.disabled = disabled;
+      btn.style.opacity = disabled ? '0.35' : '1';
+      btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+    });
+  };
+  const paintPreview = () => {
+    const secs = computeElapsed();
+    _previewEl.textContent = fmtLive(secs);
+    paintNudgeStates(secs);
+  };
+  const paintCurrent = () => { _currentEl.textContent = fmtLive(timerSecs); };
+
+  // Reads the current <input type="date|time"> values and, if they form a
+  // valid past timestamp, writes them into _adjStartMs and repaints. Safe to
+  // call as often as we like — empty or future values just leave the last
+  // valid _adjStartMs in place.
+  const syncFromPicker = () => {
+    const d = _dateInp.value;
+    const t = _timeInp.value;
+    if(d && t){
+      const ms = new Date(`${d}T${t}:00`).getTime();
+      if(!isNaN(ms) && ms <= Date.now()){
+        _adjStartMs = ms;
+      }
+    }
+    paintPreview();
+  };
+  // iOS Safari/PWA doesn't reliably fire `input` OR `change` on
+  // <input type="date|time"> — sometimes not even on picker dismissal. So we
+  // do BOTH: listen to the events for platforms that do fire them (instant
+  // feedback), AND poll the picker values from the ticker below. If the
+  // events fire, great. If they don't, the poll catches the change within a
+  // second. Either way, _adjStartMs always reflects the current picker state.
+  ['input','change'].forEach(evt=>{
+    _dateInp.addEventListener(evt, syncFromPicker);
+    _timeInp.addEventListener(evt, syncFromPicker);
+  });
+
+  // Live ticker: every second, re-read the picker, recompute, repaint. This
+  // is the fallback that makes the sheet work even when the events never fire.
+  const _tick = setInterval(()=>{ syncFromPicker(); paintCurrent(); }, 1000);
+  // Paint the nudge-button disabled states immediately, so the sheet opens
+  // with the correct buttons already greyed instead of a 1-second lag.
+  paintPreview();
+
+  document.querySelectorAll('#adjust-time-ov .adj-nudge').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const delta = parseInt(btn.dataset.delta) || 0;
+      // delta is change in duration. Subtracting duration shifts the start
+      // forward; adding duration shifts it back. Either way, wallStart is
+      // the only thing that moves — duration follows.
+      _adjStartMs -= delta * 60 * 1000;
+      const now = Date.now();
+      if(_adjStartMs > now) _adjStartMs = now; // clamp: start can't be future
+      paintPicker();
+      paintPreview();
+      if(navigator.vibrate) navigator.vibrate(8);
+    });
+  });
+
+    const close = () => { if(_tick) clearInterval(_tick); el.remove(); };
+  document.getElementById('adj-cancel').onclick = close;
+  el.addEventListener('click', e => { if(e.target === el) close(); });
+
+  document.getElementById('adj-save').onclick = () => {
+    // Read the picker values one last time before committing. This bypasses
+    // any iOS event unreliability — even if no event has fired during the
+    // whole sheet session, we now use the definitive current values.
+    syncFromPicker();
+    const newElapsed = computeElapsed();
+    if(newElapsed < 60){ showToast('Session must be at least 1 minute'); return; }
+    if(_tick) clearInterval(_tick);
+    if(_isRunning){
+      // Running — reset startedAt to a fictional "resumed at X" that makes
+      // the ticking display continue from newElapsed. wallStart and
+      // pauseIntervals are preserved so the splitter stays accurate.
+      activeTimer = {
+        ...activeTimer,
+        wallStart: _adjStartMs,
+        startedAt: Date.now() - newElapsed*1000,
+        elapsedOnPause: 0,
+        pausedAt: null
+      };
+      timerSecs = newElapsed;
       startInterval();
     } else {
-      // Paused — rewrite the frozen elapsed. Same reasoning: clear pause
-      // history so the declared total is what gets committed.
-      activeTimer={...activeTimer,elapsedOnPause:newSecs,pauseIntervals:[],pausedAt:null};
-      timerSecs=newSecs;
+      // Paused — rewrite the frozen elapsed. pausedAt stays put so the
+      // session's pause window remains anchored where it actually happened.
+      activeTimer = {
+        ...activeTimer,
+        wallStart: _adjStartMs,
+        elapsedOnPause: newElapsed
+      };
+      timerSecs = newElapsed;
     }
     saveTimer(activeTimer);
     el.remove();
-    showToast(`✓ Time adjusted to ${fmtLive(newSecs)}`);
+    showToast(`✓ Adjusted to ${fmtLive(newElapsed)}`);
     render();
   };
-  inp_h.focus();inp_h.select();
 }
 
 function mountMethodEditor(){
@@ -6244,23 +6429,61 @@ function mountMethodEditor(){
 // ── STOP SHEET ─────────────────────────────────────────────────────────────────
 function mountStopSheet(){
   const ex=document.getElementById('stop-ov');if(ex)ex.remove();
-  const mins=Math.max(1,Math.round(timerSecs/60));
-  const method=activeTimer?.method||sheetMethod;
-  const goalHit=todayMin()+mins>=char.dailyGoalMin;
-  const el=document.createElement('div');el.className='overlay';el.id='stop-ov';
-  el.innerHTML=`<div class="sheet">
+  if(!activeTimer)return;
+
+  // End-time editing. Default is the stop moment (set by stopSession to
+  // activeTimer.pausedAt). If the user edits it earlier — the classic
+  // bedtime-forgot-to-stop case — the displayed elapsed shrinks live and
+  // the session commits with the corrected duration.
+  //
+  // pauseIntervals are preserved. sessionActiveSecsBetween() correctly
+  // subtracts only the pauses that overlap [wallStart, newEnd], so any
+  // pause that happened outside the new window is silently excluded.
+  const _wallStart = activeTimer.wallStart || (Date.now() - timerSecs*1000);
+  const _originalEndMs = activeTimer.pausedAt || Date.now();
+  const _pauses = (activeTimer.pauseIntervals||[]).slice();
+  let _stopEndMs = _originalEndMs;
+
+  const computeElapsed = () => {
+    const probe = { wallStart: _wallStart, pauseIntervals: _pauses, pausedAt: null };
+    // sessionActiveSecsBetween() already returns SECONDS — do not divide again.
+    return sessionActiveSecsBetween(probe, _wallStart, _stopEndMs);
+  };
+  const fmtPickDate = (ms) => localDateStr(new Date(ms));
+  const fmtPickTime = (ms) => {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  };
+
+  const method = activeTimer.method || sheetMethod;
+  const initialElapsed = computeElapsed();
+  const initialMins = Math.max(1, Math.round(initialElapsed/60));
+  const goalHit = todayMin() + initialMins >= char.dailyGoalMin;
+
+  const el = document.createElement('div');el.className='overlay';el.id='stop-ov';
+  el.innerHTML = `<div class="sheet">
     <div class="sheet-handle"></div>
     <div style="text-align:center;margin-bottom:14px">
       <div style="font-family:var(--font-display);font-size:12px;color:var(--text4);margin-bottom:6px">Session Complete</div>
-      <div class="big-timer">${fmtLive(timerSecs)}</div>
+      <div class="big-timer" id="stop-elapsed">${fmtLive(initialElapsed)}</div>
       <div style="font-size:12px;color:var(--text3);margin-top:4px">${method}</div>
+      <div id="stop-adjusted-hint" style="display:none;font-size:10px;color:var(--accent);margin-top:6px;line-height:1.5"></div>
       <div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <div class="xp-tag">Session #${char.sessions+1}</div>
         ${char.streak>1?`<div class="xp-tag">${char.streak}-day streak 🔥</div>`:''}
-        ${goalHit?`<div class="xp-tag" style="border-color:rgba(34,168,90,.4);color:var(--green)">🎯 Daily goal hit!</div>`:''}
+        <div class="xp-tag" id="stop-goal-tag" style="display:${goalHit?'':'none'};border-color:rgba(34,168,90,.4);color:var(--green)">🎯 Daily goal hit!</div>
       </div>
     </div>
-    <div class="sec-title">Notes (Optional)</div>
+
+    <div class="sec-title" style="margin-top:0">Ended at</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <input type="date" id="stop-end-date" value="${fmtPickDate(_stopEndMs)}" max="${today()}"
+        style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:var(--font-body)">
+      <input type="time" id="stop-end-time" value="${fmtPickTime(_stopEndMs)}"
+        style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px;color:var(--accent);font-size:14px;font-weight:700;width:100%;outline:none;font-family:var(--font-display);text-align:center">
+    </div>
+
+    <div class="sec-title" style="margin-top:0">Notes (Optional)</div>
     <textarea id="stop-notes" placeholder="Comfort level, device tension, observations...">${sheetNotes}</textarea>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn-ghost" id="stop-resume">↺ Resume</button>
@@ -6268,8 +6491,73 @@ function mountStopSheet(){
     </div>
   </div>`;
   document.getElementById('root').appendChild(el);
-  document.getElementById('stop-resume').onclick=resumeSession;
-  document.getElementById('stop-save').onclick=()=>{commitSession(document.getElementById('stop-notes')?.value||'');};
+
+  const _dateInp = document.getElementById('stop-end-date');
+  const _timeInp = document.getElementById('stop-end-time');
+  const _elapsedEl = document.getElementById('stop-elapsed');
+  const _hintEl = document.getElementById('stop-adjusted-hint');
+  const _goalTag = document.getElementById('stop-goal-tag');
+
+  const syncEnd = () => {
+    const d = _dateInp.value;
+    const t = _timeInp.value;
+    if(!d || !t) return;
+    const ms = new Date(`${d}T${t}:00`).getTime();
+    if(isNaN(ms)) return;
+    if(ms < _wallStart){
+      _hintEl.style.display = 'block';
+      _hintEl.style.color = '#c0392b';
+      _hintEl.textContent = 'End time is before the session started';
+      return;
+    }
+    if(ms > Date.now() + 60000){
+      _hintEl.style.display = 'block';
+      _hintEl.style.color = '#c0392b';
+      _hintEl.textContent = 'End time can\'t be in the future';
+      return;
+    }
+    _stopEndMs = ms;
+    const secs = computeElapsed();
+    _elapsedEl.textContent = fmtLive(secs);
+    if(ms !== _originalEndMs){
+      const diffMin = Math.round((ms - _originalEndMs)/60000);
+      _hintEl.style.display = 'block';
+      _hintEl.style.color = 'var(--accent)';
+      _hintEl.textContent = diffMin < 0
+        ? `Adjusted ${fmtDur(Math.abs(diffMin))} earlier`
+        : `Adjusted ${fmtDur(diffMin)} later`;
+    } else {
+      _hintEl.style.display = 'none';
+    }
+    // Re-check the goal tag against the new elapsed
+    if(_goalTag){
+      const newMins = Math.max(1, Math.round(secs/60));
+      _goalTag.style.display = (todayMin() + newMins >= char.dailyGoalMin) ? '' : 'none';
+    }
+  };
+  // Same iOS quirk as the Adjust sheet — listen to both events.
+  ['input','change'].forEach(evt=>{
+    _dateInp.addEventListener(evt, syncEnd);
+    _timeInp.addEventListener(evt, syncEnd);
+  });
+
+  document.getElementById('stop-resume').onclick = resumeSession;
+  document.getElementById('stop-save').onclick = () => {
+    if(_stopEndMs !== _originalEndMs){
+      // Override the end. pausedAt becomes the new end so commitSession()
+      // picks it up. pauseIntervals stay — sessionActiveSecsBetween will
+      // silently exclude any that fall outside the new window.
+      const newElapsed = Math.max(1, computeElapsed());
+      timerSecs = newElapsed;
+      activeTimer = {
+        ...activeTimer,
+        elapsedOnPause: newElapsed,
+        pausedAt: _stopEndMs
+      };
+      saveTimer(activeTimer);
+    }
+    commitSession(document.getElementById('stop-notes')?.value||'');
+  };
 }
 
 // ── EVENTS ─────────────────────────────────────────────────────────────────────
@@ -6296,8 +6584,8 @@ function attachEvents(){
     sheetMethod=method;sheetCat=cat;sheetNotes='';
     beginSession();
   }));
-  document.getElementById('start-session-btn')?.addEventListener('click',()=>{window._sheetShowAll=false;showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
-  document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;render();});
+  document.getElementById('start-session-btn')?.addEventListener('click',()=>{window._sheetShowAll=false;window._sheetBackdate=null;showSessionSheet=true;logMode='timer';sheetCat=null;sheetMethod='';sheetNotes='';render();});
+  document.getElementById('log-past-btn')?.addEventListener('click',()=>{showSessionSheet=true;logMode='manual';sheetCat=null;sheetMethod='';sheetNotes='';manualStart='';manualEnd='';manualStartDate=today();manualEndDate=today();manualStillActive=false;window._sheetBackdate=null;render();});
   document.getElementById('pause-btn')?.addEventListener('click',pauseSession);
   document.getElementById('stop-btn')?.addEventListener('click',stopSession);
   document.getElementById('resume-btn')?.addEventListener('click',resumeSession);
