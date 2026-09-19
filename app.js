@@ -6475,12 +6475,19 @@ function mountStopSheet(){
       </div>
     </div>
 
-    <div class="sec-title" style="margin-top:0">Ended at</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <input type="date" id="stop-end-date" value="${fmtPickDate(_stopEndMs)}" max="${today()}"
-        style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:var(--font-body)">
-      <input type="time" id="stop-end-time" value="${fmtPickTime(_stopEndMs)}"
-        style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px;color:var(--accent);font-size:14px;font-weight:700;width:100%;outline:none;font-family:var(--font-display);text-align:center">
+    <div style="text-align:center;margin-bottom:14px">
+      <button id="stop-adjust-toggle" style="background:none;border:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:var(--font-body);padding:6px 8px;text-decoration:underline;text-underline-offset:3px;transition:color .15s">
+        Wrong duration? Adjust end time →
+      </button>
+    </div>
+    <div id="stop-end-editor" style="display:none;margin-bottom:14px">
+      <div class="sec-title" style="margin-top:0">Ended at</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input type="date" id="stop-end-date" value="${fmtPickDate(_stopEndMs)}" max="${today()}"
+          style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px;color:var(--accent);font-size:13px;font-weight:600;width:100%;outline:none;font-family:var(--font-body)">
+        <input type="time" id="stop-end-time" value="${fmtPickTime(_stopEndMs)}"
+          style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px;color:var(--accent);font-size:14px;font-weight:700;width:100%;outline:none;font-family:var(--font-display);text-align:center">
+      </div>
     </div>
 
     <div class="sec-title" style="margin-top:0">Notes (Optional)</div>
@@ -6497,6 +6504,19 @@ function mountStopSheet(){
   const _elapsedEl = document.getElementById('stop-elapsed');
   const _hintEl = document.getElementById('stop-adjusted-hint');
   const _goalTag = document.getElementById('stop-goal-tag');
+
+  // Reveal-on-tap: the end-time editor stays hidden until the user explicitly
+  // asks for it. Most sessions end when the user taps Stop, so this is one
+  // less field to scan past on the way to Save. When revealed, the toggle
+  // text flips to "Hide end time" so the same control closes it back up.
+  const _endEditor = document.getElementById('stop-end-editor');
+  const _adjustToggle = document.getElementById('stop-adjust-toggle');
+  _adjustToggle.onclick = () => {
+    const open = _endEditor.style.display === 'none';
+    _endEditor.style.display = open ? 'block' : 'none';
+    _adjustToggle.textContent = open ? 'Hide end time ↑' : 'Wrong duration? Adjust end time →';
+    if(open) _dateInp.focus();
+  };
 
   const syncEnd = () => {
     const d = _dateInp.value;
