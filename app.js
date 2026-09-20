@@ -2285,7 +2285,7 @@ function renderToday(){
         ${goalPct>=100?`<span style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:2px 8px;font-weight:700;letter-spacing:.3px;white-space:nowrap">✓ MET</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-        <input class="goal-inp" id="goal-inp" type="number" min="5" max="1440" value="${goal}" style="width:54px">
+        <input class="goal-inp" id="goal-inp" type="number" min="5" max="1440" value="${goal}" style="width:68px">
         <span style="font-size:10px;color:var(--text5)">min</span>
       </div>
     </div>
