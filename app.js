@@ -5225,6 +5225,13 @@ function obStepReady(){
         </div>
       </div>
 
+      <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px">
+        <span style="font-size:18px;flex-shrink:0;line-height:1">🌱</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:3px">You're not doing this alone.</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6">Thousands of others have restored, and the Community tab is full of restorers at every stage — from CI-0 to CI-10. Read, ask, share. The journey is a lot easier when you know others are on it.</div>
+        </div>
+      </div>
 
       <div style="display:flex;gap:12px;align-items:flex-start">
         <span style="font-size:18px;flex-shrink:0;line-height:1">📅</span>
