@@ -1915,7 +1915,10 @@ const INSIGHT_REGISTRY=[
   },
   {
     key:'first_session_today', priority:1, cooldown:1,
-    test:c=>c.tLogs.length===1&&c.lastLog&&c.lastLog.date===c.td&&(Date.now()-c.lastLog.id)<15*60*1000,
+    test:c=>{
+      const t=c.tLogs[0];
+      return t&&(Date.now()-t.id)<15*60*1000;
+    },
     render:()=>({icon:'🌱',msg:'First session in today. Consistency is the game.'})
   },
   {
@@ -1934,7 +1937,9 @@ const INSIGHT_REGISTRY=[
     test:c=>{
       const hrs=c.minutes/60;
       const next=[1,10,25,50,100,250,500,1000].find(m=>m>hrs);
-      return next!==undefined&&(next-hrs)<=12;
+      if(next===undefined)return false;
+      const threshold=Math.max(2,Math.min(12,Math.round(next*0.2)));
+      return (next-hrs)<=threshold;
     },
     render:c=>{
       const hrs=c.minutes/60;
@@ -2140,8 +2145,12 @@ const INSIGHT_REGISTRY=[
     key:'photo_cadence', priority:3, cooldown:14,
     test:c=>{
       if(c.photos.length<3)return false;
-      const months=new Set(c.photos.map(p=>(p.date||'').slice(0,7)).filter(Boolean));
-      return months.size>=3;
+      const months=[...new Set(c.photos.map(p=>(p.date||'').slice(0,7)).filter(Boolean))].sort();
+      if(months.length<3)return false;
+      const [fy,fm]=months[0].split('-').map(Number);
+      const [ly,lm]=months[months.length-1].split('-').map(Number);
+      const totalMonths=(ly-fy)*12+(lm-fm)+1;
+      return months.length===totalMonths;
     },
     render:c=>{
       const sorted=[...c.photos].sort((a,b)=>a.date.localeCompare(b.date));
