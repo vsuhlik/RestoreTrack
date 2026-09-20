@@ -2600,10 +2600,10 @@ function renderToday(){
   const checkin=pendingCheckin();
   const checkinCard=checkin?renderCheckinCard(checkin):'';
   const insight=todayInsight();
-  const insightStrip=insight?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-left:3px solid var(--acc30);border-radius:12px;padding:11px 14px 11px 12px;margin-bottom:9px;display:flex;gap:11px;align-items:center">
-  <span style="font-size:20px;flex-shrink:0;line-height:1">${insight.icon}</span>
-  <div style="flex:1;min-width:0;font-size:12px;color:var(--text2);line-height:1.55;font-weight:500">${insight.msg}</div>
-</div>`:'';
+  const insightLine=insight?`<div style="display:flex;gap:10px;align-items:flex-start;padding-top:11px;margin-top:12px;border-top:1px solid var(--stat-border)">
+    <span style="font-size:17px;flex-shrink:0;line-height:1;opacity:.85">${insight.icon}</span>
+    <div style="flex:1;min-width:0;font-size:11.5px;color:var(--text2);line-height:1.55;font-weight:500">${insight.msg}</div>
+  </div>`:'';
   const timerBlock=isRunning?`<div class="card sess-active-card" style="border-color:var(--green-border);background:var(--green-bg);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div class="live-dot sess-live-dot"></div>
@@ -2682,7 +2682,6 @@ function renderToday(){
     </div>`:'';
   return`
   ${checkinCard}
-  ${insightStrip}
   <div class="card" style="margin-bottom:9px;position:relative;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
@@ -2706,6 +2705,7 @@ function renderToday(){
       </span>
       <span data-live="goal-text" style="font-size:10px;color:${goalPct>=100?'var(--green)':'var(--text4)'};font-weight:${goalPct>=100?'600':'400'}">${goalPct>=100?'🎯 Goal reached!':fmtMin(Math.max(0,goal-tGoalMin))+' to go'}</span>
     </div>
+    ${insightLine}
   </div>
   ${timerBlock}
   ${quickLogBtn}
