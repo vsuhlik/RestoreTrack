@@ -134,7 +134,7 @@ let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[]
   dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
   communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},
-  preferredMethods:[],activeInsight:null,insightHistory:{},checkinsSeen:{}};
+  preferredMethods:[],checkinsSeen:{}};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -567,7 +567,7 @@ async function loadAll(){
   }
 }
 async function loadProfile(pid){
-  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},activeInsight:null,insightHistory:{},checkinsSeen:{}};
+  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},checkinsSeen:{}};
   char={...defaults};logs=[];photos=[];
   const c=(await ProfileDB.get(`rst-${pid}-char`))??S.get(`rst-${pid}-char`);
   if(c)char={...char,...c};
@@ -590,8 +590,6 @@ if(char.startCI===undefined)char.startCI=0;
   if(!Array.isArray(char.communityBlockedUsers))char.communityBlockedUsers=[];
   if(!char.communityBlockedProfiles||typeof char.communityBlockedProfiles!=='object')char.communityBlockedProfiles={};
   if(!char.dayNotes)char.dayNotes={};
-  if(char.activeInsight===undefined)char.activeInsight=null;
-  if(!char.insightHistory||typeof char.insightHistory!=='object')char.insightHistory={};
   if(!char.checkinsSeen||typeof char.checkinsSeen!=='object')char.checkinsSeen={};
   if(!Array.isArray(char.preferredMethods))char.preferredMethods=[];
   if(!char.photoQuality)char.photoQuality='balanced';
@@ -667,7 +665,7 @@ function createProfile(name,startCI=0,currentCI=null,goalCI=10,preferredMethods=
     hist.push({ci:currentCI,date:today()});
   }
   const _dg=Math.max(5,Math.min(1440,dailyGoalMin||120));
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:_dg,goalDays:0,theme:currentTheme||'shadow',customMethods:[],ciLevel:currentCI,ciHistory:hist,startCI:startCI,ciGoal:goalCI,restDays:[],startDate:today(),ciSetupDone:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},preferredMethods:preferredMethods,countRetainingInGoal:true,photoQuality:'balanced',ghostOverlay:true,cameraGrid:true,cameraTimer:0,photoLockEnabled:false,photoLockPinHash:'',photoLockSalt:'',photoLockCredentialId:'',activeInsight:null,insightHistory:{},checkinsSeen:{}};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:_dg,goalDays:0,theme:currentTheme||'shadow',customMethods:[],ciLevel:currentCI,ciHistory:hist,startCI:startCI,ciGoal:goalCI,restDays:[],startDate:today(),ciSetupDone:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},preferredMethods:preferredMethods,countRetainingInGoal:true,photoQuality:'balanced',ghostOverlay:true,cameraGrid:true,cameraTimer:0,photoLockEnabled:false,photoLockPinHash:'',photoLockSalt:'',photoLockCredentialId:'',checkinsSeen:{}};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -752,7 +750,7 @@ function deleteProfile(){
   localStorage.removeItem('rst-comm-pending');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},dayNotes:{},preferredMethods:[],activeInsight:null,insightHistory:{},checkinsSeen:{}};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},dayNotes:{},preferredMethods:[],checkinsSeen:{}};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
   _photoSelectMode=false;_photoSelectedIds=new Set();
   _photosUnlocked=false;_pinBuf='';
@@ -1849,442 +1847,10 @@ function arcD(cx,cy,r,startDeg,endDeg){
 
 
 // ── INSIGHT STRIP ─────────────────────────────────────────────────────────────
-// One true, personal line about the user's own data. Not advice. Not tips.
-// The strip is the app's daily voice — a quiet observation drawn from the
-// user's own logs, streak, journey, and (for members) the community.
-//
-// Each insight declares:
-//   key         unique id — cooldown tracking and stickiness
-//   priority    1 = most urgent, 5 = least. Lower number wins.
-//   cooldown    minimum days before it can fire again
-//   hourBias    optional [start,end] — during those hours, effective
-//               priority drops by 0.5, so it floats above same-priority
-//               siblings at the right time of day
-//   joinedOnly  optional — only fires for community members
-//   test(ctx)   returns true if this insight applies right now
-//   render(ctx) returns { icon, msg }
-const INSIGHT_REGISTRY=[
+// The rotating insight registry has been retired. The single surviving signal
+// — streak_breaks_today — is now a direct conditional in renderToday().
 
-  // ── Priority 1 — Urgency ─────────────────────────────────────────────
-  {
-    key:'streak_breaks_today', priority:1, cooldown:1,
-    test:c=>c.hour>=20&&c.tMin===0&&c.streak>=3,
-    render:c=>({icon:'🔥',msg:`${c.streak}-day streak still intact today — a short session keeps it.`})
-  },
-  {
-    key:'goal_just_met', priority:1, cooldown:1,
-    test:c=>c.tGoal>=c.goal&&c.tGoal<c.goal+30&&c.tGoal>0,
-    render:c=>({icon:'🎯',msg:`Goal reached — ${fmtMin(c.tGoal)} logged today.${c.streak>1?` ${c.streak}-day streak.`:''}`})
-  },
-  {
-    key:'first_session_today', priority:1, cooldown:1,
-    test:c=>{
-      const t=c.tLogs[0];
-      return t&&(Date.now()-t.id)<15*60*1000;
-    },
-    render:()=>({icon:'🌱',msg:'First session in today. Consistency is the game.'})
-  },
-  {
-    key:'welcome_new', priority:1, cooldown:1,
-    test:c=>c.sessions===0&&c.tLogs.length===0&&!c.isRunning&&c.daysSinceStart<=7,
-    render:()=>{
-      const firstMethod=(char.preferredMethods||[])[0];
-      if(firstMethod)return{icon:'👋',msg:`Welcome. When you're ready, tap Start Session to log your first ${firstMethod} session.`};
-      return{icon:'👋',msg:'Welcome to RestoreTrack. Tap Start Session whenever you\'re ready — even a few minutes counts.'};
-    }
-  },
 
-  // ── Priority 2 — Milestone countdown ─────────────────────────────────
-  {
-    key:'hours_near_milestone', priority:2, cooldown:3,
-    test:c=>{
-      const hrs=c.minutes/60;
-      const next=[1,10,25,50,100,250,500,1000].find(m=>m>hrs);
-      if(next===undefined)return false;
-      const threshold=Math.max(2,Math.min(12,Math.round(next*0.2)));
-      return (next-hrs)<=threshold;
-    },
-    render:c=>{
-      const hrs=c.minutes/60;
-      const next=[1,10,25,50,100,250,500,1000].find(m=>m>hrs);
-      const diff=Math.ceil(next-hrs);
-      return{icon:'⏱',msg:`${diff} hour${diff!==1?'s':''} from ${next}. That's the kind of number you feel.`};
-    }
-  },
-  {
-    key:'sessions_near_milestone', priority:2, cooldown:3,
-    test:c=>{
-      const next=[10,25,50,100,200,365,500].find(m=>m>c.sessions);
-      return next!==undefined&&(next-c.sessions)<=5&&c.sessions>0;
-    },
-    render:c=>{
-      const next=[10,25,50,100,200,365,500].find(m=>m>c.sessions);
-      const diff=next-c.sessions;
-      return{icon:'📈',msg:`Session #${next} is ${diff} session${diff!==1?'s':''} away.`};
-    }
-  },
-  {
-    key:'streak_near_milestone', priority:2, cooldown:3,
-    test:c=>{
-      if(c.streak<3)return false;
-      const next=[7,30,100,365].find(m=>m>c.streak);
-      return next!==undefined&&(next-c.streak)<=4;
-    },
-    render:c=>{
-      const next=[7,30,100,365].find(m=>m>c.streak);
-      const diff=next-c.streak;
-      return{icon:'🔥',msg:`${diff} day${diff!==1?'s':''} to a ${next}-day streak.`};
-    }
-  },
-  {
-    key:'goal_days_near_milestone', priority:2, cooldown:3,
-    test:c=>{
-      const next=[5,30,100,365].find(m=>m>c.goalDays);
-      return next!==undefined&&(next-c.goalDays)<=5&&c.goalDays>0;
-    },
-    render:c=>{
-      const next=[5,30,100,365].find(m=>m>c.goalDays);
-      const diff=next-c.goalDays;
-      return{icon:'🎯',msg:`${diff} more goal day${diff!==1?'s':''} to ${next}.`};
-    }
-  },
-
-  // ── Priority 3 — Pattern observations ────────────────────────────────
-  {
-    key:'strongest_day', priority:3, cooldown:14, hourBias:[5,12],
-    test:c=>{
-      if(c.logs.length<20)return false;
-      const sums={},counts={};
-      c.logs.forEach(l=>{
-        if(!l.date)return;
-        const dow=new Date(l.date+'T12:00:00').getDay();
-        sums[dow]=(sums[dow]||0)+l.dur;
-        counts[dow]=(counts[dow]||0)+1;
-      });
-      const overall=c.logs.reduce((a,l)=>a+l.dur,0)/c.logs.length;
-      return Object.keys(counts).some(d=>counts[d]>=8&&(sums[d]/counts[d])>=overall*1.5);
-    },
-    render:c=>{
-      const sums={},counts={};
-      c.logs.forEach(l=>{
-        if(!l.date)return;
-        const dow=new Date(l.date+'T12:00:00').getDay();
-        sums[dow]=(sums[dow]||0)+l.dur;
-        counts[dow]=(counts[dow]||0)+1;
-      });
-      const names=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      let best=0,bestAvg=0;
-      Object.keys(counts).forEach(d=>{
-        if(counts[d]>=8){
-          const avg=sums[d]/counts[d];
-          if(avg>bestAvg){bestAvg=avg;best=+d;}
-        }
-      });
-      return{icon:'📊',msg:`${names[best]}s are your strongest day — averaging ${Math.round(bestAvg)}m.`};
-    }
-  },
-  {
-    key:'goal_hit_rate', priority:3, cooldown:14,
-    test:c=>{
-      if(c.logs.length<20)return false;
-      const cutoff=Date.now()-30*86400000;
-      const byDate={};
-      c.logs.forEach(l=>{
-        if(new Date(l.date+'T12:00:00').getTime()<cutoff)return;
-        if(char.countRetainingInGoal!==false||l.cat!=='retaining')
-          byDate[l.date]=(byDate[l.date]||0)+l.dur;
-      });
-      const hits=Object.values(byDate).filter(m=>m>=c.goal).length;
-      return hits>=18;
-    },
-    render:c=>{
-      const cutoff=Date.now()-30*86400000;
-      const byDate={};
-      c.logs.forEach(l=>{
-        if(new Date(l.date+'T12:00:00').getTime()<cutoff)return;
-        if(char.countRetainingInGoal!==false||l.cat!=='retaining')
-          byDate[l.date]=(byDate[l.date]||0)+l.dur;
-      });
-      const hits=Object.values(byDate).filter(m=>m>=c.goal).length;
-      return{icon:'🎯',msg:`You've hit your goal ${hits} of the last 30 days.`};
-    }
-  },
-  {
-    key:'method_diversity_up', priority:3, cooldown:14,
-    test:c=>{
-      const now=new Date();
-      const thisMonthStart=new Date(now.getFullYear(),now.getMonth(),1);
-      const lastMonthStart=new Date(now.getFullYear(),now.getMonth()-1,1);
-      const thisMonthEnd=new Date(now.getFullYear(),now.getMonth()+1,1);
-      const countIn=(start,end)=>new Set(c.logs.filter(l=>{
-        const t=new Date(l.date+'T12:00:00').getTime();
-        return t>=start.getTime()&&t<end.getTime();
-      }).map(l=>l.method).filter(Boolean)).size;
-      const cur=countIn(thisMonthStart,thisMonthEnd);
-      const prev=countIn(lastMonthStart,thisMonthStart);
-      return cur>=prev+2&&prev>=1;
-    },
-    render:c=>{
-      const now=new Date();
-      const thisMonthStart=new Date(now.getFullYear(),now.getMonth(),1);
-      const lastMonthStart=new Date(now.getFullYear(),now.getMonth()-1,1);
-      const thisMonthEnd=new Date(now.getFullYear(),now.getMonth()+1,1);
-      const countIn=(start,end)=>new Set(c.logs.filter(l=>{
-        const t=new Date(l.date+'T12:00:00').getTime();
-        return t>=start.getTime()&&t<end.getTime();
-      }).map(l=>l.method).filter(Boolean)).size;
-      const cur=countIn(thisMonthStart,thisMonthEnd);
-      const prev=countIn(lastMonthStart,thisMonthStart);
-      return{icon:'🧪',msg:`${cur} methods this month, up from ${prev}.`};
-    }
-  },
-  {
-    key:'session_length_up', priority:3, cooldown:14,
-    test:c=>{
-      const now=Date.now();
-      const recent=c.logs.filter(l=>{
-        const t=new Date(l.date+'T12:00:00').getTime();
-        return (now-t)<=30*86400000;
-      });
-      const older=c.logs.filter(l=>{
-        const t=new Date(l.date+'T12:00:00').getTime();
-        return (now-t)>30*86400000&&(now-t)<=60*86400000;
-      });
-      if(recent.length<5||older.length<5)return false;
-      const rAvg=recent.reduce((a,l)=>a+l.dur,0)/recent.length;
-      const oAvg=older.reduce((a,l)=>a+l.dur,0)/older.length;
-      return oAvg>0&&rAvg>=oAvg*1.25;
-    },
-    render:c=>{
-      const now=Date.now();
-      const recent=c.logs.filter(l=>{
-        const t=new Date(l.date+'T12:00:00').getTime();
-        return (now-t)<=30*86400000;
-      });
-      const older=c.logs.filter(l=>{
-        const t=new Date(l.date+'T12:00:00').getTime();
-        return (now-t)>30*86400000&&(now-t)<=60*86400000;
-      });
-      const rAvg=Math.round(recent.reduce((a,l)=>a+l.dur,0)/recent.length);
-      const oAvg=Math.round(older.reduce((a,l)=>a+l.dur,0)/older.length);
-      return{icon:'📈',msg:`Your average session grew from ${oAvg}m to ${rAvg}m.`};
-    }
-  },
-  {
-    key:'method_absence', priority:3, cooldown:14,
-    test:c=>{
-      if((c.methods||[]).length<2)return false;
-      const methodLast={};
-      c.logs.forEach(l=>{
-        if(!l.method)return;
-        const t=new Date(l.date+'T12:00:00').getTime();
-        if(!methodLast[l.method]||t>methodLast[l.method])methodLast[l.method]=t;
-      });
-      const nowMs=Date.now();
-      return c.methods.some(m=>{
-        const last=methodLast[m];
-        if(!last)return false;
-        const days=Math.round((nowMs-last)/86400000);
-        return days>=14&&days<365;
-      });
-    },
-    render:c=>{
-      const methodLast={};
-      c.logs.forEach(l=>{
-        if(!l.method)return;
-        const t=new Date(l.date+'T12:00:00').getTime();
-        if(!methodLast[l.method]||t>methodLast[l.method])methodLast[l.method]=t;
-      });
-      const nowMs=Date.now();
-      const stale=c.methods
-        .map(m=>({m,days:Math.round((nowMs-(methodLast[m]||nowMs))/86400000)}))
-        .filter(x=>x.days>=14&&x.days<365)
-        .sort((a,b)=>b.days-a.days);
-      const top=stale[0];
-      return{icon:'🔄',msg:`It's been ${top.days} days since you used ${top.m}.`};
-    }
-  },
-  {
-    key:'photo_cadence', priority:3, cooldown:14,
-    test:c=>{
-      if(c.photos.length<3)return false;
-      const months=[...new Set(c.photos.map(p=>(p.date||'').slice(0,7)).filter(Boolean))].sort();
-      if(months.length<3)return false;
-      const [fy,fm]=months[0].split('-').map(Number);
-      const [ly,lm]=months[months.length-1].split('-').map(Number);
-      const totalMonths=(ly-fy)*12+(lm-fm)+1;
-      return months.length===totalMonths;
-    },
-    render:c=>{
-      const sorted=[...c.photos].sort((a,b)=>a.date.localeCompare(b.date));
-      const startMonth=new Date(sorted[0].date+'T12:00:00').toLocaleDateString('en',{month:'long'});
-      return{icon:'📸',msg:`You've photographed every month since ${startMonth}.`};
-    }
-  },
-
-  // ── Priority 4 — Reflection ──────────────────────────────────────────
-  {
-    key:'journey_duration', priority:4, cooldown:14, hourBias:[17,23],
-    test:c=>c.daysSinceStart>=100,
-    render:c=>({icon:'🌱',msg:`${c.daysSinceStart} days of showing up.`})
-  },
-  {
-    key:'sessions_reflection', priority:4, cooldown:14, hourBias:[17,23],
-    test:c=>c.sessions>=50,
-    render:c=>({icon:'📈',msg:`${c.sessions} sessions. ${c.sessions} quiet choices.`})
-  },
-  {
-    key:'hours_reflection', priority:4, cooldown:14, hourBias:[17,23],
-    test:c=>c.minutes>=6000,
-    render:c=>({icon:'⏳',msg:`${Math.floor(c.minutes/60)} hours of tension. That's real.`})
-  },
-  // ── Priority 5 — Community (members only) ────────────────────────────
-  {
-    key:'community_live', priority:5, cooldown:3, joinedOnly:true,
-    test:c=>c.commActiveCount>=1,
-    render:c=>{
-      const n=c.commActiveCount;
-      return{icon:'🌱',msg:n===1?'1 other is restoring right now.':`${n} others are restoring right now.`};
-    }
-  },
-  {
-    key:'community_hours_today', priority:5, cooldown:3, joinedOnly:true,
-    test:c=>c.commTotalTodayMins>=600,
-    render:c=>({icon:'⏳',msg:`The community logged ${Math.floor(c.commTotalTodayMins/60)} hours today.`})
-  },
-  {
-    key:'community_new_member', priority:5, cooldown:3, joinedOnly:true,
-    test:c=>c.commNewThisWeek>=1,
-    render:c=>{
-      const n=c.commNewThisWeek;
-      return{icon:'🌱',msg:n===1?'A new restorer joined this week.':`${n} new restorers joined this week.`};
-    }
-  },
-];
-
-// Fallback pool — used when nothing else clears. Rotates by day-of-epoch
-// so the same statement never repeats on consecutive days. Every statement
-// uses the user's actual numbers, never a generic tip.
-const INSIGHT_FALLBACKS=[
-  c=>({icon:'🌱',msg:`${c.sessions} sessions logged. Quiet accumulation.`}),
-  c=>({icon:'⏳',msg:`${Math.floor(c.minutes/60)} hours under tension. Every minute is real.`}),
-  c=>({icon:'📅',msg:`Day ${c.daysSinceStart} of the journey. Still showing up.`}),
-  c=>({icon:'📸',msg:`${c.photos.length} photo${c.photos.length!==1?'s':''}. A timeline you can see.`}),
-  c=>({icon:'📈',msg:`${c.sessions} sessions. Slowly, then suddenly.`}),
-];
-
-function buildInsightContext(){
-  const td=today();
-  const hour=new Date().getHours();
-  const tMin=todayMin();
-  const tGoal=todayGoalMin();
-  const goal=char.dailyGoalMin||120;
-  const goalLeft=Math.max(0,goal-tGoal);
-  const isRunning=!!activeTimer&&!!activeTimer.startedAt;
-  const tLogs=todayLogs();
-  const startDate=char.startDate||td;
-  const daysSinceStart=Math.max(0,Math.round((new Date(td)-new Date(startDate))/86400000));
-  const lastLog=logs[0]||null;
-
-  let commActiveCount=0,commTotalTodayMins=0,commNewThisWeek=0;
-  if(commState.ready&&commState.users&&commState.users.length){
-    const nowMs=Date.now();
-    const weekAgo=nowMs-7*86400000;
-    commState.users.forEach(u=>{
-      if(u.uid===fbUID)return;
-      if(u.active)commActiveCount++;
-      commTotalTodayMins+=(u.todayMins||0);
-      if(u.joinedAt){
-        const ms=u.joinedAt.toMillis?u.joinedAt.toMillis():new Date(u.joinedAt).getTime();
-        if(ms>=weekAgo)commNewThisWeek++;
-      }
-    });
-  }
-
-  return{
-    td,hour,tMin,tGoal,goal,goalLeft,isRunning,tLogs,
-    sessions:char.sessions||0,
-    minutes:char.minutes||0,
-    streak:char.streak||0,
-    goalDays:char.goalDays||0,
-    methods:char.methods||[],
-    photos:photos||[],
-    logs:logs||[],
-    startDate,daysSinceStart,lastLog,
-    isJoined:!!(char.communityEnabled&&fbIsGoogle&&fbUID),
-    commActiveCount,commTotalTodayMins,commNewThisWeek
-  };
-}
-
-function effectivePriority(insight,ctx){
-  let p=insight.priority;
-  if(insight.hourBias){
-    const [start,end]=insight.hourBias;
-    if(ctx.hour>=start&&ctx.hour<end)p-=0.5;
-  }
-  return p;
-}
-
-function insightOnCooldown(insight,ctx){
-  const hist=char.insightHistory||{};
-  const last=hist[insight.key];
-  if(!last)return false;
-  const days=Math.round((new Date(ctx.td)-new Date(last))/86400000);
-  return days<insight.cooldown;
-}
-
-function todayInsight(){
-  const ctx=buildInsightContext();
-
-  // Never show during a running session — the session card owns the
-  // Home screen during that time.
-  if(ctx.isRunning)return null;
-
-  // ── STICKINESS ──
-  // If a non-sticky insight is showing from today and is still valid,
-  // keep it — unless something strictly-higher-priority has become
-  // available since.
-  if(char.activeInsight&&char.activeInsight.date===ctx.td){
-    const stored=INSIGHT_REGISTRY.find(i=>i.key===char.activeInsight.key);
-    if(stored&&stored.test(ctx)){
-      const override=INSIGHT_REGISTRY.some(i=>{
-        if(i.priority>=stored.priority)return false;
-        if(i.joinedOnly&&!ctx.isJoined)return false;
-        if(insightOnCooldown(i,ctx))return false;
-        return i.test(ctx);
-      });
-      if(!override){
-        return stored.render(ctx);
-      }
-    }
-  }
-
-  // ── SELECTION ──
-  // Walk the registry in effective-priority order. Cooldown check runs
-  // before the test so expensive pattern observations are skipped
-  // entirely when they aren't eligible to fire today.
-  const eligible=INSIGHT_REGISTRY.filter(i=>{
-    if(i.joinedOnly&&!ctx.isJoined)return false;
-    if(insightOnCooldown(i,ctx))return false;
-    return i.test(ctx);
-  });
-
-  if(eligible.length){
-    eligible.sort((a,b)=>effectivePriority(a,ctx)-effectivePriority(b,ctx));
-    const winner=eligible[0];
-    if(!char.insightHistory)char.insightHistory={};
-    char.insightHistory[winner.key]=ctx.td;
-    char.activeInsight={key:winner.key,date:ctx.td};
-    saveChar();
-    return winner.render(ctx);
-  }
-
-  // ── FALLBACK ──
-  // Nothing cleared. Rotate through the fallback pool by day-of-epoch so
-  // the same statement never appears on consecutive days.
-  const dayIdx=Math.floor(Date.now()/86400000)%INSIGHT_FALLBACKS.length;
-  return INSIGHT_FALLBACKS[dayIdx](ctx);
-}
 
 // ── FIRST-30-DAYS CHECK-INS ───────────────────────────────────────────────────
 // Four milestone moments across a new user's first three months, plus one
@@ -2449,6 +2015,28 @@ function checkinSecondary(key){
   render();
 }
 
+// Auto-dismiss for check-ins that have no primary action — currently just
+// Day 1, which is pure acknowledgment and doesn't need a tap to move past.
+//
+// The timer starts the moment the card mounts. It does NOT reset on
+// re-renders — re-rendering Home (e.g. toggling sessions) won't restart the
+// clock, so the 7 seconds are absolute from the card's first appearance. If
+// the user taps "Got it" first, the timer fires later, finds no card in the
+// DOM, and does nothing. If they start a session before it fires, the card
+// has been replaced by the session card — same story.
+let _checkinAutoDismissTimer=null;
+let _checkinAutoDismissKey=null;
+function attachCheckinAutoDismiss(key){
+  if(_checkinAutoDismissTimer&&_checkinAutoDismissKey===key)return;
+  if(_checkinAutoDismissTimer)clearTimeout(_checkinAutoDismissTimer);
+  _checkinAutoDismissKey=key;
+  _checkinAutoDismissTimer=setTimeout(()=>{
+    _checkinAutoDismissTimer=null;
+    _checkinAutoDismissKey=null;
+    if(document.querySelector(`[data-checkin="${key}"]`))checkinSecondary(key);
+  },7000);
+}
+
 function renderCheckinCard(c){
   const view=c.render(buildCheckinContext());
   const {icon,title,body,stats,primary,secondary}=view;
@@ -2457,7 +2045,7 @@ function renderCheckinCard(c){
   let intent='';
   if(c.key==='day7'||c.key==='day30'||c.key==='journey_reflection')intent='note';
   else if(c.key==='day90')intent=(photos||[]).length>=2?'compare':'photos';
-  return`<div class="card card-gold" style="margin-bottom:9px;padding:18px 16px">
+  return`<div class="card card-gold" data-checkin="${c.key}" data-auto-dismiss="${primary?'0':'1'}" style="margin-bottom:9px;padding:18px 16px">
     <div style="display:flex;align-items:center;gap:11px;margin-bottom:${stats?'10':'12'}px">
       <span style="font-size:26px;line-height:1;flex-shrink:0">${icon}</span>
       <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--accent);letter-spacing:.3px">${title}</div>
@@ -2599,14 +2187,16 @@ function renderToday(){
   const isPaused=!!activeTimer&&!activeTimer.startedAt;
   const checkin=pendingCheckin();
   const checkinCard=checkin?renderCheckinCard(checkin):'';
-  // Skip todayInsight() when a check-in is showing — otherwise we'd
-  // burn the insight's cooldown on a line the user never sees, and
-  // the two would be saying the same thing anyway (both acknowledge
-  // today's first session).
-  const insight=checkin?null:todayInsight();
-  const insightLine=insight?`<div style="display:flex;gap:10px;align-items:flex-start;padding-top:11px;margin-top:12px;border-top:1px solid var(--stat-border)">
-    <span style="font-size:17px;flex-shrink:0;line-height:1;opacity:.85">${insight.icon}</span>
-    <div style="flex:1;min-width:0;font-size:11.5px;color:var(--text2);line-height:1.55;font-weight:500">${insight.msg}</div>
+  // streak_breaks_today — the one remaining insight signal. Fires only in the
+  // evening (20:00+), only if the user has an active streak of 3+ days and
+  // hasn't logged anything today. Time-sensitive and unique: nothing else on
+  // Home says this, and if the user acts, it's tonight or never. Suppressed
+  // while a session is running or a check-in card is showing.
+  const _hour=new Date().getHours();
+  const _lateNightNudge=!checkin&&!isRunning&&_hour>=20&&tMin===0&&(char.streak||0)>=3;
+  const insightLine=_lateNightNudge?`<div style="display:flex;gap:10px;align-items:flex-start;padding-top:11px;margin-top:12px;border-top:1px solid var(--stat-border)">
+    <span style="font-size:17px;flex-shrink:0;line-height:1;opacity:.85">🔥</span>
+    <div style="flex:1;min-width:0;font-size:11.5px;color:var(--text2);line-height:1.55;font-weight:500">${char.streak}-day streak still intact today — a short session keeps it.</div>
   </div>`:'';
   const timerBlock=isRunning?`<div class="card sess-active-card" style="border-color:var(--green-border);background:var(--green-bg);margin-bottom:9px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -6800,6 +6390,13 @@ function attachPhotoLongPress(){
 }
 function attachEvents(){
   attachPhotoLongPress();
+  // Auto-dismiss any check-in that carries data-auto-dismiss="1" — set by
+  // renderCheckinCard for check-ins with no primary action (currently just
+  // Day 1). See attachCheckinAutoDismiss for the reasoning.
+  if(tab==='today'){
+    const _ci=document.querySelector('[data-checkin][data-auto-dismiss="1"]');
+    if(_ci)attachCheckinAutoDismiss(_ci.dataset.checkin);
+  }
   document.querySelectorAll('.quick-start-btn').forEach(btn=>btn.addEventListener('click',function(){
     const method=this.dataset.method;
     const cat=this.dataset.cat;
