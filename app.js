@@ -134,7 +134,7 @@ let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[]
   dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
   communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},
-  communityEncouragementReadAt:0,preferredMethods:[]};
+  preferredMethods:[]};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -166,10 +166,6 @@ const fmtMin=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60
 const fmtDur=m=>{if(m<=0)return'0m';if(m<60)return m+'m';const h=Math.floor(m/60),r=m%60;if(h<24)return r?`${h}h ${r}m`:`${h}h`;const d=Math.floor(h/24),rh=h%24;if(rh===0)return r?`${d}d ${r}m`:`${d}d`;return r?`${d}d ${rh}h ${r}m`:`${d}d ${rh}h`;};
 const fmtDate=s=>{if(!s)return'';const p=s.split('-');return`${p[1]}/${p[2]}/${p[0].slice(2)}`;};
 const fmtDateLong=s=>{if(!s)return'';const p=s.split('-');return`${p[1]}/${p[2]}/${p[0]}`;};
-// Convert HH:MM (24h) string to 12-hour AM/PM using device locale
-const time12=t=>{if(!t)return'';try{const [h,m]=t.split(':').map(Number);return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(2000,0,1,h,m));}catch{return t;}};
-// Alias used inside setReminder toast
-const fmtTime12=time12;
 function fmtWallStart(ms){
   if(!ms)return'';
   const d=new Date(ms);
@@ -286,18 +282,6 @@ function liveTimerMinsForDate(dateStr){
   return Math.floor(sessionActiveSecsBetween(activeTimer, dateStart, dateEnd)/60);
 }
 const todayMin=()=>todayLogs().reduce((a,l)=>a+l.dur,0)+liveTimerTodayMins();
-// Display-only streak — reflects gap-breakage without mutating char.streak
-function displayStreak(){
-  if(!char.streak||!char.lastDate)return 0;
-  const diff=Math.round((new Date(today())-new Date(char.lastDate))/86400000);
-  if(diff<=1)return char.streak;
-  for(let i=1;i<diff;i++){
-    const gd=new Date(char.lastDate+'T12:00:00');
-    gd.setDate(gd.getDate()+i);
-    if(!(char.restDays||[]).includes(localDateStr(gd)))return 0;
-  }
-  return char.streak;
-}
 // Goal-qualifying minutes — filters retaining if user has opted out
 const todayGoalMin=()=>{
   const excl=char.countRetainingInGoal===false;
@@ -587,7 +571,7 @@ async function loadAll(){
   }
 }
 async function loadProfile(pid){
-  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0};
+  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{}};
   char={...defaults};logs=[];photos=[];
   const c=(await ProfileDB.get(`rst-${pid}-char`))??S.get(`rst-${pid}-char`);
   if(c)char={...char,...c};
@@ -609,7 +593,6 @@ if(char.startCI===undefined)char.startCI=0;
   if(char.communityMessagesEnabled===undefined)char.communityMessagesEnabled=true;
   if(!Array.isArray(char.communityBlockedUsers))char.communityBlockedUsers=[];
   if(!char.communityBlockedProfiles||typeof char.communityBlockedProfiles!=='object')char.communityBlockedProfiles={};
-  if(!char.communityEncouragementReadAt)char.communityEncouragementReadAt=0;
   if(!char.dayNotes)char.dayNotes={};
   if(!Array.isArray(char.preferredMethods))char.preferredMethods=[];
   if(!char.photoQuality)char.photoQuality='balanced';
@@ -685,7 +668,7 @@ function createProfile(name,startCI=0,currentCI=null,goalCI=10,preferredMethods=
     hist.push({ci:currentCI,date:today()});
   }
   const _dg=Math.max(5,Math.min(1440,dailyGoalMin||120));
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:_dg,goalDays:0,theme:currentTheme||'shadow',customMethods:[],ciLevel:currentCI,ciHistory:hist,startCI:startCI,ciGoal:goalCI,restDays:[],startDate:today(),ciSetupDone:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0,preferredMethods:preferredMethods,countRetainingInGoal:true,photoQuality:'balanced',ghostOverlay:true,cameraGrid:true,cameraTimer:0,photoLockEnabled:false,photoLockPinHash:'',photoLockSalt:'',photoLockCredentialId:''};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:_dg,goalDays:0,theme:currentTheme||'shadow',customMethods:[],ciLevel:currentCI,ciHistory:hist,startCI:startCI,ciGoal:goalCI,restDays:[],startDate:today(),ciSetupDone:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},preferredMethods:preferredMethods,countRetainingInGoal:true,photoQuality:'balanced',ghostOverlay:true,cameraGrid:true,cameraTimer:0,photoLockEnabled:false,photoLockPinHash:'',photoLockSalt:'',photoLockCredentialId:''};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -768,10 +751,9 @@ function deleteProfile(){
   S.del('rst-active-pid');
   S.del('rst-reactions');
   localStorage.removeItem('rst-comm-pending');
-  localStorage.removeItem('rst-comm-welcome-seen');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},communityEncouragementReadAt:0,dayNotes:{},preferredMethods:[]};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},dayNotes:{},preferredMethods:[]};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
   _photoSelectMode=false;_photoSelectedIds=new Set();
   _photosUnlocked=false;_pinBuf='';
@@ -1260,22 +1242,6 @@ function setCILevel(n){
 }
 
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
-async function addPhoto(ciLevel,dataUrl,note,dateStr){
-  const photoDate=dateStr||today();
-  const compressed=await compressForPhoto(dataUrl);
-  const newPhoto={id:Date.now(),ci:ciLevel,date:photoDate,url:compressed,note:note||'',pinned:false};
-  photos=[newPhoto,...photos];
-  try{
-    await PhotoDB.save(currentPid,photos);
-    recalcAchievements();
-    showToast('📸 Progress photo saved!');tab='photos';render();
-  }catch(e){
-    photos=photos.filter(p=>p.id!==newPhoto.id);
-    showToast('⚠ Photo could not be saved');
-    console.warn('[RT] addPhoto IDB error',e);
-  }
-}
-
 function deletePhoto(id){
   photos=photos.filter(p=>p.id!==id);
   savePhotos();
@@ -1880,29 +1846,6 @@ function exportCSV(){
 // ── UI HELPERS ─────────────────────────────────────────────────────────────────
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3500);}
 function showSessFlash(msg){const el=document.createElement('div');el.className='sess-flash';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),950);}
-// Fires a small upward-outward burst of encouraging emojis.
-// If originEl is provided, the burst originates near that element —
-// so tapping 👊 on a specific card feels local and satisfying rather
-// than generic-screen-confetti.
-function showEncourageBurst(avatar,originEl){
-  const pool=[avatar||'👊','💪','✨','🌱','⚡','🔥'];
-  let baseX=50,baseY=50;
-  if(originEl){
-    const rect=originEl.getBoundingClientRect();
-    baseX=((rect.left+rect.width/2)/window.innerWidth)*100;
-    baseY=((rect.top+rect.height/2)/window.innerHeight)*100;
-  }
-  for(let i=0;i<7;i++)setTimeout(()=>{
-    const el=document.createElement('div');
-    el.textContent=pool[i%pool.length];
-    const fs=16+Math.random()*20,dur=.8+Math.random()*.5;
-    const x=baseX+(Math.random()-0.5)*30;
-    const y=baseY+(Math.random()-0.5)*20;
-    el.style.cssText=`position:fixed;font-size:${fs}px;left:${x}%;top:${y}%;pointer-events:none;z-index:500;animation:enc-burst ${dur}s ease forwards`;
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(),(dur*1000)+200);
-  },i*95);
-}
 const SESSION_QUIPS=[
   m=>`${m} of mechanotransduction complete 🧬`,
   m=>`Keratinocytes: activated. ${m} locked in`,
@@ -7670,14 +7613,6 @@ function renderCommunity(){
   }
 
   return`${topBar}${broadcastBanner}${tabBar}${content}`;
-}
-
-// Dismisses the one-time welcome banner. Removes the element immediately
-// for a smooth feel; also stores the flag so subsequent renders skip it.
-function dismissCommunityWelcome(){
-  localStorage.setItem('rst-comm-welcome-seen','1');
-  const el=document.getElementById('comm-welcome-banner');
-  if(el)el.remove();
 }
 
 // mode: 'live' | 'member' | 'dormant'. Defaults based on activity.
