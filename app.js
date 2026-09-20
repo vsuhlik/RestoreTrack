@@ -1896,7 +1896,7 @@ const CHECKINS=[
         title:'One week in.',
         stats:stats.join(' · '),
         body:'How\'s it feeling? A short note to yourself now will be worth reading later.',
-        primary:{label:'Write a note for future you'},
+        primary:{label:'Write today\'s note'},
         secondary:{label:'Not now'}
       };
     }
@@ -1915,7 +1915,7 @@ const CHECKINS=[
         title:'One month in.',
         stats:stats.join(' · '),
         body:'The habit is forming. This is where consistency starts to compound.',
-        primary:{label:'Write a note for future you'},
+        primary:{label:'Write today\'s note'},
         secondary:{label:'Not now'}
       };
     }
@@ -1950,7 +1950,7 @@ const CHECKINS=[
         title:'You\'ve been at this a while.',
         stats:stats.join(' · '),
         body:'This is what consistency actually looks like — not the perfect weeks, but the ones where you kept going anyway. Worth pausing to notice.',
-        primary:{label:'Write a note for future you'},
+        primary:{label:'Write today\'s note'},
         secondary:{label:'Maybe later'}
       };
     }
