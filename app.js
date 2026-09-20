@@ -7357,7 +7357,13 @@ function showConversationSheet(otherUID,otherUser={}){
       <button id="message-close" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font-body)">Close</button>
     </div>
     <div id="message-thread" style="flex:1;overflow-y:auto;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:9px;margin-bottom:9px"></div>
-    <div style="display:flex;gap:7px"><input id="message-inp" class="gold-inp" maxlength="500" placeholder="Write a message…" style="flex:1;font-size:12px"><button id="message-send" class="btn-gold" style="width:auto;padding:0 14px">Send</button></div>
+    <div id="message-emoji-panel" style="display:none;background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;padding:8px;margin-bottom:7px;max-height:150px;overflow-y:auto"></div>
+    <div style="display:flex;gap:7px;align-items:flex-end">
+      <textarea id="message-inp" maxlength="500" placeholder="Write a message…" rows="1"
+        style="flex:1;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:10px;padding:9px 12px;color:var(--text1);font-size:13px;outline:none;font-family:var(--font-body);resize:none;max-height:120px;overflow-y:auto;line-height:1.45;min-height:38px"></textarea>
+      <button id="message-emoji-btn" title="Emoji" style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:17px;padding:0;line-height:1;font-family:var(--font-body);transition:background .15s,border-color .15s">😊</button>
+      <button id="message-send" class="btn-gold" style="width:auto;padding:0 14px;height:38px;flex-shrink:0">Send</button>
+    </div>
   </div>`;
   document.getElementById('root').appendChild(el);
   const messageRef=db.collection('conversations').doc(cid).collection('messages');
@@ -7386,8 +7392,66 @@ function showConversationSheet(otherUID,otherUser={}){
   el.addEventListener('click',event=>{if(event.target===el)close();});
   const send=()=>sendPrivateMessage(cid,otherUID,otherUser);
   document.getElementById('message-send').onclick=send;
-  document.getElementById('message-inp').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}});
-  document.getElementById('message-inp').focus();
+
+  // ── Auto-growing textarea ──
+  // Starts at one line and expands up to max-height (120px ≈ 5 lines), then
+  // scrolls internally. The `height:auto` reset before reading scrollHeight
+  // is what lets the box shrink back down when you delete text — without it,
+  // scrollHeight would keep reporting the previous larger height.
+  const _inp=document.getElementById('message-inp');
+  const _growInput=()=>{
+    _inp.style.height='auto';
+    _inp.style.height=Math.min(_inp.scrollHeight,120)+'px';
+  };
+  _inp.addEventListener('input',_growInput);
+
+  // ── Enter behaviour ──
+  // Enter inserts a newline (default textarea behaviour). No keydown handler
+  // is registered, so the browser's default stands. Send is deliberate —
+  // tap the Send button. Chosen because multi-sentence messages are common
+  // in this community, and Enter-to-send makes it too easy to ship a
+  // half-written message.
+
+  // ── Emoji panel ──
+  // Curated set: encouragement, common chat reactions, and a few
+  // context-relevant ones (rest day, photos, sessions, progress). 8 columns
+  // keeps it compact within the sheet's 480px-max width.
+  const EMOJI_SET=[
+    '💪','🔥','✨','🌱','🎉','👊','🙌','👍',
+    '❤️','😂','😊','😅','🤔','😍','😎','🥳',
+    '🤝','🙏','👋','🤗','🛌','📸','⏱','📈',
+    '🎯','🏅','⚡','💎','🌟','🍀','🚀','💯',
+    '👏','🤞','😌','🤙','✌️','☀️','🌙','🌊'
+  ];
+  const _emojiPanel=document.getElementById('message-emoji-panel');
+  const _emojiBtn=document.getElementById('message-emoji-btn');
+  _emojiPanel.innerHTML=`<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px">${
+    EMOJI_SET.map(e=>`<button type="button" data-emoji="${e}" style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px;border-radius:6px;line-height:1;transition:background .12s">${e}</button>`).join('')
+  }</div>`;
+  _emojiPanel.querySelectorAll('[data-emoji]').forEach(btn=>{
+    btn.addEventListener('mouseenter',()=>btn.style.background='var(--bg-card)');
+    btn.addEventListener('mouseleave',()=>btn.style.background='none');
+    btn.onclick=()=>{
+      const emoji=btn.dataset.emoji;
+      // Insert at cursor position (or at end if there's no selection)
+      const start=_inp.selectionStart??_inp.value.length;
+      const end=_inp.selectionEnd??_inp.value.length;
+      _inp.value=_inp.value.slice(0,start)+emoji+_inp.value.slice(end);
+      const newPos=start+emoji.length;
+      _inp.setSelectionRange(newPos,newPos);
+      _inp.focus();
+      _growInput();
+      if(navigator.vibrate)navigator.vibrate(8);
+    };
+  });
+  _emojiBtn.onclick=()=>{
+    const open=_emojiPanel.style.display==='none';
+    _emojiPanel.style.display=open?'block':'none';
+    _emojiBtn.style.background=open?'var(--acc12)':'var(--bg-stat)';
+    _emojiBtn.style.borderColor=open?'var(--acc30)':'var(--stat-border)';
+  };
+
+  _inp.focus();
 }
 
 function markConversationRead(conversationId){
@@ -7399,6 +7463,10 @@ function sendPrivateMessage(conversationId,otherUID,otherUser){
   const input=document.getElementById('message-inp');
   const text=input?.value.trim();if(!text||!db||!fbUID)return;
   input.value='';input.disabled=true;
+  // Reset auto-grow height back to one line. Without this, the textarea
+  // would keep the taller height it grew to while typing the previous
+  // message.
+  input.style.height='auto';
   db.collection('community_users').doc(otherUID).get().then(doc=>{
     if(!doc.exists||doc.data().acceptsMessages===false)throw new Error('disabled');
     const conversation=db.collection('conversations').doc(conversationId);
@@ -7535,26 +7603,15 @@ function renderCommunity(){
   // it shouldn't be summed here either.
   const totalHoursRestored=commState.users.reduce((sum,u)=>sum+(u.totalHours||0),0);
 
-  // ── First-time welcome banner ──
-  // Shown once per user, dismissible, remembered in localStorage.
-  const welcomeBanner=(()=>{
-    if(localStorage.getItem('rst-comm-welcome-seen'))return '';
-    return `<div id="comm-welcome-banner" style="background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.04));border:1px solid var(--acc30);border-radius:12px;padding:14px 16px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
-        <div style="font-size:12px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px"><span style="font-size:14px">👋</span> Welcome to the Community</div>
-        <button onclick="dismissCommunityWelcome()" style="background:none;border:none;color:var(--text4);font-size:14px;cursor:pointer;font-family:var(--font-body);padding:0;line-height:1;flex-shrink:0" title="Dismiss">✕</button>
-      </div>
-      <div style="font-size:11px;color:var(--text3);line-height:1.7">
-        Real people restoring right now. Browse freely — or <strong style="color:var(--text2)">join with Google</strong> to post, message, and appear on the Live tab. Seeing other restorers' progress is one of the most motivating parts of this journey.
-      </div>
-    </div>`;
-  })();
-
   // ── Status bar (joined) or join banner ──
   const topBar=!isJoined
-    ?`<div style="background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:12px;padding:14px;margin-bottom:10px">
-        <div style="font-size:12px;font-weight:600;color:var(--text1);margin-bottom:6px">◈ Join the Community</div>
-        <div style="font-size:11px;color:var(--text3);line-height:1.7;margin-bottom:10px">You can browse freely without signing in. To post, react, and appear as active — connect with Google. You can leave and rejoin the community at any time.</div>
+    ?`<div style="background:var(--bg-card-gold);border:1px solid var(--card-border-gold);border-radius:12px;padding:16px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--accent);margin-bottom:10px">
+          <span style="font-size:19px;line-height:1">👋</span> Welcome to the Community
+        </div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.75;margin-bottom:14px">
+          Real people restoring right now. Browse freely — or <strong style="color:var(--text2)">join with Google</strong> to post, message, and appear on the Live tab. You can leave and rejoin anytime.
+        </div>
         <button class="btn-gold" id="comm-join-btn" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px">
           <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.66h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Join as ${htmlEsc(char.name)}
@@ -7827,7 +7884,7 @@ function renderCommunity(){
     }
   }
 
-  return`${welcomeBanner}${topBar}${broadcastBanner}${tabBar}${content}`;
+  return`${topBar}${broadcastBanner}${tabBar}${content}`;
 }
 
 // Dismisses the one-time welcome banner. Removes the element immediately
