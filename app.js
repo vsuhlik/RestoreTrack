@@ -200,12 +200,8 @@ const IC={
   flag:    (s=13)=>IC._s('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',s),
   edit:    (s=15)=>IC._s('<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',s),
   settings:(s=15)=>IC._s('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',s),
-  user:    (s=15)=>IC._s('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',s),
   today:   (s=18)=>IC._s('<circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>',s,1.6),
-  journey: (s=18)=>IC._s('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',s,1.6),
   photos:  (s=18)=>IC._s('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',s,1.6),
-  reports: (s=18)=>IC._s('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',s,1.6),
-  badges:  (s=18)=>IC._s('<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>',s,1.6),
   community:(s=18)=>IC._s('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',s,1.6),
   progress:(s=18)=>IC._s('<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',s,1.6),
 };
@@ -1212,38 +1208,6 @@ function markRestDay(){
   saveChar();render();
 }
 
-// ── CI LEVEL ───────────────────────────────────────────────────────────────────
-function setCILevel(n){
-  _activeMilestoneIdx=null;
-  const prev=char.ciLevel||0;
-  if(n===prev){showCISheet=false;render();return;}
-  // Badge revocation: if going DOWN, strip CI badges above new level
-  if(n<prev){
-    const revokedIds=ACHS
-      .filter(a=>{
-        if(!a.id.startsWith('ci'))return false;
-        const lvl=parseInt(a.id.slice(2));
-        return!isNaN(lvl)&&lvl>n&&char.achievements.includes(a.id);
-      })
-      .map(a=>a.id);
-    if(revokedIds.length)char.achievements=char.achievements.filter(id=>!revokedIds.includes(id));
-  }
-  char.ciLevel=n;
-  // Auto-correct startCI and ciGoal if they're now inconsistent
-  if(n<(char.startCI||0))char.startCI=n;
-  if(n>(char.ciGoal||10))char.ciGoal=Math.min(10,n+1);
-  char.ciHistory=[...(char.ciHistory||[]),{ci:n,date:today()}];
-  expandedCIRef.add(n);
-  const newly=[];
-  for(const a of ACHS)if(!char.achievements.includes(a.id)&&a.check(char,photos)){char.achievements=[...char.achievements,a.id];newly.push({title:a.title,icon:a.icon});}
-  saveChar();
-  if(n>prev)recordCommunityActivity('ci_reached',{ci:n});
-  if(n>prev)showToast(`🎉 ${LEVELS[n].ci} reached!`);
-  else showToast(`◑ CI adjusted to ${LEVELS[n].ci}`);
-  if(newly.length){setTimeout(()=>showToast(`🏅 ${newly[0].title} unlocked!`),1800);}
-  showCISheet=false;render();
-}
-
 // ── PHOTOS ─────────────────────────────────────────────────────────────────────
 function deletePhoto(id){
   photos=photos.filter(p=>p.id!==id);
@@ -1897,8 +1861,6 @@ function arcD(cx,cy,r,startDeg,endDeg){
 //               priority drops by 0.5, so it floats above same-priority
 //               siblings at the right time of day
 //   joinedOnly  optional — only fires for community members
-//   once        optional — fires once ever, never again
-//   nonSticky   optional — fires once, then the strip re-selects
 //   test(ctx)   returns true if this insight applies right now
 //   render(ctx) returns { icon, msg }
 const INSIGHT_REGISTRY=[
@@ -2265,7 +2227,6 @@ function effectivePriority(insight,ctx){
 
 function insightOnCooldown(insight,ctx){
   const hist=char.insightHistory||{};
-  if(insight.once&&hist[insight.key])return true;
   const last=hist[insight.key];
   if(!last)return false;
   const days=Math.round((new Date(ctx.td)-new Date(last))/86400000);
@@ -2411,7 +2372,7 @@ const CHECKINS=[
   },
   {
     key:'journey_reflection',
-    test:c=>c.daysSinceStart>=120,
+    test:c=>c.daysSinceStart>=120&&c.sessions>=1,
     render:c=>{
       const stats=[];
       stats.push(`${c.daysSinceStart} day${c.daysSinceStart!==1?'s':''}`);
@@ -2525,7 +2486,7 @@ function render(){
         ${isRunning
           ? `<div class="ci-pill hdr-session-pill" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Go to session"><span class="hdr-session-dot"></span><span id="hdr-session-time">${fmtLiveCompact(timerSecs)}</span></div>`
           : isPaused
-            ? `<div class="ci-pill hdr-session-pill hdr-session-pill--paused" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Session paused"><span style="font-size:10px;line-height:1">⏸</span><span id="hdr-session-time">${fmtLiveCompact(timerSecs)}</span></div>`
+            ? `<div class="ci-pill hdr-session-pill hdr-session-pill--paused" onclick="tab='today';render()" style="cursor:pointer;flex-shrink:0" title="Session paused"><span style="display:inline-flex;align-items:center">${IC.pause(11)}</span><span id="hdr-session-time">${fmtLiveCompact(timerSecs)}</span></div>`
             : `<div class="ci-pill" onclick="tab='journey';render()" style="cursor:pointer;flex-shrink:0" title="Go to Progress">${LEVELS[ci].ci}</div>`
         }
       </div>
