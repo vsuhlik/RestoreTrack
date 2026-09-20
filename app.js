@@ -134,7 +134,7 @@ let char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[]
   dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],ciGoal:10,restDays:[],
   communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',
   communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},
-  preferredMethods:[],activeInsight:null,insightHistory:{}};
+  preferredMethods:[],activeInsight:null,insightHistory:{},checkinsSeen:{}};
 let logs=[],photos=[];
 let tab='today';
 let activeTimer=null,timerInterval=null,timerSecs=0;
@@ -571,7 +571,7 @@ async function loadAll(){
   }
 }
 async function loadProfile(pid){
-  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},activeInsight:null,insightHistory:{}};
+  const defaults={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'shadow',customMethods:[],ciLevel:0,ciHistory:[],communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},activeInsight:null,insightHistory:{},checkinsSeen:{}};
   char={...defaults};logs=[];photos=[];
   const c=(await ProfileDB.get(`rst-${pid}-char`))??S.get(`rst-${pid}-char`);
   if(c)char={...char,...c};
@@ -596,6 +596,7 @@ if(char.startCI===undefined)char.startCI=0;
   if(!char.dayNotes)char.dayNotes={};
   if(char.activeInsight===undefined)char.activeInsight=null;
   if(!char.insightHistory||typeof char.insightHistory!=='object')char.insightHistory={};
+  if(!char.checkinsSeen||typeof char.checkinsSeen!=='object')char.checkinsSeen={};
   if(!Array.isArray(char.preferredMethods))char.preferredMethods=[];
   if(!char.photoQuality)char.photoQuality='balanced';
   if(char.ghostOverlay===undefined)char.ghostOverlay=true;
@@ -670,7 +671,7 @@ function createProfile(name,startCI=0,currentCI=null,goalCI=10,preferredMethods=
     hist.push({ci:currentCI,date:today()});
   }
   const _dg=Math.max(5,Math.min(1440,dailyGoalMin||120));
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:_dg,goalDays:0,theme:currentTheme||'shadow',customMethods:[],ciLevel:currentCI,ciHistory:hist,startCI:startCI,ciGoal:goalCI,restDays:[],startDate:today(),ciSetupDone:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},preferredMethods:preferredMethods,countRetainingInGoal:true,photoQuality:'balanced',ghostOverlay:true,cameraGrid:true,cameraTimer:0,photoLockEnabled:false,photoLockPinHash:'',photoLockSalt:'',photoLockCredentialId:'',activeInsight:null,insightHistory:{}};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name,dailyGoalMin:_dg,goalDays:0,theme:currentTheme||'shadow',customMethods:[],ciLevel:currentCI,ciHistory:hist,startCI:startCI,ciGoal:goalCI,restDays:[],startDate:today(),ciSetupDone:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},preferredMethods:preferredMethods,countRetainingInGoal:true,photoQuality:'balanced',ghostOverlay:true,cameraGrid:true,cameraTimer:0,photoLockEnabled:false,photoLockPinHash:'',photoLockSalt:'',photoLockCredentialId:'',activeInsight:null,insightHistory:{},checkinsSeen:{}};
   logs=[];photos=[];S.set('rst-active-pid',id);saveChar();showProfileScreen=false;tab='today';render();
 }
 
@@ -755,7 +756,7 @@ function deleteProfile(){
   localStorage.removeItem('rst-comm-pending');
   // Reset all state
   profiles=[];currentPid=null;
-  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},dayNotes:{},preferredMethods:[],activeInsight:null,insightHistory:{}};
+  char={sessions:0,minutes:0,streak:0,lastDate:null,methods:[],achievements:[],name:'Restorer',dailyGoalMin:120,goalDays:0,theme:'ivory',customMethods:[],ciLevel:0,ciHistory:[],restDays:[],communityEnabled:false,communityDisplayName:'',communityVisible:true,communityAvatar:'🌱',communityBio:'',communityShareStats:true,communityMessagesEnabled:true,communityBlockedUsers:[],communityBlockedProfiles:{},dayNotes:{},preferredMethods:[],activeInsight:null,insightHistory:{},checkinsSeen:{}};
   logs=[];photos=[];activeTimer=null;timerSecs=0;
   _photoSelectMode=false;_photoSelectedIds=new Set();
   _photosUnlocked=false;_pinBuf='';
@@ -2175,12 +2176,6 @@ const INSIGHT_REGISTRY=[
     test:c=>c.minutes>=6000,
     render:c=>({icon:'⏳',msg:`${Math.floor(c.minutes/60)} hours of tension. That's real.`})
   },
-  {
-    key:'first_month', priority:4, cooldown:365, once:true,
-    test:c=>c.daysSinceStart>=30&&c.daysSinceStart<=45,
-    render:()=>({icon:'🌱',msg:'One month in. The habit is forming.'})
-  },
-
   // ── Priority 5 — Community (members only) ────────────────────────────
   {
     key:'community_live', priority:5, cooldown:3, joinedOnly:true,
@@ -2330,6 +2325,191 @@ function todayInsight(){
   return INSIGHT_FALLBACKS[dayIdx](ctx);
 }
 
+// ── FIRST-30-DAYS CHECK-INS ───────────────────────────────────────────────────
+// Four milestone moments across a new user's first three months, plus one
+// long-haul reflection for anyone who arrives past the Day-90 window. Each
+// fires at most once, on the day its condition is first met, and only if no
+// other check-in has already shown that same calendar day. Once spent, this
+// system goes silent — the insight strip carries the daily voice from here on.
+//
+// Each entry declares an optional maxDay. If the user is past that day when
+// we first check, the milestone has passed and the entry is silently marked
+// seen — but the long-haul reflection below catches them, so no user ever
+// ends up with a card-less account. Legacy users get the reflection instead
+// of the milestones, not instead of anything.
+//
+// Jobs, in order:
+//   day1               — Presence.    "You started." Acknowledgment only.
+//   day7               — Reflection.  Stats + nudge to write a note.
+//   day30              — Consistency. Bigger stats, same note nudge.
+//   day90              — Proof.       Compare photos — the payoff moment.
+//   journey_reflection — Recognition. For long-haul users, once, ever.
+const CHECKINS=[
+  {
+    key:'day1', maxDay:3,
+    test:c=>c.sessions>=1,
+    render:()=>({
+      icon:'🌱',
+      title:'Day one.',
+      body:'The hardest part is behind you — you started. Everything from here is just showing up.',
+      primary:null,
+      secondary:{label:'Got it'}
+    })
+  },
+  {
+    key:'day7', maxDay:14,
+    test:c=>c.daysSinceStart>=7,
+    render:c=>{
+      const stats=[];
+      if(c.sessions)stats.push(`${c.sessions} session${c.sessions!==1?'s':''}`);
+      if(c.minutes)stats.push(fmtDur(c.minutes));
+      if((c.methods||[]).length)stats.push(`${c.methods.length} method${c.methods.length!==1?'s':''}`);
+      return{
+        icon:'🌿',
+        title:'One week in.',
+        stats:stats.join(' · '),
+        body:'How\'s it feeling? A short note to yourself now will be worth reading later.',
+        primary:{label:'Write a note for future you'},
+        secondary:{label:'Not now'}
+      };
+    }
+  },
+  {
+    key:'day30', maxDay:45,
+    test:c=>c.daysSinceStart>=30,
+    render:c=>{
+      const stats=[];
+      if(c.sessions)stats.push(`${c.sessions} session${c.sessions!==1?'s':''}`);
+      if(c.minutes)stats.push(fmtDur(c.minutes));
+      const activeDays=new Set((c.logs||[]).map(l=>l.date)).size;
+      if(activeDays)stats.push(`${activeDays} active day${activeDays!==1?'s':''}`);
+      return{
+        icon:'🌙',
+        title:'One month in.',
+        stats:stats.join(' · '),
+        body:'The habit is forming. This is where consistency starts to compound.',
+        primary:{label:'Write a note for future you'},
+        secondary:{label:'Not now'}
+      };
+    }
+  },
+  {
+    key:'day90', maxDay:120,
+    test:c=>c.daysSinceStart>=90,
+    render:c=>{
+      const hasPhotos=(c.photos||[]).length>=2;
+      return{
+        icon:'💎',
+        title:'Three months in.',
+        body:hasPhotos
+          ?'Visible changes usually start around now. Compare your earliest photo to your most recent — that\'s the whole point of taking them.'
+          :'Visible changes usually start around now. If you haven\'t started a photo timeline yet, today is the day to begin.',
+        primary:{label:hasPhotos?'Compare your photos':'Add a photo'},
+        secondary:{label:'Maybe later'}
+      };
+    }
+  },
+  {
+    key:'journey_reflection',
+    test:c=>c.daysSinceStart>=120,
+    render:c=>{
+      const stats=[];
+      stats.push(`${c.daysSinceStart} day${c.daysSinceStart!==1?'s':''}`);
+      if(c.sessions)stats.push(`${c.sessions} session${c.sessions!==1?'s':''}`);
+      if(c.minutes)stats.push(`${fmtDur(c.minutes)} logged`);
+      if((c.methods||[]).length)stats.push(`${c.methods.length} method${c.methods.length!==1?'s':''}`);
+      return{
+        icon:'🏔️',
+        title:'You\'ve been at this a while.',
+        stats:stats.join(' · '),
+        body:'This is what consistency actually looks like — not the perfect weeks, but the ones where you kept going anyway. Worth pausing to notice.',
+        primary:{label:'Write a note for future you'},
+        secondary:{label:'Maybe later'}
+      };
+    }
+  },
+];
+
+function buildCheckinContext(){
+  const startDate=char.startDate||today();
+  return{
+    sessions:char.sessions||0,
+    minutes:char.minutes||0,
+    methods:char.methods||[],
+    logs:logs||[],
+    photos:photos||[],
+    daysSinceStart:Math.max(0,Math.round((new Date(today())-new Date(startDate))/86400000))
+  };
+}
+
+function pendingCheckin(){
+  if(!char.checkinsSeen)char.checkinsSeen={};
+  // Session owns Home while it runs — no card over a live session
+  if(activeTimer&&activeTimer.startedAt)return null;
+  // One per calendar day, even if several qualify
+  const seenToday=Object.values(char.checkinsSeen).includes(today());
+  if(seenToday)return null;
+  const ctx=buildCheckinContext();
+  let mutated=false;
+  for(const c of CHECKINS){
+    if(char.checkinsSeen[c.key])continue;
+    // Past its window — the milestone has passed. Mark silently so a
+    // late-arriving build doesn't hand a veteran a "Day one" card. The
+    // journey_reflection entry below catches anyone skipped this way.
+    if(c.maxDay!==undefined&&ctx.daysSinceStart>c.maxDay){
+      char.checkinsSeen[c.key]=today();
+      mutated=true;
+      continue;
+    }
+    if(c.test(ctx)){
+      if(mutated)saveChar();
+      return c;
+    }
+  }
+  if(mutated)saveChar();
+  return null;
+}
+
+function checkinPrimary(key,intent){
+  if(!char.checkinsSeen)char.checkinsSeen={};
+  char.checkinsSeen[key]=today();
+  saveChar();
+  // Render first so the card is gone from Home before the sheet opens on top
+  if(intent==='note'){render();showDayNoteEditor(today());}
+  else if(intent==='compare'){render();openComparePicker();}
+  else if(intent==='photos'){tab='photos';render();}
+  else render();
+}
+
+function checkinSecondary(key){
+  if(!char.checkinsSeen)char.checkinsSeen={};
+  char.checkinsSeen[key]=today();
+  saveChar();
+  render();
+}
+
+function renderCheckinCard(c){
+  const view=c.render(buildCheckinContext());
+  const {icon,title,body,stats,primary,secondary}=view;
+  // Map card identity → action intent. The card's render() only declares
+  // *what kind of moment* this is; the intent decides *where the button goes*.
+  let intent='';
+  if(c.key==='day7'||c.key==='day30'||c.key==='journey_reflection')intent='note';
+  else if(c.key==='day90')intent=(photos||[]).length>=2?'compare':'photos';
+  return`<div class="card card-gold" style="margin-bottom:9px;padding:18px 16px">
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:${stats?'10':'12'}px">
+      <span style="font-size:26px;line-height:1;flex-shrink:0">${icon}</span>
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:700;color:var(--accent);letter-spacing:.3px">${title}</div>
+    </div>
+    ${stats?`<div style="font-size:12px;color:var(--text2);font-weight:600;letter-spacing:.2px;margin-bottom:12px;font-variant-numeric:tabular-nums">${stats}</div>`:''}
+    <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:16px">${body}</div>
+    <div style="display:flex;gap:8px">
+      ${primary?`<button onclick="checkinPrimary('${c.key}','${intent}')" class="btn-gold" style="flex:1;padding:11px;font-size:13px">${primary.label}</button>`:''}
+      <button onclick="checkinSecondary('${c.key}')" class="${primary?'btn-ghost':'btn-gold'}" style="flex:${primary?'0 0 92px':'1'};padding:11px;font-size:13px">${secondary.label}</button>
+    </div>
+  </div>`;
+}
+
 // ── RENDER ─────────────────────────────────────────────────────────────────────
 function render(){
   if(showProfileScreen){renderProfileScreen();return;}
@@ -2456,6 +2636,8 @@ function renderToday(){
   const tSess=todayLogs();
   const isRunning=!!activeTimer&&!!activeTimer.startedAt;
   const isPaused=!!activeTimer&&!activeTimer.startedAt;
+  const checkin=pendingCheckin();
+  const checkinCard=checkin?renderCheckinCard(checkin):'';
   const insight=todayInsight();
   const insightStrip=insight?`<div style="background:var(--acc6);border:1px solid var(--acc18);border-left:3px solid var(--acc30);border-radius:12px;padding:11px 14px 11px 12px;margin-bottom:9px;display:flex;gap:11px;align-items:center">
   <span style="font-size:20px;flex-shrink:0;line-height:1">${insight.icon}</span>
@@ -2538,6 +2720,7 @@ function renderToday(){
       </button>`).join('')}
     </div>`:'';
   return`
+  ${checkinCard}
   ${insightStrip}
   <div class="card" style="margin-bottom:9px;position:relative;overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
