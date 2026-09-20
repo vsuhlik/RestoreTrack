@@ -2464,9 +2464,9 @@ function renderCheckinCard(c){
     </div>
     ${stats?`<div style="font-size:12px;color:var(--text2);font-weight:600;letter-spacing:.2px;margin-bottom:12px;font-variant-numeric:tabular-nums">${stats}</div>`:''}
     <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:16px">${body}</div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;${primary?'':'justify-content:flex-end'}">
       ${primary?`<button onclick="checkinPrimary('${c.key}','${intent}')" class="btn-gold" style="flex:1;padding:11px;font-size:13px">${primary.label}</button>`:''}
-      <button onclick="checkinSecondary('${c.key}')" class="${primary?'btn-ghost':'btn-gold'}" style="flex:${primary?'0 0 92px':'1'};padding:11px;font-size:13px">${secondary.label}</button>
+      <button onclick="checkinSecondary('${c.key}')" class="btn-ghost" style="${primary?'flex:0 0 92px;padding:11px;font-size:13px;':'padding:9px 18px;font-size:12px;'}">${secondary.label}</button>
     </div>
   </div>`;
 }
@@ -2599,7 +2599,11 @@ function renderToday(){
   const isPaused=!!activeTimer&&!activeTimer.startedAt;
   const checkin=pendingCheckin();
   const checkinCard=checkin?renderCheckinCard(checkin):'';
-  const insight=todayInsight();
+  // Skip todayInsight() when a check-in is showing — otherwise we'd
+  // burn the insight's cooldown on a line the user never sees, and
+  // the two would be saying the same thing anyway (both acknowledge
+  // today's first session).
+  const insight=checkin?null:todayInsight();
   const insightLine=insight?`<div style="display:flex;gap:10px;align-items:flex-start;padding-top:11px;margin-top:12px;border-top:1px solid var(--stat-border)">
     <span style="font-size:17px;flex-shrink:0;line-height:1;opacity:.85">${insight.icon}</span>
     <div style="flex:1;min-width:0;font-size:11.5px;color:var(--text2);line-height:1.55;font-weight:500">${insight.msg}</div>
