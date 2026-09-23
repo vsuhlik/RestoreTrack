@@ -3499,13 +3499,18 @@ function mountPhotoGuideSheet(){
     const isQueued=queueTotal>1;
     const isLast=!isQueued||queueIdx===queueTotal-1;
     const tagGhostPhoto=getLatestPhotoForGhost();
+    // Original filename from the user's library pick. Only populated when the
+    // photo came from "Choose Existing" — the camera capture path doesn't set
+    // a fileName on the queue entry. Looked up by index; safe if queueIdx is
+    // -1 (photoQueue[-1] is undefined, optional chaining returns undefined).
+    const currentFileName=photoQueue[queueIdx]?.fileName||'';
 
     const headerBtn='background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:15px;transition:all .15s;padding:0;flex-shrink:0';
 
     el.innerHTML=`<div class="sheet" style="max-height:94vh;display:flex;flex-direction:column;padding-bottom:18px">
       <div class="sheet-handle"></div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-shrink:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:${currentFileName?'2px':'10px'};flex-shrink:0">
         <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);flex-shrink:0">Tag Your Photo</div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${isQueued?`<div style="font-size:10px;color:var(--text4);background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:20px;padding:4px 9px;white-space:nowrap">${queueIdx+1}/${queueTotal}</div>`:''}
@@ -3513,6 +3518,7 @@ function mountPhotoGuideSheet(){
           ${!isQueued?`<button type="button" id="tag-retake-btn" title="Retake" style="${headerBtn}">↺</button>`:''}
         </div>
       </div>
+      ${currentFileName?`<div style="font-size:10px;color:var(--text5);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0" title="${htmlEsc(currentFileName)}">📄 ${htmlEsc(currentFileName)}</div>`:''}
 
       ${isQueued?`<div style="height:4px;background:var(--bg-stat);border-radius:2px;overflow:hidden;margin-bottom:10px;flex-shrink:0">
         <div style="height:100%;background:var(--accent);border-radius:2px;width:${Math.round(((queueIdx+1)/queueTotal)*100)}%;transition:width .3s"></div>
