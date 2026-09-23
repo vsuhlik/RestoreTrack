@@ -1444,35 +1444,37 @@ function openPhotoViewer(photo,eraPhotos){
   function buildContent(p,i){
     const hasPrev=i<era.length-1;
     const hasNext=i>0;
+    const chevL=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+    const chevR=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
     return`
-      <div style="position:relative;width:100%">
-        <img src="${p.url}" alt="Progress photo" style="max-width:100%;max-height:50vh;border-radius:10px;object-fit:contain;display:block;margin:0 auto">
-        ${era.length>1?`
-          <div style="position:absolute;top:50%;left:-8px;transform:translateY(-50%)">
-            <button onclick="viewerNav(-1)" style="background:rgba(0,0,0,.5);border:none;border-radius:50%;width:32px;height:32px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;${!hasPrev?'opacity:.2;pointer-events:none':''}">‹</button>
+      <button class="pv-close-x" onclick="document.getElementById('photo-view').remove()" aria-label="Close">✕</button>
+      <div class="pv-body">
+        <div class="pv-body-inner">
+          <div class="pv-stage">
+            <img src="${p.url}" alt="Progress photo" class="pv-img">
+            ${era.length>1?`
+              <button class="pv-arrow pv-arrow-l" onclick="viewerNav(-1)" aria-label="Previous" ${!hasPrev?'disabled':''}>${chevL}</button>
+              <button class="pv-arrow pv-arrow-r" onclick="viewerNav(1)" aria-label="Next" ${!hasNext?'disabled':''}>${chevR}</button>
+              <div class="pv-counter">${i+1} / ${era.length}</div>`:''}
           </div>
-          <div style="position:absolute;top:50%;right:-8px;transform:translateY(-50%)">
-            <button onclick="viewerNav(1)" style="background:rgba(0,0,0,.5);border:none;border-radius:50%;width:32px;height:32px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;${!hasNext?'opacity:.2;pointer-events:none':''}">›</button>
+          <div id="viewer-meta" style="margin-top:14px;text-align:center;width:100%">
+            <div style="font-family:var(--font-display);font-size:14px;color:var(--accent)">${p.ci}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px">${fmtDate(p.date)}</div>
+            ${p.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${htmlEsc(p.note)}</div>`:'<div style="font-size:11px;color:var(--text5);margin-top:6px">No caption</div>'}
+            <div style="margin-top:8px">
+              ${p.canonical
+                ?`<span style="font-size:11px;color:var(--accent);font-weight:600">★ ${p.ci} representative</span> <button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body);text-decoration:underline;margin-left:4px">Remove</button>`
+                :`<button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:var(--font-body);text-decoration:underline">★ Set as ${p.ci} representative</button>`
+              }
+            </div>
+          </div>
+          ${_isIOS()?`<div style="font-size:11px;color:var(--text5);text-align:center;margin-top:14px;line-height:1.55;display:flex;align-items:center;justify-content:center;gap:6px">
+            <span style="font-size:14px">💡</span>
+            <span>Long-press the photo to save it to Photos</span>
           </div>`:''}
-      </div>
-      ${era.length>1?`<div style="text-align:center;margin-top:8px;font-size:10px;color:var(--text5)">${era.length-i} of ${era.length}</div>`:''}
-      <div id="viewer-meta" style="margin-top:10px;text-align:center;width:100%">
-        <div style="font-family:var(--font-display);font-size:14px;color:var(--accent)">${p.ci}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px">${fmtDate(p.date)}</div>
-        ${p.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${p.note}</div>`:'<div style="font-size:11px;color:var(--text5);margin-top:6px">No caption</div>'}
-        <div style="margin-top:8px">
-          ${p.canonical
-            ?`<span style="font-size:11px;color:var(--accent);font-weight:600">★ ${p.ci} representative</span> <button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body);text-decoration:underline;margin-left:4px">Remove</button>`
-            :`<button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:var(--font-body);text-decoration:underline">★ Set as ${p.ci} representative</button>`
-          }
         </div>
       </div>
-      <div id="viewer-edit-area"></div>
-      ${_isIOS()?`<div style="font-size:11px;color:var(--text5);text-align:center;margin-top:14px;line-height:1.55;display:flex;align-items:center;justify-content:center;gap:6px">
-        <span style="font-size:14px">💡</span>
-        <span>Long-press the photo to save it to Photos</span>
-      </div>`:''}
-      <div style="display:flex;gap:8px;margin-top:${_isIOS()?'10':'14'}px;width:100%">
+      <div class="pv-actions">
         <button class="btn-ghost" onclick="document.getElementById('photo-view').remove()" style="flex:1">Close</button>
         ${_isIOS()?'':`<button class="btn-outline" onclick="exportPhotoSingle(${p.id})" title="Download" style="flex:0 0 auto;padding:10px 14px;font-size:12px">⬇</button>`}
         <button id="viewer-pin-btn" class="btn-outline" onclick="event.stopPropagation();togglePhotoPin(${p.id},this)" style="flex:0 0 auto;padding:10px 14px;font-size:12px;${p.pinned?'background:var(--acc12);border-color:var(--acc30);color:var(--accent);':''}">${p.pinned?'⭐':'☆'}</button>
@@ -1489,11 +1491,25 @@ function openPhotoViewer(photo,eraPhotos){
   // silently dropping the user to a single-photo view.
   window._viewerEra=era;
 
-  // Swipe touch handling
-  let touchStartX=0;
-  el.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+  // Swipe touch handling — horizontal navigates between photos in the era,
+  // vertical-down dismisses (but only when the body is already scrolled to
+  // the top, otherwise a downward drag is a natural scroll gesture).
+  let touchStartX=0,touchStartY=0;
+  el.addEventListener('touchstart',e=>{
+    const t=e.touches[0];if(!t)return;
+    touchStartX=t.clientX;touchStartY=t.clientY;
+  },{passive:true});
   el.addEventListener('touchend',e=>{
-    const dx=e.changedTouches[0].clientX-touchStartX;
+    const t=e.changedTouches[0];if(!t)return;
+    const dx=t.clientX-touchStartX;
+    const dy=t.clientY-touchStartY;
+    if(dy>100&&Math.abs(dy)>Math.abs(dx)*1.4){
+      const body=el.querySelector('.pv-body');
+      if(!body||body.scrollTop<=10){
+        el.remove();
+        return;
+      }
+    }
     if(Math.abs(dx)>50){dx<0?viewerNav(1):viewerNav(-1);}
   },{passive:true});
 
@@ -1506,36 +1522,52 @@ function openPhotoViewer(photo,eraPhotos){
     // Swipe listeners persist on `el` — attached once at open, no need to re-attach
   };
 
-  // Edit function
+  // Edit function — mounts a bottom sheet that sits above the photo viewer.
+  // The photo stays visible behind the sheet, dimmed by the overlay backdrop,
+  // so the user is always editing in context. z-index 250 is scoped inline so
+  // that only this sheet sits above the viewer (200); every other overlay in
+  // the app keeps its default 150 and is unaffected.
   window.openViewerEdit=(photoId)=>{
     const p=photos.find(x=>x.id===photoId);if(!p)return;
-    const editArea=document.getElementById('viewer-edit-area');
-    if(!editArea)return;
+    const existing=document.getElementById('pv-edit-ov');if(existing)existing.remove();
     const currentCINum=parseInt((p.ci||'CI-0').replace('CI-',''))||0;
     const ciGrid=LEVELS.map((l,i)=>{
       const isSel=i===currentCINum;
       return`<button
-        onclick="(function(v){document.querySelectorAll('.vw-ci-btn').forEach(b=>{const s=b.dataset.ci===v;b.style.background=s?'var(--acc12)':'var(--bg-stat)';b.style.borderColor=s?'var(--acc30)':'var(--stat-border)';b.style.color=s?'var(--accent)':'var(--text3)';});document.getElementById('edit-photo-ci').value=v;})('${l.ci}')"
+        onclick="(function(v){document.querySelectorAll('#pv-edit-ov .vw-ci-btn').forEach(b=>{const s=b.dataset.ci===v;b.style.background=s?'var(--acc12)':'var(--bg-stat)';b.style.borderColor=s?'var(--acc30)':'var(--stat-border)';b.style.color=s?'var(--accent)':'var(--text3)';});document.getElementById('edit-photo-ci').value=v;})('${l.ci}')"
         class="vw-ci-btn" data-ci="${l.ci}"
         style="padding:7px 2px;border-radius:7px;font-family:var(--font-display);font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;background:${isSel?'var(--acc12)':'var(--bg-stat)'};border:1px solid ${isSel?'var(--acc30)':'var(--stat-border)'};color:${isSel?'var(--accent)':'var(--text3)'}">${l.ci}</button>`;
     }).join('');
-    editArea.innerHTML=`
-      <div style="margin-top:12px;background:var(--bg-stat);border:1px solid var(--acc30);border-radius:10px;padding:12px;width:100%">
-        <input type="hidden" id="edit-photo-ci" value="${p.ci||'CI-0'}">
-        <div style="font-size:10px;color:var(--text4);margin-bottom:7px;text-transform:uppercase;letter-spacing:.8px">CI Level</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px">${ciGrid}</div>
-        <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Date</div>
-        <input type="date" id="edit-photo-date" value="${p.date}" max="${today()}"
-          style="background:var(--bg-card);border:1px solid var(--acc30);border-radius:7px;padding:7px 10px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:var(--font-body);margin-bottom:10px">
-        <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Caption</div>
-        <input type="text" id="edit-photo-note" value="${htmlEsc(p.note||'')}" placeholder="Add a caption..."
-          style="background:var(--bg-card);border:1px solid var(--stat-border);border-radius:7px;padding:7px 10px;color:var(--text1);font-size:12px;width:100%;outline:none;font-family:var(--font-body);margin-bottom:10px">
-        <div style="display:flex;gap:7px">
-          <button class="btn-ghost" onclick="document.getElementById('viewer-edit-area').innerHTML=''" style="flex:0 0 70px;padding:8px">Cancel</button>
-          <button class="btn-gold" onclick="saveViewerEdit(${photoId})" style="flex:1;padding:8px">Save</button>
-        </div>
-      </div>`;
-    document.getElementById('edit-photo-note').focus();
+    const ov=document.createElement('div');
+    ov.className='overlay';
+    ov.id='pv-edit-ov';
+    ov.style.zIndex='250';
+    ov.innerHTML=`<div class="sheet" style="padding-bottom:24px;max-height:65vh">
+      <div class="sheet-handle"></div>
+      <div style="font-family:var(--font-display);font-size:14px;color:var(--accent);margin-bottom:14px">Edit Photo</div>
+      <input type="hidden" id="edit-photo-ci" value="${p.ci||'CI-0'}">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:7px;text-transform:uppercase;letter-spacing:.8px">CI Level</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px">${ciGrid}</div>
+      <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Date</div>
+      <input type="date" id="edit-photo-date" value="${p.date}" max="${today()}"
+        style="background:var(--bg-stat);border:1px solid var(--acc30);border-radius:8px;padding:10px 12px;color:var(--accent);font-size:14px;font-weight:600;width:100%;outline:none;font-family:var(--font-body);margin-bottom:14px">
+      <div style="font-size:10px;color:var(--text4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px">Caption</div>
+      <input type="text" id="edit-photo-note" value="${htmlEsc(p.note||'')}" placeholder="Add a caption..."
+        style="background:var(--bg-stat);border:1px solid var(--stat-border);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:13px;width:100%;outline:none;font-family:var(--font-body);margin-bottom:16px">
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" id="pv-edit-cancel" style="flex:0 0 90px">Cancel</button>
+        <button class="btn-gold" id="pv-edit-save" style="flex:1">✓ Save</button>
+      </div>
+    </div>`;
+    document.getElementById('root').appendChild(ov);
+    document.getElementById('pv-edit-cancel').onclick=()=>ov.remove();
+    document.getElementById('pv-edit-save').onclick=()=>saveViewerEdit(photoId);
+    // Backdrop tap dismisses without saving. Guarded against the edge case where
+    // the user taps the backdrop while a click is mid-propagation on a child.
+    ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+    // No auto-focus. On iOS, focusing a text input here opens the software
+    // keyboard, which fills the bottom half of the screen and hides the photo
+    // the user is editing. The user can tap the caption field when they want it.
   };
 
   window.saveViewerEdit=(photoId)=>{
@@ -1548,6 +1580,9 @@ function openPhotoViewer(photo,eraPhotos){
     // `.map()` above didn't update it. Replace before re-rendering.
     const updated=photos.find(p=>p.id===photoId);
     if(updated)era[idx]=updated;
+    // Close the edit sheet first so the viewer's rebuild happens on top of
+    // a clean stack rather than fighting with the sheet's z-index.
+    document.getElementById('pv-edit-ov')?.remove();
     el.innerHTML=buildContent(era[idx],idx);
     showToast('✓ Photo updated');
     // Swipe listeners persist on `el` — no need to re-attach
