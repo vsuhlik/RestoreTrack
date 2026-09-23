@@ -1513,6 +1513,8 @@ function openPhotoViewer(photo,eraPhotos){
   let pvPanStartX=null,pvPanStartY=null;
   let pvGestureOnPhoto=false;
   let pvLastTapTime=0,pvLastTapX=0,pvLastTapY=0;
+  let pvChromeHidden=false;
+  let pvTapTimer=null;
 
   const pvApplyTransform=(animate)=>{
     const img=el.querySelector('.pv-img');
@@ -2957,6 +2959,8 @@ function toggleCanonicalPhoto(id){
     // openPhotoViewer and is the same array togglePhotoPin already uses.
     viewer.remove();
     openPhotoViewer(photos.find(x=>x.id===id),window._viewerEra||null);
+      document.getElementById('root').appendChild(el);
+  // Remember the era this viewer was opened with, so togglePhotoPin can
     return;
   }
   render();
