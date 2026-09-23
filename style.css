@@ -1011,6 +1011,26 @@ textarea:focus        { border-color: var(--acc30); }
   backdrop-filter: blur(10px);
 }
 
+/* ── PHOTO VIEWER — TAP TO HIDE CHROME ─────────────────────────────────── */
+/* Tapping the photo hides the close button, nav arrows, counter, and bottom
+   action bar so the image is unobstructed. Tap again to bring them back.
+   The metadata card below the photo is NOT chrome — it sits below the image
+   rather than overlaying it, and it has its own interactive elements, so it
+   stays visible throughout. */
+.pv-close-x,
+.pv-arrow,
+.pv-counter,
+.pv-actions {
+  transition: opacity .25s ease;
+}
+.photo-viewer.pv-chrome-hidden .pv-close-x,
+.photo-viewer.pv-chrome-hidden .pv-arrow,
+.photo-viewer.pv-chrome-hidden .pv-counter,
+.photo-viewer.pv-chrome-hidden .pv-actions {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── MASTER GAUGE (Journey Tab) ─────────────────────────────────────────── */
 .journey-tab {
   animation: journeyFadeIn .3s ease;

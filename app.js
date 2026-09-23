@@ -1478,7 +1478,7 @@ function openPhotoViewer(photo,eraPhotos){
         </div>
       </div>
       <div class="pv-actions">
-        <button class="btn-ghost" onclick="document.getElementById('photo-view').remove()" style="flex:1">Close</button>
+        <button class="btn-ghost" onclick="document.getElementById('photo-view').remove();openComparePicker(${p.id})" style="flex:1">⟷ Compare</button>
         ${_isIOS()?'':`<button class="btn-outline" onclick="exportPhotoSingle(${p.id})" title="Download" style="flex:0 0 auto;padding:10px 14px;font-size:12px">⬇</button>`}
         <button id="viewer-pin-btn" class="btn-outline" onclick="event.stopPropagation();togglePhotoPin(${p.id},this)" style="flex:0 0 auto;padding:10px 14px;font-size:12px;${p.pinned?'background:var(--acc12);border-color:var(--acc30);color:var(--accent);':''}">${p.pinned?'⭐':'☆'}</button>
         <button class="btn-outline" onclick="openViewerEdit(${p.id})" style="flex:0 0 60px;font-size:12px">✏ Edit</button>
@@ -1526,8 +1526,15 @@ function openPhotoViewer(photo,eraPhotos){
     pvPanStartX=null;pvPanStartY=null;
     pvApplyTransform(true);
   };
+  const pvSetChrome=(hidden)=>{
+    pvChromeHidden=hidden;
+    el.classList.toggle('pv-chrome-hidden',hidden);
+  };
 
   el.addEventListener('touchstart',e=>{
+    // A new touch cancels any pending chrome-hide. This is what makes the
+    // second tap of a double-tap feel instantaneous instead of hiding first.
+    if(pvTapTimer){clearTimeout(pvTapTimer);pvTapTimer=null;}
     // ── Two-finger pinch ──
     if(e.touches.length===2){
       pvPinching=true;
@@ -1540,6 +1547,10 @@ function openPhotoViewer(photo,eraPhotos){
     // ── Single-finger ──
     if(e.touches.length!==1)return;
     const t=e.touches[0];
+    // touchStartX/Y are recorded for every single-finger touch, not just
+    // photo touches — the chrome-restore branch in touchend needs a valid
+    // start position even when the tap landed on the metadata.
+    touchStartX=t.clientX;touchStartY=t.clientY;
     pvGestureOnPhoto=!!(t.target&&t.target.closest&&t.target.closest('.pv-stage'));
     if(!pvGestureOnPhoto)return;
     // Double-tap detection — only when starting on the photo, only when the
@@ -1553,7 +1564,6 @@ function openPhotoViewer(photo,eraPhotos){
       return;
     }
     pvLastTapTime=now;pvLastTapX=t.clientX;pvLastTapY=t.clientY;
-    touchStartX=t.clientX;touchStartY=t.clientY;
     if(pvScale>1){
       pvPanStartX=t.clientX-pvPanX;
       pvPanStartY=t.clientY-pvPanY;
@@ -1591,23 +1601,43 @@ function openPhotoViewer(photo,eraPhotos){
       if(pvScale<1.05){
         pvReset();
       } else if(pvPanStartX===null&&e.touches.length===1){
-        // Second finger lifted, first finger still down — start panning from here
+        // One finger lifted, one remains — start panning from here so the
+        // user can pinch-to-zoom then immediately drag without lifting.
         pvPanStartX=e.touches[0].clientX-pvPanX;
         pvPanStartY=e.touches[0].clientY-pvPanY;
       }
       return;
     }
-    // ── Zoomed in — do not process nav/dismiss ──
-    if(pvScale>1){
-      pvPanStartX=null;pvPanStartY=null;
+    const t=e.changedTouches[0];if(!t)return;
+    const dx=t.clientX-touchStartX;
+    const dy=t.clientY-touchStartY;
+    const isCleanTap=Math.abs(dx)<10&&Math.abs(dy)<10;
+    // ── Chrome restore — tap anywhere brings controls back ──
+    // Checked before the zoomed-in branch so a tap while zoomed still
+    // restores chrome. A tap that started on the metadata also works, which
+    // is the escape hatch if chrome is hidden and the photo is off-screen.
+    if(pvChromeHidden&&isCleanTap){
+      pvSetChrome(false);
       pvGestureOnPhoto=false;
       return;
     }
-    // ── At scale 1 — process swipe nav / dismiss ──
-    const t=e.changedTouches[0];if(!t)return;
+    // ── Zoomed in — do not process nav/dismiss ──
+    if(pvScale>1){
+      pvPanStartX=null;pvPanStartY=null;pvGestureOnPhoto=false;
+      return;
+    }
+    // ── Only photo gestures continue from here ──
     if(!pvGestureOnPhoto){pvGestureOnPhoto=false;return;}
-    const dx=t.clientX-touchStartX;
-    const dy=t.clientY-touchStartY;
+    // ── Clean tap on the photo — schedule chrome hide ──
+    if(isCleanTap){
+      pvTapTimer=setTimeout(()=>{
+        pvTapTimer=null;
+        pvSetChrome(true);
+      },250);
+      pvGestureOnPhoto=false;
+      return;
+    }
+    // ── Swipe nav / dismiss ──
     if(dy>100&&Math.abs(dy)>Math.abs(dx)*1.4){
       const body=el.querySelector('.pv-body');
       if(!body||body.scrollTop<=10){
@@ -2920,7 +2950,15 @@ function toggleCanonicalPhoto(id){
   savePhotos();
   showToast(isOn?'Removed':'★ Set as '+ci+' representative');
   const viewer=document.getElementById('photo-view');
-  if(viewer){viewer.remove();openPhotoViewer(photos.find(x=>x.id===id),null);return;}
+  if(viewer){
+    // Reopen with the same era the viewer was opened with, so the user keeps
+    // their swipe context (month view, CI filmstrip, etc.) instead of being
+    // dropped into single-photo mode. window._viewerEra is set at the top of
+    // openPhotoViewer and is the same array togglePhotoPin already uses.
+    viewer.remove();
+    openPhotoViewer(photos.find(x=>x.id===id),window._viewerEra||null);
+    return;
+  }
   render();
 }
 function renderPhotos(){
@@ -3915,9 +3953,17 @@ function compareClearA(){
   compareB=null;
   updateComparePickUI();
 }
-function openComparePicker(){
+function openComparePicker(preselectId){
   const ex=document.getElementById('compare-pick-ov');if(ex)ex.remove();
   compareA=null;compareB=null;
+  // Optional preselect — used when the viewer's Compare button opens the
+  // picker. Sets the current photo as "Before (A)" so the user only has to
+  // pick the "After" photo. Backward compatible: callers with no argument
+  // get the exact same behavior as before.
+  if(preselectId){
+    const p=photos.find(x=>x.id===preselectId);
+    if(p)compareA=p;
+  }
   const sorted=[...photos].sort((a,b)=>b.date.localeCompare(a.date));
   const shortcuts=buildCompareShortcuts();
   const el=document.createElement('div');el.className='overlay';el.id='compare-pick-ov';
@@ -3960,6 +4006,12 @@ function openComparePicker(){
     </div>
   </div>`;
   document.getElementById('root').appendChild(el);
+  // If a photo was preselected as A, sync the UI immediately so the A preview
+  // panel renders and the shortcuts section hides. Without this the picker
+  // would look empty on open even though compareA is set. Safe when
+  // compareA is null — updateComparePickUI handles that (everything stays
+  // in its default state).
+  updateComparePickUI();
   document.getElementById('compare-cancel-btn').onclick=()=>el.remove();
   document.getElementById('compare-go-btn').onclick=()=>{
     if(compareA&&compareB){el.remove();openCompareViewer();}
