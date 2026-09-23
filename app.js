@@ -1457,14 +1457,17 @@ function openPhotoViewer(photo,eraPhotos){
               <button class="pv-arrow pv-arrow-r" onclick="viewerNav(1)" aria-label="Next" ${!hasNext?'disabled':''}>${chevR}</button>
               <div class="pv-counter">${i+1} / ${era.length}</div>`:''}
           </div>
-          <div id="viewer-meta" style="margin-top:14px;text-align:center;width:100%">
-            <div style="font-family:var(--font-display);font-size:14px;color:var(--accent)">${p.ci}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:3px">${fmtDate(p.date)}</div>
-            ${p.note?`<div style="font-size:12px;color:var(--text2);margin-top:6px;font-style:italic">${htmlEsc(p.note)}</div>`:'<div style="font-size:11px;color:var(--text5);margin-top:6px">No caption</div>'}
-            <div style="margin-top:8px">
+          <div class="pv-meta-card">
+            <div class="pv-meta-head">
+              <span class="pv-ci-pill">${p.ci}</span>
+              <span class="pv-date">${fmtDate(p.date)}</span>
+            </div>
+            <div class="pv-meta-divider"></div>
+            <div class="pv-caption">${p.note?htmlEsc(p.note):'<span class="pv-no-caption">No caption</span>'}</div>
+            <div class="pv-meta-footer">
               ${p.canonical
-                ?`<span style="font-size:11px;color:var(--accent);font-weight:600">★ ${p.ci} representative</span> <button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text5);font-size:10px;cursor:pointer;font-family:var(--font-body);text-decoration:underline;margin-left:4px">Remove</button>`
-                :`<button onclick="toggleCanonicalPhoto(${p.id})" style="background:none;border:none;color:var(--text4);font-size:11px;cursor:pointer;font-family:var(--font-body);text-decoration:underline">★ Set as ${p.ci} representative</button>`
+                ?`<span class="pv-canonical">★ ${p.ci} representative</span><button class="pv-canonical-btn" onclick="toggleCanonicalPhoto(${p.id})">Remove</button>`
+                :`<span class="pv-no-caption">Not the ${p.ci} representative</span><button class="pv-canonical-btn" onclick="toggleCanonicalPhoto(${p.id})">Set as representative</button>`
               }
             </div>
           </div>
@@ -1491,16 +1494,118 @@ function openPhotoViewer(photo,eraPhotos){
   // silently dropping the user to a single-photo view.
   window._viewerEra=era;
 
-  // Swipe touch handling — horizontal navigates between photos in the era,
-  // vertical-down dismisses (but only when the body is already scrolled to
-  // the top, otherwise a downward drag is a natural scroll gesture).
+  // ── Gesture system ──────────────────────────────────────────────────────
+  // One- and two-finger gestures all run through the photo viewer element.
+  // State lives in closure variables and resets on every rebuild.
+  //
+  //   Scale 1    → horizontal swipe navigates, swipe-down dismisses
+  //   Scale > 1  → one-finger drag pans, gestures are consumed (no navigate,
+  //                no dismiss)
+  //   Pinch      → scales 1x..4x; releasing below 1.05 snaps back to 1
+  //   Double-tap → toggles between 1x and 2x
+  //
+  // Every gesture that starts on the stage is a "photo gesture". Gestures
+  // that start on the metadata below fall through to native scroll, so the
+  // user always has a scroll surface when the card is tall.
   let touchStartX=0,touchStartY=0;
+  let pvScale=1,pvPanX=0,pvPanY=0;
+  let pvPinchDist=0,pvPinching=false;
+  let pvPanStartX=null,pvPanStartY=null;
+  let pvGestureOnPhoto=false;
+  let pvLastTapTime=0,pvLastTapX=0,pvLastTapY=0;
+
+  const pvApplyTransform=(animate)=>{
+    const img=el.querySelector('.pv-img');
+    if(!img)return;
+    img.style.transition=animate?'transform .22s cubic-bezier(.22,.9,.3,1)':'none';
+    img.style.transform=`translate(${pvPanX}px, ${pvPanY}px) scale(${pvScale})`;
+  };
+  const pvReset=()=>{
+    pvScale=1;pvPanX=0;pvPanY=0;
+    pvPinching=false;pvPinchDist=0;
+    pvPanStartX=null;pvPanStartY=null;
+    pvApplyTransform(true);
+  };
+
   el.addEventListener('touchstart',e=>{
-    const t=e.touches[0];if(!t)return;
+    // ── Two-finger pinch ──
+    if(e.touches.length===2){
+      pvPinching=true;
+      pvPinchDist=Math.hypot(
+        e.touches[0].clientX-e.touches[1].clientX,
+        e.touches[0].clientY-e.touches[1].clientY
+      );
+      return;
+    }
+    // ── Single-finger ──
+    if(e.touches.length!==1)return;
+    const t=e.touches[0];
+    pvGestureOnPhoto=!!(t.target&&t.target.closest&&t.target.closest('.pv-stage'));
+    if(!pvGestureOnPhoto)return;
+    // Double-tap detection — only when starting on the photo, only when the
+    // two taps are close in time AND space.
+    const now=Date.now();
+    const near=Math.abs(t.clientX-pvLastTapX)<30&&Math.abs(t.clientY-pvLastTapY)<30;
+    if(now-pvLastTapTime<300&&near){
+      pvLastTapTime=0;
+      if(pvScale>1.05){pvReset();}
+      else{pvScale=2;pvApplyTransform(true);}
+      return;
+    }
+    pvLastTapTime=now;pvLastTapX=t.clientX;pvLastTapY=t.clientY;
     touchStartX=t.clientX;touchStartY=t.clientY;
+    if(pvScale>1){
+      pvPanStartX=t.clientX-pvPanX;
+      pvPanStartY=t.clientY-pvPanY;
+    }
   },{passive:true});
+
+  el.addEventListener('touchmove',e=>{
+    // ── Pinch in progress ──
+    if(pvPinching&&e.touches.length===2){
+      const dist=Math.hypot(
+        e.touches[0].clientX-e.touches[1].clientX,
+        e.touches[0].clientY-e.touches[1].clientY
+      );
+      if(pvPinchDist>0){
+        const ratio=dist/pvPinchDist;
+        pvScale=Math.max(1,Math.min(4,pvScale*ratio));
+        pvApplyTransform(false);
+      }
+      pvPinchDist=dist;
+      return;
+    }
+    // ── Single-finger pan while zoomed ──
+    if(pvScale>1&&pvPanStartX!==null&&e.touches.length===1){
+      pvPanX=e.touches[0].clientX-pvPanStartX;
+      pvPanY=e.touches[0].clientY-pvPanStartY;
+      pvApplyTransform(false);
+    }
+  },{passive:true});
+
   el.addEventListener('touchend',e=>{
+    // ── Pinch released ──
+    if(pvPinching&&e.touches.length<2){
+      pvPinching=false;
+      pvPinchDist=0;
+      if(pvScale<1.05){
+        pvReset();
+      } else if(pvPanStartX===null&&e.touches.length===1){
+        // Second finger lifted, first finger still down — start panning from here
+        pvPanStartX=e.touches[0].clientX-pvPanX;
+        pvPanStartY=e.touches[0].clientY-pvPanY;
+      }
+      return;
+    }
+    // ── Zoomed in — do not process nav/dismiss ──
+    if(pvScale>1){
+      pvPanStartX=null;pvPanStartY=null;
+      pvGestureOnPhoto=false;
+      return;
+    }
+    // ── At scale 1 — process swipe nav / dismiss ──
     const t=e.changedTouches[0];if(!t)return;
+    if(!pvGestureOnPhoto){pvGestureOnPhoto=false;return;}
     const dx=t.clientX-touchStartX;
     const dy=t.clientY-touchStartY;
     if(dy>100&&Math.abs(dy)>Math.abs(dx)*1.4){
@@ -1511,6 +1616,7 @@ function openPhotoViewer(photo,eraPhotos){
       }
     }
     if(Math.abs(dx)>50){dx<0?viewerNav(1):viewerNav(-1);}
+    pvGestureOnPhoto=false;
   },{passive:true});
 
   // Nav function scoped to this viewer instance
@@ -1518,6 +1624,11 @@ function openPhotoViewer(photo,eraPhotos){
     const newIdx=idx-dir; // dir=1 means right/newer, dir=-1 means left/older
     if(newIdx<0||newIdx>=era.length)return;
     idx=newIdx;
+    // Reset zoom/pan state so the incoming photo renders at 1x. The state
+    // lives in the touch handler's closure; resetting here is what makes the
+    // transform state and the fresh DOM agree after every navigation.
+    pvScale=1;pvPanX=0;pvPanY=0;
+    pvPinching=false;pvPinchDist=0;pvPanStartX=null;pvPanStartY=null;
     el.innerHTML=buildContent(era[idx],idx);
     // Swipe listeners persist on `el` — attached once at open, no need to re-attach
   };
